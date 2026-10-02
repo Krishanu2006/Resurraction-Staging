@@ -1,0 +1,211 @@
+/* =========================================================
+   RESURRACTION — COSMIC BLUE DESIGN SYSTEM
+   Non-hero theme tokens
+   ========================================================= */
+
+:root {
+  /* -------------------------------------------------------
+     Core canvas
+     ------------------------------------------------------- */
+
+  --void: #050816;
+  --canvas: #050816;
+  --canvas-deep: #030510;
+  --canvas-blue: #071027;
+
+
+  /* -------------------------------------------------------
+     Surface hierarchy
+     ------------------------------------------------------- */
+
+  --surface-1: #0b1022;
+  --surface-2: #111936;
+  --surface-3: #18234a;
+
+
+  /* -------------------------------------------------------
+     Primary cosmic palette
+     ------------------------------------------------------- */
+
+  --stellar-cyan: #22d3ee;
+  --cyan-soft: #67e8f9;
+
+  --cosmic-blue: #3b82f6;
+  --cosmic-blue-bright: #60a5fa;
+
+  --nebula-purple: #8b5cf6;
+  --nebula-violet: #7c3aed;
+
+  --nebula-pink: #ec4899;
+
+  --solar-gold: #fbbf24;
+
+
+  /* -------------------------------------------------------
+     Typography colors
+     ------------------------------------------------------- */
+
+  --text: #f8fbff;
+  --text-dim: #d9e2f4;
+  --muted: #aab5d6;
+  --muted-dark: #68749a;
+
+
+  /* -------------------------------------------------------
+     Compatibility aliases
+     ------------------------------------------------------- */
+
+  --ink: var(--text);
+  --ink-muted: var(--muted);
+  --ink-subtle: var(--muted-dark);
+
+  --inverse-ink: #03101a;
+
+
+  /* -------------------------------------------------------
+     Borders / lines
+     ------------------------------------------------------- */
+
+  --hairline: rgba(148, 163, 184, 0.14);
+
+  --hairline-soft: rgba(96, 165, 250, 0.09);
+
+  --border-subtle: rgba(96, 165, 250, 0.16);
+
+  --border-cosmic: rgba(96, 165, 250, 0.22);
+
+  --border-cyan: rgba(34, 211, 238, 0.38);
+
+
+  /* -------------------------------------------------------
+     Panels
+     ------------------------------------------------------- */
+
+  --panel-bg: rgba(11, 16, 34, 0.78);
+
+  --panel-bg-solid: #0b1022;
+
+  --panel-bg-elevated: #111936;
+
+  --panel-backdrop: blur(18px);
+
+
+  /* -------------------------------------------------------
+     Typography
+     ------------------------------------------------------- */
+
+  --font-display:
+    'Space Grotesk',
+    'Inter',
+    system-ui,
+    sans-serif;
+
+  --font-body:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+
+  --font-mono:
+    'JetBrains Mono',
+    'IBM Plex Mono',
+    ui-monospace,
+    monospace;
+
+
+  /* -------------------------------------------------------
+     Layout
+     ------------------------------------------------------- */
+
+  --max-width: 1280px;
+
+  --max-width-wide: 1440px;
+
+  --header-height: 68px;
+
+
+  /* -------------------------------------------------------
+     Border radius
+     ------------------------------------------------------- */
+
+  --radius-xs: 4px;
+
+  --radius-sm: 6px;
+
+  --radius-md: 8px;
+
+  --radius-lg: 12px;
+
+  --radius-xl: 16px;
+
+  --radius-xxl: 24px;
+
+  --radius-cosmic: 32px;
+
+  --radius-pill: 9999px;
+
+
+  /* -------------------------------------------------------
+     Motion
+     ------------------------------------------------------- */
+
+  --transition-fast:
+    180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  --transition-normal:
+    320ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  --transition-slow:
+    600ms cubic-bezier(0.16, 1, 0.3, 1);
+
+
+  /* -------------------------------------------------------
+     Controlled cosmic glows
+     ------------------------------------------------------- */
+
+  --glow-cyan:
+    0 0 32px rgba(34, 211, 238, 0.22);
+
+  --glow-blue:
+    0 0 32px rgba(59, 130, 246, 0.22);
+
+  --glow-purple:
+    0 0 36px rgba(139, 92, 246, 0.20);
+
+  --glow-gold:
+    0 0 30px rgba(251, 191, 36, 0.18);
+
+
+  /* -------------------------------------------------------
+     Compatibility aliases
+     
+     Some existing components still reference the old
+     variable names. These aliases allow us to redesign
+     the visual language without breaking those components.
+     ------------------------------------------------------- */
+
+  --brand-peach: var(--stellar-cyan);
+
+  --brand-peach-light: var(--cyan-soft);
+
+  --brand-peach-dark: #0891b2;
+
+  --crimson-deep: #0b1c3d;
+
+  --crimson: var(--cosmic-blue);
+
+  --red-hot: #ef4444;
+
+  --white-hot: #f8fbff;
+
+  --surface-glass: var(--panel-bg);
+
+  --border-panel: var(--border-subtle);
+
+  --border-peach: var(--border-cyan);
+
+  --hairline-crimson:
+    rgba(59, 130, 246, 0.16);
+}

@@ -1,0 +1,70 @@
+/* RESURRACTION cinematic animation system */
+
+@keyframes cosmicSlowDrift {
+  0%, 100% { transform: scale(1.015) translate3d(0, 0, 0); }
+  50% { transform: scale(1.075) translate3d(-1.2%, -0.6%, 0); }
+}
+
+@keyframes backgroundBreathe {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50% { opacity: .9; transform: scale(1.06); }
+}
+
+@keyframes energyPulse {
+  0%, 100% { opacity: .32; transform: scale(1); }
+  50% { opacity: .72; transform: scale(1.035); }
+}
+
+@keyframes energySweep {
+  0% { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+  12% { opacity: .15; }
+  38% { opacity: .72; }
+  55% { opacity: .48; }
+  100% { transform: translateX(240%) skewX(-20deg); opacity: 0; }
+}
+
+@keyframes plasmaFlow {
+  from { stroke-dashoffset: 0; opacity: .35; }
+  to { stroke-dashoffset: -260; opacity: .95; }
+}
+
+@keyframes particleDrift {
+  0% { transform: translate3d(0, 18px, 0) scale(.8); opacity: .15; }
+  50% { transform: translate3d(12px, -12px, 0) scale(1.15); opacity: 1; }
+  100% { transform: translate3d(-8px, -42px, 0) scale(.75); opacity: .18; }
+}
+
+@keyframes statusBeacon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.88); }
+}
+
+@keyframes logoBreath {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(242,177,138,.18)); }
+  50% { filter: drop-shadow(0 0 24px rgba(242,177,138,.52)); }
+}
+
+.animate-cosmic-drift { animation: cosmicSlowDrift 22s ease-in-out infinite; }
+.animate-background-breathe { animation: backgroundBreathe 9s ease-in-out infinite; }
+.animate-energy-pulse { animation: energyPulse 6s ease-in-out infinite; }
+.animate-energy-sweep { animation: energySweep 8s cubic-bezier(.2,.7,.2,1) infinite; }
+.animate-plasma-flow { stroke-dasharray: 22 18; animation: plasmaFlow 5s linear infinite; }
+.plasma-flow-delay { animation-duration: 7s; animation-delay: -2.5s; }
+.animate-status-beacon { animation: statusBeacon 2.4s ease-in-out infinite; }
+.animate-logo-breath { animation: logoBreath 4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-cosmic-drift,
+  .animate-background-breathe,
+  .animate-energy-pulse,
+  .animate-energy-sweep,
+  .animate-plasma-flow,
+  .animate-status-beacon,
+  .animate-logo-breath { animation: none !important; }
+}
