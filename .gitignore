@@ -1,2 +1,6 @@
 node_modules
-.env.example
+dist
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
