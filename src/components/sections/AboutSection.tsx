@@ -461,7 +461,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
           <div className="about-content-card">
             <div className="about-kicker">
               <Orbit size={16} />
-              <span>ABOUT RESURRACTION</span>
+              <span>ABOUT RESURRECTION</span>
             </div>
             <h2 className="about-heading">
               Build beyond
@@ -469,7 +469,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
               <span>the known.</span>
             </h2>
             <p className="about-description">
-              Resurraction is a space where ambitious minds come together
+              Resurrection is a space where ambitious minds come together
               to transform ideas into technology. It brings together
               developers, designers, innovators and problem-solvers to
               create meaningful solutions to real-world challenges.
@@ -482,7 +482,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
             <div className="about-meta">
               <span>MISSION</span>
               <div />
-              <strong>RESURRACTION</strong>
+              <strong>RESURRECTION</strong>
             </div>
           </div>
         </div>
@@ -527,7 +527,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
           </div>
         </div>
 
-        {/* WHY RESURRACTION */}
+        {/* WHY RESURRECTION */}
         <div
           className="about-scene about-details-scene"
           style={detailsStyle}
@@ -536,7 +536,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
             <div className="about-content-card about-details-main">
               <div className="about-kicker">
                 <Atom size={16} />
-                <span>WHY RESURRACTION?</span>
+                <span>WHY RESURRECTION?</span>
               </div>
               <h2 className="about-heading">
                 Ideas deserve
@@ -544,7 +544,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
                 <span>more than gravity.</span>
               </h2>
               <p className="about-description">
-                Resurraction encourages you to think beyond conventional
+                Resurrection encourages you to think beyond conventional
                 solutions. Whether you are exploring artificial
                 intelligence, software engineering, quantum computing or
                 another emerging field, the focus is on learning, creating
@@ -578,7 +578,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
           style={closingStyle}
         >
           <div className="about-closing">
-            <span className="about-closing-label">RESURRACTION</span>
+            <span className="about-closing-label">RESURRECTION</span>
             <h2>
               Your next idea
               <br />

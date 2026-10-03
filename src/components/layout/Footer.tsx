@@ -192,7 +192,7 @@ export const Footer: React.FC = () => {
             >
               SECTOR 01
               <br />
-              RESURRACTION
+              RESURRECTION
             </div>
           </div>
         </div>
@@ -219,7 +219,7 @@ export const Footer: React.FC = () => {
         >
           <span>
             © {new Date().getFullYear()}{' '}
-            RESURRACTION
+            RESURRECTION
           </span>
 
           <span>

@@ -10,8 +10,8 @@ export const faqData: FAQItem[] = [
   {
     id: "faq-01",
     code: "QUERY 01",
-    question: "What is RESURRACTION?",
-    answer: "RESURRACTION is a flagship technical hackathon organized by the Department of Computer Science & Engineering, Institute of Engineering & Management (IEM), Kolkata. It serves as a mission launchpad for engineering students and developers to construct transformative solutions for high-impact challenges.",
+    question: "What is RESURRECTION?",
+    answer: "RESURRECTION is a flagship technical hackathon organized by the Department of Computer Science & Engineering, Institute of Engineering & Management (IEM), Kolkata. It serves as a mission launchpad for engineering students and developers to construct transformative solutions for high-impact challenges.",
     category: "GENERAL",
   },
   {
@@ -59,7 +59,7 @@ export const faqData: FAQItem[] = [
   {
     id: "faq-08",
     code: "QUERY 08",
-    question: "What is the prize pool for RESURRACTION?",
+    question: "What is the prize pool for RESURRECTION?",
     answer: "The complete prize structure—including champion trophies, tier bounties, and partner tracks—is currently in calibration. Official amounts will be revealed during the event announcement.",
     category: "PRIZES",
   },

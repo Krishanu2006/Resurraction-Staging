@@ -231,7 +231,7 @@ export const HeroContent: React.FC<HeroContentProps> = ({
 
 
   /* ==========================================================
-     1. RESURRACTION LOGO
+     1. RESURRECTION LOGO
 
      0.00 - 0.10
        Fully visible
@@ -479,7 +479,7 @@ export const HeroContent: React.FC<HeroContentProps> = ({
 
 
       {/* ======================================================
-          1. RESURRACTION LOGO
+          1. RESURRECTION LOGO
           ====================================================== */}
 
       <div
@@ -908,7 +908,7 @@ export const HeroContent: React.FC<HeroContentProps> = ({
               '0 12px 45px rgba(34, 211, 238, 0.22)',
           }}
         >
-          Explore RESURRACTION
+          Explore RESURRECTION
         </a>
 
 

@@ -13,7 +13,7 @@ export const timelineData: TimelineItem[] = [
     stageNumber: "PHASE 01",
     title: "MISSION ANNOUNCEMENT",
     date: "DATE // TO BE ANNOUNCED",
-    description: "Initial signal transmission, website staging launch, and formal announcement of RESURRACTION by Department of CSE, IEM Kolkata.",
+    description: "Initial signal transmission, website staging launch, and formal announcement of RESURRECTION by Department of CSE, IEM Kolkata.",
     status: "coming-soon",
   },
   {

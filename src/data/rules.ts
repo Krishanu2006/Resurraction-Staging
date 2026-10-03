@@ -92,7 +92,7 @@ export const rulesData: RuleCategory[] = [
       {
         id: "rule-cd-1",
         title: "INCLUSION & MUTUAL RESPECT",
-        description: "RESURRACTION upholds a safe, respectful, and harassment-free experience for everyone, regardless of gender, identity, disability, or background.",
+        description: "RESURRECTION upholds a safe, respectful, and harassment-free experience for everyone, regardless of gender, identity, disability, or background.",
         status: "confirmed",
       },
       {
@@ -128,7 +128,7 @@ export const rulesData: RuleCategory[] = [
       {
         id: "rule-ip-1",
         title: "BUILDER OWNERSHIP",
-        description: "Participants retain 100% intellectual property ownership of the code, designs, and hardware developed during RESURRACTION.",
+        description: "Participants retain 100% intellectual property ownership of the code, designs, and hardware developed during RESURRECTION.",
         status: "confirmed",
       },
     ],
