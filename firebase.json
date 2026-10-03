@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "resurraction-staging",
     "public": "dist",
     "ignore": [
       "firebase.json",
