@@ -14,18 +14,159 @@
 @import './animations.css';
 
 
+/* =========================================================
+   LOCAL COSMIC FONT SYSTEM
+   ========================================================= */
+
+/*
+ * Display
+ * -------
+ * Futuristic aerospace / sci-fi identity.
+ */
+@font-face {
+  font-family: 'Nasalization';
+
+  src:
+    url('/fonts/nasalization/Nasalization-Regular.woff2')
+    format('woff2');
+
+  font-weight: 400;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Nasalization';
+
+  src:
+    url('/fonts/nasalization/Nasalization-Bold.woff2')
+    format('woff2');
+
+  font-weight: 700;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
+
+/*
+ * Body
+ * ----
+ * Used for readable paragraphs and general content.
+ */
+@font-face {
+  font-family: 'Neue Stance';
+
+  src:
+    url('/fonts/neue-stance/NeueStance-Regular.woff2')
+    format('woff2');
+
+  font-weight: 400;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Neue Stance';
+
+  src:
+    url('/fonts/neue-stance/NeueStance-Medium.woff2')
+    format('woff2');
+
+  font-weight: 500;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Neue Stance';
+
+  src:
+    url('/fonts/neue-stance/NeueStance-SemiBold.woff2')
+    format('woff2');
+
+  font-weight: 600;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Neue Stance';
+
+  src:
+    url('/fonts/neue-stance/NeueStance-Bold.woff2')
+    format('woff2');
+
+  font-weight: 700;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
+
+/*
+ * Technical
+ * ---------
+ * Used for telemetry, labels, navigation metadata,
+ * numbers, buttons and interface elements.
+ */
+@font-face {
+  font-family: 'Space Mono';
+
+  src:
+    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Regular.woff2')
+    format('woff2');
+
+  font-weight: 400;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Space Mono';
+
+  src:
+    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Bold.woff2')
+    format('woff2');
+
+  font-weight: 700;
+
+  font-style: normal;
+
+  font-display: swap;
+}
+
 
 /* =========================================================
    RESET
    ========================================================= */
 
 * {
-  box-sizing: border-box;
+  box-sizing:
+    border-box;
 }
 
 *::before,
 *::after {
-  box-sizing: border-box;
+  box-sizing:
+    border-box;
 }
 
 
@@ -34,7 +175,8 @@
    ========================================================= */
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior:
+    smooth;
 
   scroll-padding-top:
     var(--header-height);
@@ -51,13 +193,21 @@ html {
 
 
 body {
-  margin: 0;
+  margin:
+    0;
 
-  min-height: 100vh;
+  min-height:
+    100vh;
 
-  overflow-x: hidden;
+  overflow-x:
+    hidden;
 
-  font-family: sans-serif;
+  /*
+   * Main website typeface.
+   */
+  font-family:
+    'Neue Stance',
+    sans-serif;
 
   color:
     var(--text);
@@ -98,17 +248,23 @@ body {
    ========================================================= */
 
 body::before {
-  content: '';
+  content:
+    '';
 
-  position: fixed;
+  position:
+    fixed;
 
-  inset: 0;
+  inset:
+    0;
 
-  z-index: -1;
+  z-index:
+    -1;
 
-  pointer-events: none;
+  pointer-events:
+    none;
 
-  opacity: 0.24;
+  opacity:
+    0.24;
 
   background-image:
     linear-gradient(
@@ -152,13 +308,16 @@ body::before {
    ========================================================= */
 
 ::-webkit-scrollbar {
-  width: 7px;
+  width:
+    7px;
 }
+
 
 ::-webkit-scrollbar-track {
   background:
     var(--canvas-deep);
 }
+
 
 ::-webkit-scrollbar-thumb {
   background:
@@ -167,6 +326,7 @@ body::before {
   border-radius:
     99px;
 }
+
 
 ::-webkit-scrollbar-thumb:hover {
   background:
@@ -178,37 +338,66 @@ body::before {
    TYPOGRAPHY
    ========================================================= */
 
+/*
+ * Major headings
+ *
+ * Nasalization gives the site its futuristic
+ * aerospace / deep-space identity.
+ */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  margin: 0;
+  margin:
+    0;
 
   font-family:
-    var(--font-display);
+    'Nasalization',
+    sans-serif;
 
   color:
     var(--text);
 
   font-weight:
-    650;
+    700;
 
   line-height:
     1.08;
 
   letter-spacing:
     -0.035em;
+
+  text-transform:
+    uppercase;
 }
 
+
+/*
+ * Body copy
+ *
+ * Neue Stance keeps longer text readable.
+ */
 p {
-  margin: 0;
+  margin:
+    0;
+
+  font-family:
+    'Neue Stance',
+    sans-serif;
 
   color:
     var(--text-dim);
+
+  font-weight:
+    400;
 }
 
+
+/*
+ * Links inherit the surrounding typography.
+ */
 a {
   color:
     inherit;
@@ -217,6 +406,11 @@ a {
     none;
 }
 
+
+/*
+ * Buttons inherit the base UI type,
+ * then receive their own technical styling below.
+ */
 button {
   font:
     inherit;
@@ -224,6 +418,7 @@ button {
   cursor:
     pointer;
 }
+
 
 img,
 svg {
@@ -265,6 +460,7 @@ svg {
   padding-inline:
     32px;
 }
+
 
 .container-wide {
   width:
@@ -355,6 +551,7 @@ svg {
     rgba(5, 8, 22, 0.68);
 }
 
+
 #tracks,
 #prize,
 #sponsors,
@@ -372,6 +569,30 @@ svg {
 .section-heading {
   position:
     relative;
+}
+
+
+/*
+ * Section heading labels / eyebrow text.
+ *
+ * Any small technical label placed inside a section
+ * can use the mono treatment.
+ */
+.section-heading .eyebrow,
+.section-heading .kicker,
+.section-heading .code {
+  font-family:
+    'Space Mono',
+    monospace;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.16em;
+
+  text-transform:
+    uppercase;
 }
 
 
@@ -482,11 +703,18 @@ svg {
   border-radius:
     var(--radius-sm);
 
+  /*
+   * Technical spacecraft-interface typography.
+   */
+  font-family:
+    'Space Mono',
+    monospace;
+
   font-size:
-    0.82rem;
+    0.76rem;
 
   font-weight:
-    650;
+    700;
 
   letter-spacing:
     0.08em;
@@ -517,6 +745,7 @@ svg {
     var(--glow-cyan);
 }
 
+
 .btn-primary:hover {
   background:
     var(--cyan-soft);
@@ -541,6 +770,7 @@ svg {
     1px solid var(--border-cosmic);
 }
 
+
 .btn-secondary:hover {
   color:
     var(--stellar-cyan);
@@ -554,18 +784,137 @@ svg {
 
 
 /* =========================================================
+   GLOBAL TECHNICAL UI
+   ========================================================= */
+
+/*
+ * Technical metadata, counters, coordinates,
+ * status indicators and small interface text.
+ */
+[data-mono],
+.mono,
+.technical,
+.telemetry,
+.metadata,
+.status,
+.counter {
+  font-family:
+    'Space Mono',
+    monospace;
+}
+
+
+/*
+ * Small uppercase cosmic labels.
+ */
+[data-label],
+.cosmic-label {
+  font-family:
+    'Space Mono',
+    monospace;
+
+  font-size:
+    0.68rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.16em;
+
+  text-transform:
+    uppercase;
+}
+
+
+/* =========================================================
    UTILITY CLASSES
    ========================================================= */
 
+.font-display {
+  font-family:
+    'Nasalization',
+    sans-serif;
+}
+
+
+.font-body {
+  font-family:
+    'Neue Stance',
+    sans-serif;
+}
+
+
 .font-mono {
   font-family:
-    var(--font-mono);
+    'Space Mono',
+    monospace;
 }
+
+
+.font-cosmic-display {
+  font-family:
+    'Nasalization',
+    sans-serif;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    -0.035em;
+
+  text-transform:
+    uppercase;
+}
+
+
+.font-cosmic-body {
+  font-family:
+    'Neue Stance',
+    sans-serif;
+
+  font-weight:
+    400;
+}
+
+
+.font-cosmic-mono {
+  font-family:
+    'Space Mono',
+    monospace;
+
+  font-weight:
+    400;
+
+  letter-spacing:
+    0.08em;
+}
+
+
+.font-cosmic-label {
+  font-family:
+    'Space Mono',
+    monospace;
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.16em;
+
+  text-transform:
+    uppercase;
+}
+
 
 .text-cyan {
   color:
     var(--stellar-cyan);
 }
+
 
 .text-muted {
   color:
@@ -578,11 +927,13 @@ svg {
    ========================================================= */
 
 @media (max-width: 900px) {
+
   .container,
   .container-wide {
     padding-inline:
       22px;
   }
+
 
   .section {
     padding:
@@ -596,15 +947,42 @@ svg {
    ========================================================= */
 
 @media (max-width: 600px) {
+
   .container,
   .container-wide {
     padding-inline:
       18px;
   }
 
+
   .section {
     padding:
       72px 0;
+  }
+
+
+  /*
+   * Slightly reduce display-heading tracking on
+   * narrow screens so Nasalization doesn't feel cramped.
+   */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing:
+      -0.025em;
+  }
+
+
+  .btn-primary,
+  .btn-secondary {
+    font-size:
+      0.68rem;
+
+    letter-spacing:
+      0.06em;
   }
 }
 
@@ -614,10 +992,12 @@ svg {
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
+
   html {
     scroll-behavior:
       auto;
   }
+
 
   *,
   *::before,
