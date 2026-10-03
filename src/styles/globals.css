@@ -1,38 +1,20 @@
 /* =========================================================
    RESURRACTION — GLOBAL COSMIC BLUE THEME
-
-   IMPORTANT:
-   HeroSection.tsx
-   ScrollVideoBackground.tsx
-   Hero video
-   Hero logo
-
-   are intentionally NOT modified here.
    ========================================================= */
+
+/*
+  IMPORTANT:
+
+  HeroSection.tsx
+  ScrollVideoBackground.tsx
+  Hero video
+  Hero logo
+
+  are intentionally NOT modified here.
+*/
 
 @import './tokens.css';
 @import './animations.css';
-
-/* =========================================================
-   ROCKY — GLOBAL COSMIC CURSOR
-   ========================================================= */
-
-html,
-body,
-#root,
-.app-container {
-  cursor: url('/assets/about/rocky.png') 16 16, auto !important;
-}
-
-button,
-a,
-input,
-textarea,
-select,
-[role='button'],
-[tabindex] {
-  cursor: url('/assets/about/rocky.png') 16 16, pointer !important;
-}
 
 
 /* =========================================================
@@ -40,129 +22,103 @@ select,
    ========================================================= */
 
 /*
- * Display
+ * DISPLAY
  * -------
  * Futuristic aerospace / sci-fi identity.
  */
+
 @font-face {
   font-family: 'Nasalization';
-
   src:
-    url('/fonts/nasalization/Nasalization-Regular.woff2') format('woff2');
-
+    url('/fonts/nasalization/Nasalization-Regular.woff2')
+    format('woff2');
   font-weight: 400;
-
   font-style: normal;
-
   font-display: swap;
 }
 
-
 @font-face {
   font-family: 'Nasalization';
-
   src:
-    url('/fonts/nasalization/Nasalization-Bold.woff2') format('woff2');
-
+    url('/fonts/nasalization/Nasalization-Bold.woff2')
+    format('woff2');
   font-weight: 700;
-
   font-style: normal;
-
   font-display: swap;
 }
 
 
 /*
- * Body
+ * BODY
  * ----
  * Used for readable paragraphs and general content.
  */
+
 @font-face {
   font-family: 'Neue Stance';
-
   src:
-    url('/fonts/neue-stance/NeueStance-Regular.woff2') format('woff2');
-
+    url('/fonts/neue-stance/NeueStance-Regular.woff2')
+    format('woff2');
   font-weight: 400;
-
   font-style: normal;
-
   font-display: swap;
 }
 
-
 @font-face {
   font-family: 'Neue Stance';
-
   src:
-    url('/fonts/neue-stance/NeueStance-Medium.woff2') format('woff2');
-
+    url('/fonts/neue-stance/NeueStance-Medium.woff2')
+    format('woff2');
   font-weight: 500;
-
   font-style: normal;
-
   font-display: swap;
 }
 
-
 @font-face {
   font-family: 'Neue Stance';
-
   src:
-    url('/fonts/neue-stance/NeueStance-SemiBold.woff2') format('woff2');
-
+    url('/fonts/neue-stance/NeueStance-SemiBold.woff2')
+    format('woff2');
   font-weight: 600;
-
   font-style: normal;
-
   font-display: swap;
 }
 
-
 @font-face {
   font-family: 'Neue Stance';
-
   src:
-    url('/fonts/neue-stance/NeueStance-Bold.woff2') format('woff2');
-
+    url('/fonts/neue-stance/NeueStance-Bold.woff2')
+    format('woff2');
   font-weight: 700;
-
   font-style: normal;
-
   font-display: swap;
 }
 
 
 /*
- * Technical
+ * TECHNICAL
  * ---------
  * Used for telemetry, labels, navigation metadata,
  * numbers, buttons and interface elements.
  */
+
 @font-face {
   font-family: 'Space Mono';
-
   src:
-    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Regular.woff2') format('woff2');
-
+    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Regular.woff2')
+    format('woff2');
   font-weight: 400;
-
   font-style: normal;
-
   font-display: swap;
 }
 
-
 @font-face {
   font-family: 'Space Mono';
-
   src:
-    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Bold.woff2') format('woff2');
-
+    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Bold.woff2')
+    format('woff2');
   font-weight: 700;
-
   font-style: normal;
-
   font-display: swap;
 }
 
@@ -172,14 +128,12 @@ select,
    ========================================================= */
 
 * {
-  box-sizing:
-    border-box;
+  box-sizing: border-box;
 }
 
 *::before,
 *::after {
-  box-sizing:
-    border-box;
+  box-sizing: border-box;
 }
 
 
@@ -188,8 +142,7 @@ select,
    ========================================================= */
 
 html {
-  scroll-behavior:
-    smooth;
+  scroll-behavior: smooth;
 
   scroll-padding-top:
     var(--header-height);
@@ -206,8 +159,7 @@ html {
 
 
 body {
-  margin:
-    0;
+  margin: 0;
 
   min-height:
     100vh;
@@ -226,18 +178,24 @@ body {
     var(--text);
 
   background:
-    radial-gradient(circle at 75% 8%,
+    radial-gradient(
+      circle at 75% 8%,
       rgba(59, 130, 246, 0.10),
-      transparent 28%),
+      transparent 28%
+    ),
 
-    radial-gradient(circle at 15% 42%,
+    radial-gradient(
+      circle at 15% 42%,
       rgba(139, 92, 246, 0.055),
-      transparent 30%),
+      transparent 30%
+    ),
 
-    linear-gradient(180deg,
+    linear-gradient(
+      180deg,
       #050816 0%,
       #060a18 45%,
-      #050816 100%);
+      #050816 100%
+    );
 
   line-height:
     1.6;
@@ -255,8 +213,7 @@ body {
    ========================================================= */
 
 body::before {
-  content:
-    '';
+  content: '';
 
   position:
     fixed;
@@ -274,20 +231,26 @@ body::before {
     0.24;
 
   background-image:
-    linear-gradient(rgba(96, 165, 250, 0.055) 1px,
-      transparent 1px),
-
-    linear-gradient(90deg,
+    linear-gradient(
       rgba(96, 165, 250, 0.055) 1px,
-      transparent 1px);
+      transparent 1px
+    ),
+
+    linear-gradient(
+      90deg,
+      rgba(96, 165, 250, 0.055) 1px,
+      transparent 1px
+    );
 
   background-size:
     72px 72px;
 
   mask-image:
-    linear-gradient(to bottom,
+    linear-gradient(
+      to bottom,
       black,
-      transparent 85%);
+      transparent 85%
+    );
 }
 
 
@@ -313,12 +276,10 @@ body::before {
     7px;
 }
 
-
 ::-webkit-scrollbar-track {
   background:
     var(--canvas-deep);
 }
-
 
 ::-webkit-scrollbar-thumb {
   background:
@@ -327,7 +288,6 @@ body::before {
   border-radius:
     99px;
 }
-
 
 ::-webkit-scrollbar-thumb:hover {
   background:
@@ -345,6 +305,7 @@ body::before {
  * Nasalization gives the site its futuristic
  * aerospace / deep-space identity.
  */
+
 h1,
 h2,
 h3,
@@ -380,6 +341,7 @@ h6 {
  *
  * Neue Stance keeps longer text readable.
  */
+
 p {
   margin:
     0;
@@ -399,6 +361,7 @@ p {
 /*
  * Links inherit the surrounding typography.
  */
+
 a {
   color:
     inherit;
@@ -412,6 +375,7 @@ a {
  * Buttons inherit the base UI type,
  * then receive their own technical styling below.
  */
+
 button {
   font:
     inherit;
@@ -527,9 +491,11 @@ svg {
     50%;
 
   background:
-    radial-gradient(circle,
+    radial-gradient(
+      circle,
       rgba(34, 211, 238, 0.055),
-      transparent 68%);
+      transparent 68%
+    );
 
   pointer-events:
     none;
@@ -549,7 +515,6 @@ svg {
   background:
     rgba(5, 8, 22, 0.68);
 }
-
 
 #tracks,
 #prize,
@@ -577,6 +542,7 @@ svg {
  * Any small technical label placed inside a section
  * can use the mono treatment.
  */
+
 .section-heading .eyebrow,
 .section-heading .kicker,
 .section-heading .code {
@@ -604,9 +570,11 @@ svg {
     relative;
 
   background:
-    linear-gradient(145deg,
+    linear-gradient(
+      145deg,
       rgba(17, 25, 54, 0.90),
-      rgba(8, 13, 30, 0.82));
+      rgba(8, 13, 30, 0.82)
+    );
 
   border:
     1px solid var(--border-subtle);
@@ -617,7 +585,6 @@ svg {
   overflow:
     hidden;
 }
-
 
 .cosmic-panel::before {
   content:
@@ -633,12 +600,13 @@ svg {
     none;
 
   background:
-    linear-gradient(120deg,
+    linear-gradient(
+      120deg,
       rgba(34, 211, 238, 0.06),
       transparent 32%,
-      rgba(139, 92, 246, 0.045));
+      rgba(139, 92, 246, 0.045)
+    );
 }
-
 
 .cosmic-panel:hover {
   border-color:
@@ -740,7 +708,6 @@ svg {
     var(--glow-cyan);
 }
 
-
 .btn-primary:hover {
   background:
     var(--cyan-soft);
@@ -765,7 +732,6 @@ svg {
     1px solid var(--border-cosmic);
 }
 
-
 .btn-secondary:hover {
   color:
     var(--stellar-cyan);
@@ -786,6 +752,7 @@ svg {
  * Technical metadata, counters, coordinates,
  * status indicators and small interface text.
  */
+
 [data-mono],
 .mono,
 .technical,
@@ -802,6 +769,7 @@ svg {
 /*
  * Small uppercase cosmic labels.
  */
+
 [data-label],
 .cosmic-label {
   font-family:
@@ -832,20 +800,17 @@ svg {
     sans-serif;
 }
 
-
 .font-body {
   font-family:
     'Neue Stance',
     sans-serif;
 }
 
-
 .font-mono {
   font-family:
     'Space Mono',
     monospace;
 }
-
 
 .font-cosmic-display {
   font-family:
@@ -862,7 +827,6 @@ svg {
     uppercase;
 }
 
-
 .font-cosmic-body {
   font-family:
     'Neue Stance',
@@ -871,7 +835,6 @@ svg {
   font-weight:
     400;
 }
-
 
 .font-cosmic-mono {
   font-family:
@@ -884,7 +847,6 @@ svg {
   letter-spacing:
     0.08em;
 }
-
 
 .font-cosmic-label {
   font-family:
@@ -904,12 +866,10 @@ svg {
     uppercase;
 }
 
-
 .text-cyan {
   color:
     var(--stellar-cyan);
 }
-
 
 .text-muted {
   color:
@@ -922,13 +882,11 @@ svg {
    ========================================================= */
 
 @media (max-width: 900px) {
-
   .container,
   .container-wide {
     padding-inline:
       22px;
   }
-
 
   .section {
     padding:
@@ -942,24 +900,22 @@ svg {
    ========================================================= */
 
 @media (max-width: 600px) {
-
   .container,
   .container-wide {
     padding-inline:
       18px;
   }
 
-
   .section {
     padding:
       72px 0;
   }
 
-
   /*
    * Slightly reduce display-heading tracking on
    * narrow screens so Nasalization doesn't feel cramped.
    */
+
   h1,
   h2,
   h3,
@@ -969,7 +925,6 @@ svg {
     letter-spacing:
       -0.025em;
   }
-
 
   .btn-primary,
   .btn-secondary {
@@ -987,12 +942,10 @@ svg {
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-
   html {
     scroll-behavior:
       auto;
   }
-
 
   *,
   *::before,
@@ -1008,45 +961,121 @@ svg {
   }
 }
 
+
 /* =========================================================
    ROCKY CUSTOM WEBSITE CURSOR
    ========================================================= */
 
-html,
-body,
-#root,
-.app-container,
-.app-container * {
+/*
+ * Normal Rocky:
+ *   56 × 56 px
+ *
+ * Hover / pointer Rocky:
+ *   46 × 46 px
+ *
+ * Small enough to behave like a cursor,
+ * but large enough for Rocky to remain visible.
+ */
+
+
+/* ---------------------------------------------------------
+   Hide native browser cursor while Rocky exists
+   --------------------------------------------------------- */
+
+body:has(.rocky-custom-cursor),
+html:has(.rocky-custom-cursor) {
   cursor: none !important;
 }
 
+body:has(.rocky-custom-cursor) *,
+html:has(.rocky-custom-cursor) * {
+  cursor: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   Rocky base
+   --------------------------------------------------------- */
+
 .rocky-custom-cursor {
-  position: fixed;
+  position: fixed !important;
 
-  left: 0;
-  top: 0;
+  left: 0 !important;
+  top: 0 !important;
 
-  width: 64px;
-  height: 64px;
+  width: 56px !important;
+  height: 56px !important;
 
-  opacity: 1;
+  min-width: 56px !important;
+  min-height: 56px !important;
 
-  object-fit: contain;
+  max-width: none !important;
+  max-height: none !important;
 
-  pointer-events: none;
+  display: block !important;
 
-  z-index: 2147483647;
+  object-fit: contain !important;
+  object-position: center !important;
 
-  user-select: none;
+  pointer-events: none !important;
 
-  will-change: transform;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
 
-  transform: translate3d(-100px, -100px, 0);
+  opacity: 1 !important;
+  visibility: visible !important;
 
-  /*
-   * Your Rocky image has a light background.
-   * This makes the white portion visually disappear
-   * against darker areas of the website.
-   */
-  mix-blend-mode: screen;
+  z-index: 2147483647 !important;
+
+  will-change:
+    transform,
+    width,
+    height;
+
+  transform:
+    translate3d(-200px, -200px, 0);
+
+  transition:
+    width 160ms ease,
+    height 160ms ease,
+    filter 160ms ease;
+}
+
+
+/* ---------------------------------------------------------
+   Normal Rocky
+   --------------------------------------------------------- */
+
+.rocky-custom-cursor:not(
+  .rocky-custom-cursor--pointer
+) {
+  width: 80px !important;
+  height: 80px !important;
+
+  filter:
+    drop-shadow(
+      0 2px 5px
+      rgba(0, 0, 0, 0.42)
+    );
+}
+
+
+/* ---------------------------------------------------------
+   Pointer / hover Rocky
+   --------------------------------------------------------- */
+
+.rocky-custom-cursor--pointer {
+  width: 80px !important;
+  height: 80px !important;
+
+  filter:
+    drop-shadow(
+      0 2px 5px
+      rgba(0, 0, 0, 0.45)
+    )
+    drop-shadow(
+      0 0 7px
+      rgba(103, 232, 249, 0.30)
+    );
 }

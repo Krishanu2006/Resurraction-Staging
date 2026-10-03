@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Header } from './components/layout/Header';
 import { HeroSection } from './components/hero/HeroSection';
@@ -13,45 +13,93 @@ import { RulesSection } from './components/sections/RulesSection';
 import { FAQSection } from './components/sections/FAQSection';
 
 import { Footer } from './components/layout/Footer';
+
 import { RockyCursor } from './components/ui/RockyCursor';
+import { BootLoader } from './components/ui/BootLoader';
+import { ThemeSelector } from './components/ui/ThemeSelector';
 
 const App: React.FC = () => {
+  const [bootComplete, setBootComplete] =
+    useState(false);
+
+  const [themeSelected, setThemeSelected] =
+    useState(false);
+
+  const handleBootComplete = useCallback(() => {
+    setBootComplete(true);
+  }, []);
+
   return (
-    <div
-      className="app-container"
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--void)',
-      }}
-    >
-      {/* Rocky custom cursor */}
-      <RockyCursor />
+    <>
+      {/* =====================================================
+          BOOTLOADER
+         ===================================================== */}
 
-      <Header />
+      {!bootComplete && (
+        <BootLoader
+          onComplete={handleBootComplete}
+        />
+      )}
 
-      <main id="main-content">
-        <HeroSection />
+      {/* =====================================================
+          THEME SELECTOR
+         ===================================================== */}
 
-        {/* About section must be active so its cinematic layer is visible */}
-        <AboutSection active />
+      {bootComplete && !themeSelected && (
+        <ThemeSelector
+          onSelect={() => {
+            setThemeSelected(true);
+          }}
+        />
+      )}
 
-        <TracksSection />
+      {/* =====================================================
+          MAIN WEBSITE
+         ===================================================== */}
 
-        <PrizesSection />
+      {bootComplete && themeSelected && (
+        <div
+          className="app-container"
+          style={{
+            minHeight: '100vh',
+            backgroundColor: 'var(--void)',
+          }}
+        >
+          <Header />
 
-        <TimelineSection />
+          <main id="main-content">
+            <HeroSection />
 
-        <SponsorsSection />
+            <AboutSection active />
 
-        <JurySection />
+            <TracksSection />
 
-        <RulesSection />
+            <PrizesSection />
 
-        <FAQSection />
-      </main>
+            <TimelineSection />
 
-      <Footer />
-    </div>
+            <SponsorsSection />
+
+            <JurySection />
+
+            <RulesSection />
+
+            <FAQSection />
+          </main>
+
+          <Footer />
+        </div>
+      )}
+
+      {/* =====================================================
+          ROCKY CURSOR
+          MUST BE LAST SO IT STAYS ABOVE EVERYTHING
+         ===================================================== */}
+
+      {bootComplete && (
+        <RockyCursor />
+      )}
+    </>
   );
 };
 
