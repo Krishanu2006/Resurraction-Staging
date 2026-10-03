@@ -13,6 +13,27 @@
 @import './tokens.css';
 @import './animations.css';
 
+/* =========================================================
+   ROCKY — GLOBAL COSMIC CURSOR
+   ========================================================= */
+
+html,
+body,
+#root,
+.app-container {
+  cursor: url('/assets/about/rocky.png') 16 16, auto !important;
+}
+
+button,
+a,
+input,
+textarea,
+select,
+[role='button'],
+[tabindex] {
+  cursor: url('/assets/about/rocky.png') 16 16, pointer !important;
+}
+
 
 /* =========================================================
    LOCAL COSMIC FONT SYSTEM
@@ -27,8 +48,7 @@
   font-family: 'Nasalization';
 
   src:
-    url('/fonts/nasalization/Nasalization-Regular.woff2')
-    format('woff2');
+    url('/fonts/nasalization/Nasalization-Regular.woff2') format('woff2');
 
   font-weight: 400;
 
@@ -42,8 +62,7 @@
   font-family: 'Nasalization';
 
   src:
-    url('/fonts/nasalization/Nasalization-Bold.woff2')
-    format('woff2');
+    url('/fonts/nasalization/Nasalization-Bold.woff2') format('woff2');
 
   font-weight: 700;
 
@@ -62,8 +81,7 @@
   font-family: 'Neue Stance';
 
   src:
-    url('/fonts/neue-stance/NeueStance-Regular.woff2')
-    format('woff2');
+    url('/fonts/neue-stance/NeueStance-Regular.woff2') format('woff2');
 
   font-weight: 400;
 
@@ -77,8 +95,7 @@
   font-family: 'Neue Stance';
 
   src:
-    url('/fonts/neue-stance/NeueStance-Medium.woff2')
-    format('woff2');
+    url('/fonts/neue-stance/NeueStance-Medium.woff2') format('woff2');
 
   font-weight: 500;
 
@@ -92,8 +109,7 @@
   font-family: 'Neue Stance';
 
   src:
-    url('/fonts/neue-stance/NeueStance-SemiBold.woff2')
-    format('woff2');
+    url('/fonts/neue-stance/NeueStance-SemiBold.woff2') format('woff2');
 
   font-weight: 600;
 
@@ -107,8 +123,7 @@
   font-family: 'Neue Stance';
 
   src:
-    url('/fonts/neue-stance/NeueStance-Bold.woff2')
-    format('woff2');
+    url('/fonts/neue-stance/NeueStance-Bold.woff2') format('woff2');
 
   font-weight: 700;
 
@@ -128,8 +143,7 @@
   font-family: 'Space Mono';
 
   src:
-    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Regular.woff2')
-    format('woff2');
+    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Regular.woff2') format('woff2');
 
   font-weight: 400;
 
@@ -143,8 +157,7 @@
   font-family: 'Space Mono';
 
   src:
-    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Bold.woff2')
-    format('woff2');
+    url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Bold.woff2') format('woff2');
 
   font-weight: 700;
 
@@ -213,24 +226,18 @@ body {
     var(--text);
 
   background:
-    radial-gradient(
-      circle at 75% 8%,
+    radial-gradient(circle at 75% 8%,
       rgba(59, 130, 246, 0.10),
-      transparent 28%
-    ),
+      transparent 28%),
 
-    radial-gradient(
-      circle at 15% 42%,
+    radial-gradient(circle at 15% 42%,
       rgba(139, 92, 246, 0.055),
-      transparent 30%
-    ),
+      transparent 30%),
 
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       #050816 0%,
       #060a18 45%,
-      #050816 100%
-    );
+      #050816 100%);
 
   line-height:
     1.6;
@@ -267,26 +274,20 @@ body::before {
     0.24;
 
   background-image:
-    linear-gradient(
-      rgba(96, 165, 250, 0.055) 1px,
-      transparent 1px
-    ),
+    linear-gradient(rgba(96, 165, 250, 0.055) 1px,
+      transparent 1px),
 
-    linear-gradient(
-      90deg,
+    linear-gradient(90deg,
       rgba(96, 165, 250, 0.055) 1px,
-      transparent 1px
-    );
+      transparent 1px);
 
   background-size:
     72px 72px;
 
   mask-image:
-    linear-gradient(
-      to bottom,
+    linear-gradient(to bottom,
       black,
-      transparent 85%
-    );
+      transparent 85%);
 }
 
 
@@ -526,11 +527,9 @@ svg {
     50%;
 
   background:
-    radial-gradient(
-      circle,
+    radial-gradient(circle,
       rgba(34, 211, 238, 0.055),
-      transparent 68%
-    );
+      transparent 68%);
 
   pointer-events:
     none;
@@ -605,11 +604,9 @@ svg {
     relative;
 
   background:
-    linear-gradient(
-      145deg,
+    linear-gradient(145deg,
       rgba(17, 25, 54, 0.90),
-      rgba(8, 13, 30, 0.82)
-    );
+      rgba(8, 13, 30, 0.82));
 
   border:
     1px solid var(--border-subtle);
@@ -636,12 +633,10 @@ svg {
     none;
 
   background:
-    linear-gradient(
-      120deg,
+    linear-gradient(120deg,
       rgba(34, 211, 238, 0.06),
       transparent 32%,
-      rgba(139, 92, 246, 0.045)
-    );
+      rgba(139, 92, 246, 0.045));
 }
 
 
@@ -1011,4 +1006,47 @@ svg {
     transition-duration:
       0.01ms !important;
   }
+}
+
+/* =========================================================
+   ROCKY CUSTOM WEBSITE CURSOR
+   ========================================================= */
+
+html,
+body,
+#root,
+.app-container,
+.app-container * {
+  cursor: none !important;
+}
+
+.rocky-custom-cursor {
+  position: fixed;
+
+  left: 0;
+  top: 0;
+
+  width: 64px;
+  height: 64px;
+
+  opacity: 1;
+
+  object-fit: contain;
+
+  pointer-events: none;
+
+  z-index: 2147483647;
+
+  user-select: none;
+
+  will-change: transform;
+
+  transform: translate3d(-100px, -100px, 0);
+
+  /*
+   * Your Rocky image has a light background.
+   * This makes the white portion visually disappear
+   * against darker areas of the website.
+   */
+  mix-blend-mode: screen;
 }

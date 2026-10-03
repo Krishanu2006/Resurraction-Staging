@@ -2127,3 +2127,22 @@
       none;
   }
 }
+
+/* TEMPORARY ABOUT VISIBILITY FIX */
+
+#about.about-scroll-section {
+  display: block !important;
+  position: relative !important;
+  min-height: 430vh !important;
+  height: 430vh !important;
+  visibility: visible !important;
+}
+
+#about .about-scroll-sticky {
+  position: sticky !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  visibility: visible !important;
+}
