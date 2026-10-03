@@ -88,7 +88,7 @@ export const RockyCursor: React.FC = () => {
 
       cursor.style.transform =
         `translate3d(
-          ${currentX + 10}px,
+          ${currentX - 10}px,
           ${currentY + 10}px,
           0
         )`;

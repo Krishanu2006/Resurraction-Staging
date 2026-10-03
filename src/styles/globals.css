@@ -967,18 +967,14 @@ svg {
    ========================================================= */
 
 /*
- * The custom Rocky image is rendered by RockyCursor.tsx.
+ * Normal Rocky:
+ *   56 × 56 px
  *
- * Normal:
- *   rocky.png
- *   42 × 42 px
+ * Hover / pointer Rocky:
+ *   46 × 46 px
  *
- * Hover / pointer:
- *   rocky-pointer.png
- *   32 × 32 px
- *
- * The cursor is intentionally small so it behaves
- * like a real pointer instead of covering the UI.
+ * Small enough to behave like a cursor,
+ * but large enough for Rocky to remain visible.
  */
 
 
@@ -988,14 +984,12 @@ svg {
 
 body:has(.rocky-custom-cursor),
 html:has(.rocky-custom-cursor) {
-  cursor:
-    none !important;
+  cursor: none !important;
 }
 
 body:has(.rocky-custom-cursor) *,
 html:has(.rocky-custom-cursor) * {
-  cursor:
-    none !important;
+  cursor: none !important;
 }
 
 
@@ -1004,62 +998,35 @@ html:has(.rocky-custom-cursor) * {
    --------------------------------------------------------- */
 
 .rocky-custom-cursor {
-  position:
-    fixed !important;
+  position: fixed !important;
 
-  left:
-    0 !important;
+  left: 0 !important;
+  top: 0 !important;
 
-  top:
-    0 !important;
+  width: 56px !important;
+  height: 56px !important;
 
-  width:
-    42px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
 
-  height:
-    42px !important;
+  max-width: none !important;
+  max-height: none !important;
 
-  min-width:
-    42px !important;
+  display: block !important;
 
-  min-height:
-    42px !important;
+  object-fit: contain !important;
+  object-position: center !important;
 
-  max-width:
-    none !important;
+  pointer-events: none !important;
 
-  max-height:
-    none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
 
-  display:
-    block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 
-  object-fit:
-    contain !important;
-
-  object-position:
-    center !important;
-
-  pointer-events:
-    none !important;
-
-  user-select:
-    none !important;
-
-  -webkit-user-select:
-    none !important;
-
-  -webkit-user-drag:
-    none !important;
-
-  opacity:
-    1 !important;
-
-  visibility:
-    visible !important;
-
-  z-index:
-    2147483647 !important;
+  z-index: 2147483647 !important;
 
   will-change:
     transform,
@@ -1083,16 +1050,13 @@ html:has(.rocky-custom-cursor) * {
 .rocky-custom-cursor:not(
   .rocky-custom-cursor--pointer
 ) {
-  width:
-    42px !important;
-
-  height:
-    42px !important;
+  width: 80px !important;
+  height: 80px !important;
 
   filter:
     drop-shadow(
-      0 2px 4px
-      rgba(0, 0, 0, 0.40)
+      0 2px 5px
+      rgba(0, 0, 0, 0.42)
     );
 }
 
@@ -1102,20 +1066,16 @@ html:has(.rocky-custom-cursor) * {
    --------------------------------------------------------- */
 
 .rocky-custom-cursor--pointer {
-  width:
-    32px !important;
-
-  height:
-    32px !important;
+  width: 80px !important;
+  height: 80px !important;
 
   filter:
     drop-shadow(
-      0 2px 4px
+      0 2px 5px
       rgba(0, 0, 0, 0.45)
     )
-
     drop-shadow(
-      0 0 6px
-      rgba(103, 232, 249, 0.28)
+      0 0 7px
+      rgba(103, 232, 249, 0.30)
     );
 }
