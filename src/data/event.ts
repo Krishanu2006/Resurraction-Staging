@@ -22,8 +22,8 @@ export const eventData: EventData = {
   missionStatement: "RESURRECTION is a flagship hackathon engineered to unite visionary student builders, engineers, and creators. Guided by scientific rigor and high-stakes problem solving, our mission parameters will push algorithmic and hardware ingenuity.",
   phase: "Pre-announcement / Coming Soon",
   status: "coming-soon",
-  technicalStatus: "SIGNAL DETECTED // MISSION INITIALIZING",
+  technicalStatus: "SIGNAL DETECTED - MISSION INITIALIZING",
   technicalSubtext: "A NEW BUILDING MISSION IS APPROACHING",
   venue: "Institute of Engineering & Management (IEM), Kolkata",
-  edition: "2027 // STAGING",
+  edition: "2027 - STAGING",
 };

@@ -35,7 +35,7 @@ export const rulesData: RuleCategory[] = [
       {
         id: "rule-el-2",
         title: "INSTITUTIONAL CRITERIA",
-        description: "DETAILED CRITERIA // TO BE ANNOUNCED.",
+        description: "DETAILED CRITERIA - TO BE ANNOUNCED.",
         status: "coming-soon",
       },
     ],
@@ -56,7 +56,7 @@ export const rulesData: RuleCategory[] = [
       {
         id: "rule-tm-2",
         title: "CROSS-INSTITUTION TEAMS",
-        description: "POLICY SPECIFICATION // TO BE ANNOUNCED.",
+        description: "POLICY SPECIFICATION - TO BE ANNOUNCED.",
         status: "coming-soon",
       },
     ],
@@ -77,7 +77,7 @@ export const rulesData: RuleCategory[] = [
       {
         id: "rule-sub-2",
         title: "REPOSITORY & TELEMETRY REQUIREMENTS",
-        description: "DELIVERABLE FORMAT // TO BE ANNOUNCED.",
+        description: "DELIVERABLE FORMAT - TO BE ANNOUNCED.",
         status: "coming-soon",
       },
     ],

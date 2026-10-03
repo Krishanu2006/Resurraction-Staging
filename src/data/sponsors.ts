@@ -11,7 +11,7 @@ export interface SponsorTier {
 }
 
 export const sponsorsOverview = {
-  headerBadge: "PARTNERS // INCOMING",
+  headerBadge: "PARTNERS - INCOMING",
   title: "MISSION PARTNERS & SPONSORS",
   description: "Partnership inquiries and corporate sponsorships are currently undergoing mission clearance. Tier slots will feature leading technology innovators, industry leaders, and developer tools.",
   inquiryNotice: "Interested in supporting the next generation of builders? Official partnership channels will be announced shortly.",
@@ -25,7 +25,7 @@ export const sponsorTiers: SponsorTier[] = [
     slots: [
       {
         id: "title-slot-1",
-        label: "PARTNER // INCOMING",
+        label: "PARTNER - INCOMING",
         status: "incoming",
         note: "CLEARANCE IN PROGRESS",
       },
@@ -38,13 +38,13 @@ export const sponsorTiers: SponsorTier[] = [
     slots: [
       {
         id: "plat-slot-1",
-        label: "PARTNER // INCOMING",
+        label: "PARTNER - INCOMING",
         status: "incoming",
         note: "CLEARANCE IN PROGRESS",
       },
       {
         id: "plat-slot-2",
-        label: "PARTNER // INCOMING",
+        label: "PARTNER - INCOMING",
         status: "incoming",
         note: "CLEARANCE IN PROGRESS",
       },
@@ -57,19 +57,19 @@ export const sponsorTiers: SponsorTier[] = [
     slots: [
       {
         id: "gold-slot-1",
-        label: "PARTNER // INCOMING",
+        label: "PARTNER - INCOMING",
         status: "incoming",
         note: "CLEARANCE IN PROGRESS",
       },
       {
         id: "gold-slot-2",
-        label: "PARTNER // INCOMING",
+        label: "PARTNER - INCOMING",
         status: "incoming",
         note: "CLEARANCE IN PROGRESS",
       },
       {
         id: "gold-slot-3",
-        label: "PARTNER // INCOMING",
+        label: "PARTNER - INCOMING",
         status: "incoming",
         note: "CLEARANCE IN PROGRESS",
       },

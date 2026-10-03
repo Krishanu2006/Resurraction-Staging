@@ -287,7 +287,7 @@
   align-items: center;
   gap: 10px;
 
-  font-family: 'JetBrains Mono', monospace;
+  font-family: sans-serif;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.15em;
@@ -341,7 +341,7 @@
   gap: 9px;
   margin-bottom: 22px;
 
-  font-family: 'JetBrains Mono', monospace;
+  font-family: sans-serif;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -397,7 +397,7 @@
 
 .about-greeting-card h2 {
   margin: 0;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: sans-serif;
   font-size: clamp(2.4rem, 5vw, 5rem);
   line-height: 0.95;
   letter-spacing: -0.055em;
@@ -406,7 +406,7 @@
 
 .about-greeting-card h3 {
   margin: 8px 0 0;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: sans-serif;
   font-size: clamp(2rem, 4vw, 4.2rem);
   line-height: 1;
   letter-spacing: -0.05em;
@@ -465,7 +465,7 @@
 
 .about-heading {
   margin: 0;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: sans-serif;
   font-size: clamp(2.8rem, 5.2vw, 5.7rem);
   line-height: 0.9;
   letter-spacing: -0.065em;
@@ -495,7 +495,7 @@
   gap: 13px;
   margin-top: 30px;
 
-  font-family: 'JetBrains Mono', monospace;
+  font-family: sans-serif;
   font-size: 9px;
   letter-spacing: 0.15em;
   color: rgba(170, 181, 214, 0.52);
@@ -541,7 +541,7 @@
 }
 
 .about-feature strong {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: sans-serif;
   font-size: 10px;
   letter-spacing: 0.16em;
   color: #f8fbff;
@@ -595,7 +595,7 @@
 }
 
 .about-small-card strong {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: sans-serif;
   font-size: 10px;
   letter-spacing: 0.16em;
   color: #f8fbff;
@@ -625,7 +625,7 @@
   display: block;
   margin-bottom: 22px;
 
-  font-family: 'JetBrains Mono', monospace;
+  font-family: sans-serif;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.24em;
@@ -634,7 +634,7 @@
 
 .about-closing h2 {
   margin: 0;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: sans-serif;
   font-size: clamp(3.2rem, 7vw, 7.4rem);
   line-height: 0.86;
   letter-spacing: -0.07em;
@@ -662,7 +662,7 @@
   gap: 13px;
   margin-top: 38px;
 
-  font-family: 'JetBrains Mono', monospace;
+  font-family: sans-serif;
   font-size: 8px;
   letter-spacing: 0.2em;
   color: rgba(170, 181, 214, 0.55);

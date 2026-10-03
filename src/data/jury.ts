@@ -17,7 +17,7 @@ export const juryOverview = {
 export const juryMembersData: JuryMember[] = [
   {
     id: "jury-seat-01",
-    seatCode: "EVAL-SEAT // 01",
+    seatCode: "EVAL-SEAT - 01",
     name: "JURY MEMBER",
     role: "ACADEMIC & RESEARCH EVALUATOR",
     organization: "ANNOUNCEMENT PENDING",
@@ -25,7 +25,7 @@ export const juryMembersData: JuryMember[] = [
   },
   {
     id: "jury-seat-02",
-    seatCode: "EVAL-SEAT // 02",
+    seatCode: "EVAL-SEAT - 02",
     name: "JURY MEMBER",
     role: "INDUSTRY ARCHITECT",
     organization: "ANNOUNCEMENT PENDING",
@@ -33,7 +33,7 @@ export const juryMembersData: JuryMember[] = [
   },
   {
     id: "jury-seat-03",
-    seatCode: "EVAL-SEAT // 03",
+    seatCode: "EVAL-SEAT - 03",
     name: "JURY MEMBER",
     role: "ENGINEERING DIRECTOR",
     organization: "ANNOUNCEMENT PENDING",
@@ -41,7 +41,7 @@ export const juryMembersData: JuryMember[] = [
   },
   {
     id: "jury-seat-04",
-    seatCode: "EVAL-SEAT // 04",
+    seatCode: "EVAL-SEAT - 04",
     name: "JURY MEMBER",
     role: "TECHNICAL DOMAIN SPECIALIST",
     organization: "ANNOUNCEMENT PENDING",

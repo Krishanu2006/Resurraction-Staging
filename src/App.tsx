@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import { MissionIntro } from './components/hero/MissionIntro';
+// import { MissionIntro } from './components/hero/MissionIntro';
 import { Header } from './components/layout/Header';
 
 import { HeroSection } from './components/hero/HeroSection';
@@ -57,7 +57,7 @@ const App: React.FC = () => {
           INTRO
           ===================================================== */}
 
-      <MissionIntro />
+      {/* <MissionIntro /> */}
 
       {/* =====================================================
           GLOBAL NAVIGATION
