@@ -104,7 +104,7 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
         className="
           resurrection-boot__video
         "
-        src="/assets/hero/scroll-space-background.mp4.mp4"
+        src="/assets/hero/scroll-space-background.mp4"
         autoPlay
         muted
         loop
