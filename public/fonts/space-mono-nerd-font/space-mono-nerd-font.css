@@ -1,0 +1,109 @@
+/* SpaceMono Nerd Font (Nerd Font patched, from Fontsource) */
+
+@font-face {
+  font-family: "SpaceMono Nerd Font";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFont-Regular.woff2") format("woff2"),
+       url("./SpaceMonoNerdFont-Regular.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFont-Italic.woff2") format("woff2"),
+       url("./SpaceMonoNerdFont-Italic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFont-Bold.woff2") format("woff2"),
+       url("./SpaceMonoNerdFont-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFont-BoldItalic.woff2") format("woff2"),
+       url("./SpaceMonoNerdFont-BoldItalic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontMono-Regular.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontMono-Regular.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Mono";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontMono-Italic.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontMono-Italic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontMono-Bold.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontMono-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Mono";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontMono-BoldItalic.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontMono-BoldItalic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Propo";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontPropo-Regular.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontPropo-Regular.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Propo";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontPropo-Italic.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontPropo-Italic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Propo";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontPropo-Bold.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontPropo-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "SpaceMono Nerd Font Propo";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./SpaceMonoNerdFontPropo-BoldItalic.woff2") format("woff2"),
+       url("./SpaceMonoNerdFontPropo-BoldItalic.woff") format("woff");
+}
