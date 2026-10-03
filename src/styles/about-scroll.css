@@ -1,139 +1,328 @@
 /* =========================================================
    RESURRACTION
-   ABOUT — CINEMATIC SCROLL
+   ABOUT — CINEMATIC SPACE SCROLL
    ========================================================= */
 
-   /* =========================================================
-   ABOUT — ONE-SHOT FADE-IN
-   =========================================================
-   The sticky viewport starts at opacity 0 and stays that
-   way until the parent flips `active` to true (which happens
-   the instant the hero completes).
 
-   When `active` flips, the class `about-scroll-sticky--active`
-   is applied and this element fades in over 600ms with a
-   gentle ease-out curve. No scroll-linked opacity is used —
-   the fade is entirely time-based.
-*/
-
-.about-scroll-sticky {
-  opacity: 0;
-  will-change: opacity;
-}
-
-.about-scroll-sticky.about-scroll-sticky--active {
-  animation: aboutStickyFadeIn 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes aboutStickyFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .about-scroll-sticky.about-scroll-sticky--active {
-    animation: none;
-    opacity: 1;
-  }
-}
+/* =========================================================
+   SECTION
+   ========================================================= */
 
 .about-scroll-section {
   position: relative;
+
   width: 100%;
+
   height: 430vh;
-  background: #050816;
+
+  /*
+   * Same deep-space base as the Hero.
+   */
+  background: #030510;
 }
+
+
+/* =========================================================
+   STICKY VIEWPORT
+   ========================================================= */
 
 .about-scroll-sticky {
   position: sticky;
-  top: 0;
-  width: 100%;
-  height: 100vh;
-  height: 100svh;
-  overflow: hidden;
-  isolation: isolate;
-  background: #02040c;
 
-  /* Promote to its own compositing layer once. */
-  transform: translateZ(0);
+  top: 0;
+
+  width: 100%;
+
+  height: 100vh;
+
+  height: 100svh;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  background: #030510;
+
+  opacity: 0;
+
+  transform:
+    translate3d(
+      0,
+      16px,
+      0
+    )
+    scale(0.994);
+
+  filter:
+    blur(1.5px);
+
+  will-change:
+    opacity,
+    transform,
+    filter;
 }
+
+
+/* =========================================================
+   ABOUT ENTRANCE
+   ========================================================= */
+
+.about-scroll-sticky.about-scroll-sticky--active {
+  animation:
+    aboutStickyFadeIn
+    1100ms
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    forwards;
+}
+
+
+@keyframes aboutStickyFadeIn {
+
+  0% {
+    opacity: 0;
+
+    transform:
+      translate3d(
+        0,
+        16px,
+        0
+      )
+      scale(0.994);
+
+    filter:
+      blur(1.5px);
+  }
+
+  45% {
+    opacity: 0.7;
+
+    transform:
+      translate3d(
+        0,
+        4px,
+        0
+      )
+      scale(0.998);
+
+    filter:
+      blur(0.55px);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      )
+      scale(1);
+
+    filter:
+      blur(0);
+  }
+}
+
+
+/* =========================================================
+   SIDE-ONLY BLENDING
+   =========================================================
+
+   IMPORTANT:
+   There is NO top fade here.
+
+   The center and top of About remain untouched.
+
+   Only the left and right edges are feathered.
+   ========================================================= */
+
+.about-scroll-sticky::after {
+  content: '';
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 12;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      to right,
+
+      #030510 0%,
+
+      rgba(
+        3,
+        5,
+        16,
+        0.90
+      ) 2.5%,
+
+      rgba(
+        3,
+        5,
+        16,
+        0.62
+      ) 6%,
+
+      rgba(
+        3,
+        5,
+        16,
+        0.22
+      ) 12%,
+
+      transparent 19%,
+
+      transparent 81%,
+
+      rgba(
+        3,
+        5,
+        16,
+        0.22
+      ) 88%,
+
+      rgba(
+        3,
+        5,
+        16,
+        0.62
+      ) 94%,
+
+      rgba(
+        3,
+        5,
+        16,
+        0.90
+      ) 97.5%,
+
+      #030510 100%
+    );
+}
+
+
+/* =========================================================
+   VIDEO LAYER
+   ========================================================= */
+
+.about-video-layer {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 2;
+
+  overflow: hidden;
+
+  background: #030510;
+
+  pointer-events: none;
+}
+
 
 /* =========================================================
    VIDEO
    ========================================================= */
-   /* =========================================================
-   HERO → ABOUT BACKGROUND TRANSITION
-   ========================================================= */
-
-.about-entry-background {
-  position: absolute;
-  inset: 0;
-
-  /*
-   * Sits behind Rocky.
-   */
-  z-index: 0;
-
-  pointer-events: none;
-
-  /*
-   * This is the actual About background that
-   * fades in immediately after the Hero ends.
-   */
-  background:
-    radial-gradient(
-      ellipse at 50% 42%,
-      rgba(12, 27, 65, 0.72) 0%,
-      rgba(5, 8, 22, 0.94) 48%,
-      #050816 100%
-    );
-
-  opacity: 0;
-
-  will-change: opacity;
-
-  transform: translateZ(0);
-
-  isolation: isolate;
-}
-
-.about-video-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  background: #02040c;
-}
 
 .about-scroll-video {
   position: absolute;
-  top: 50%;
-  left: 50%;
 
-  width: min(120vw, 2300px);
-  height: min(120vh, 1300px);
+  inset: 0;
+
+  width: 100%;
+
+  height: 100%;
 
   max-width: none;
+
   max-height: none;
 
+  /*
+   * Keep the full video visible.
+   */
   object-fit: contain;
-  object-position: center center;
 
-  transform: translate3d(-50%, -50%, 0);
+  object-position:
+    center center;
 
   display: block;
+
   pointer-events: none;
+
   user-select: none;
 
-  filter: brightness(0.94) contrast(1.03) saturate(0.97);
+  transform:
+    translate3d(
+      0,
+      0,
+      0
+    );
 
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  filter:
+    brightness(0.88)
+    contrast(1.03)
+    saturate(0.92);
+
+  backface-visibility:
+    hidden;
+
+  -webkit-backface-visibility:
+    hidden;
+
+  will-change:
+    transform;
 }
+
+
+/* =========================================================
+   SOFT ATMOSPHERIC GLOW
+   ========================================================= */
+
+.about-video-layer::before {
+  content: '';
+
+  position: absolute;
+
+  inset: -15%;
+
+  z-index: 6;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 46%,
+
+      rgba(
+        34,
+        211,
+        238,
+        0.055
+      ) 0%,
+
+      rgba(
+        59,
+        130,
+        246,
+        0.025
+      ) 28%,
+
+      transparent 65%
+    );
+
+  mix-blend-mode:
+    screen;
+}
+
 
 /* =========================================================
    VIDEO DARKEN
@@ -141,12 +330,25 @@
 
 .about-video-darken {
   position: absolute;
+
   inset: 0;
-  z-index: 3;
-  background: rgba(2, 4, 12, 0.92);
+
+  z-index: 7;
+
+  background:
+    rgba(
+      2,
+      4,
+      12,
+      0.90
+    );
+
   pointer-events: none;
-  will-change: opacity;
+
+  will-change:
+    opacity;
 }
+
 
 /* =========================================================
    VIGNETTE
@@ -154,42 +356,122 @@
 
 .about-video-vignette {
   position: absolute;
+
   inset: 0;
-  z-index: 4;
+
+  z-index: 8;
+
   pointer-events: none;
 
-  background: radial-gradient(
-    ellipse at center,
-    transparent 30%,
-    rgba(2, 4, 12, 0.1) 56%,
-    rgba(2, 4, 12, 0.62) 100%
-  );
+  background:
+    radial-gradient(
+      ellipse at center,
+
+      transparent 20%,
+
+      rgba(
+        2,
+        4,
+        12,
+        0.08
+      ) 42%,
+
+      rgba(
+        2,
+        4,
+        12,
+        0.40
+      ) 70%,
+
+      rgba(
+        2,
+        4,
+        12,
+        0.86
+      ) 100%
+    );
 
   box-shadow:
-    inset 0 100px 130px rgba(2, 4, 12, 0.52),
-    inset 0 -100px 150px rgba(2, 4, 12, 0.66);
+
+    inset
+    0 120px
+    150px
+    rgba(
+      2,
+      4,
+      12,
+      0.48
+    ),
+
+    inset
+    0 -130px
+    170px
+    rgba(
+      2,
+      4,
+      12,
+      0.82
+    );
 }
 
+
 /* =========================================================
-   BOTTOM FADE
+   BOTTOM OF ABOUT VIDEO
    ========================================================= */
 
 .about-video-bottom-fade {
   position: absolute;
+
   left: 0;
+
   right: 0;
+
   bottom: 0;
-  height: 30vh;
-  z-index: 5;
+
+  height: 44%;
+
+  z-index: 10;
+
   pointer-events: none;
 
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(5, 8, 22, 0.48) 60%,
-    #050816 100%
-  );
+  background:
+    linear-gradient(
+      to bottom,
+
+      transparent 0%,
+
+      rgba(
+        5,
+        8,
+        22,
+        0.08
+      ) 18%,
+
+      rgba(
+        5,
+        8,
+        22,
+        0.20
+      ) 35%,
+
+      rgba(
+        5,
+        8,
+        22,
+        0.48
+      ) 55%,
+
+      rgba(
+        3,
+        5,
+        16,
+        0.80
+      ) 76%,
+
+      #030510 100%
+    );
 }
+
 
 /* =========================================================
    STARS
@@ -197,49 +479,87 @@
 
 .about-star {
   position: absolute;
-  z-index: 7;
+
+  z-index: 18;
+
   width: 3px;
+
   height: 3px;
+
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
 
   box-shadow:
-    0 0 8px rgba(103, 232, 249, 0.75),
-    0 0 20px rgba(59, 130, 246, 0.4);
+    0 0 8px
+    rgba(
+      103,
+      232,
+      249,
+      0.55
+    );
 
   pointer-events: none;
-  animation: aboutStarPulse 4.5s ease-in-out infinite;
-  will-change: opacity, transform;
+
+  animation:
+    aboutStarPulse
+    4.5s
+    ease-in-out
+    infinite;
 }
+
 
 .about-star-1 {
   top: 18%;
+
   left: 15%;
 }
 
+
 .about-star-2 {
   top: 29%;
+
   right: 18%;
-  animation-delay: 1.4s;
+
+  animation-delay:
+    1.4s;
 }
+
 
 .about-star-3 {
   bottom: 24%;
+
   left: 28%;
-  animation-delay: 2.5s;
+
+  animation-delay:
+    2.5s;
 }
 
+
 @keyframes aboutStarPulse {
+
   0%,
   100% {
     opacity: 0.25;
-    transform: scale(0.7);
+
+    transform:
+      scale(0.7);
   }
+
   50% {
     opacity: 1;
-    transform: scale(1.35);
+
+    transform:
+      scale(1.35);
   }
 }
+
 
 /* =========================================================
    ORBITS
@@ -247,68 +567,67 @@
 
 .about-orbit {
   position: absolute;
-  z-index: 6;
+
+  z-index: 17;
+
   border-radius: 50%;
-  border: 1px solid rgba(103, 232, 249, 0.08);
+
+  border:
+    1px solid
+    rgba(
+      103,
+      232,
+      249,
+      0.055
+    );
+
   pointer-events: none;
 }
+
 
 .about-orbit-1 {
   width: 42vw;
+
   height: 42vw;
+
   min-width: 400px;
+
   min-height: 400px;
+
   right: -18vw;
+
   top: 10%;
-  transform: rotate(23deg);
+
+  transform:
+    rotate(23deg);
 }
+
 
 .about-orbit-2 {
   width: 27vw;
+
   height: 27vw;
+
   min-width: 280px;
+
   min-height: 280px;
+
   left: -13vw;
+
   bottom: 5%;
-  border-color: rgba(139, 92, 246, 0.1);
-  transform: rotate(-20deg);
+
+  border-color:
+    rgba(
+      139,
+      92,
+      246,
+      0.07
+    );
+
+  transform:
+    rotate(-20deg);
 }
 
-/* =========================================================
-   TELEMETRY
-   ========================================================= */
-
-.about-telemetry {
-  position: absolute;
-  top: 92px;
-  left: clamp(20px, 4vw, 70px);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  font-family: sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  color: rgba(217, 226, 244, 0.62);
-
-  pointer-events: none;
-}
-
-.about-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #22d3ee;
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
-}
-
-.about-telemetry-line {
-  width: 50px;
-  height: 1px;
-  background: rgba(103, 232, 249, 0.25);
-}
 
 /* =========================================================
    SCENES
@@ -316,20 +635,30 @@
 
 .about-scene {
   position: absolute;
+
   inset: 0;
-  z-index: 20;
+
+  z-index: 30;
+
   display: flex;
+
   align-items: center;
-  padding: 130px clamp(22px, 7vw, 110px) 70px;
 
-  /* No CSS transition — JS drives every frame. */
-  transition: none;
+  padding:
+    130px
+    clamp(
+      22px,
+      7vw,
+      110px
+    )
+    70px;
 
-  transform-origin: center center;
+  transform-origin:
+    center center;
 
-  /* Start hidden so React doesn't paint them until needed. */
   opacity: 0;
 }
+
 
 /* =========================================================
    KICKER
@@ -337,127 +666,333 @@
 
 .about-kicker {
   display: flex;
+
   align-items: center;
+
   gap: 9px;
+
   margin-bottom: 22px;
 
-  font-family: sans-serif;
+  font-family:
+    sans-serif;
+
   font-size: 10px;
+
   font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #67e8f9;
+
+  letter-spacing:
+    0.18em;
+
+  color:
+    #67e8f9;
 }
+
 
 /* =========================================================
    GREETING
    ========================================================= */
 
 .about-greeting-scene {
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding-top: 20vh;
+  align-items:
+    flex-start;
+
+  justify-content:
+    flex-start;
+
+  padding-top:
+    20vh;
 }
+
 
 .about-greeting-card {
-  position: relative;
-  width: min(580px, 48vw);
-  padding: clamp(25px, 3.3vw, 44px);
+  position:
+    relative;
 
-  border: 1px solid rgba(103, 232, 249, 0.22);
-  border-radius: 5px 28px 5px 28px;
+  width:
+    min(
+      580px,
+      48vw
+    );
 
-  background: linear-gradient(
-    135deg,
-    rgba(5, 8, 22, 0.82),
-    rgba(7, 16, 39, 0.62)
-  );
+  padding:
+    clamp(
+      25px,
+      3.3vw,
+      44px
+    );
+
+  border:
+    1px solid
+    rgba(
+      103,
+      232,
+      249,
+      0.18
+    );
+
+  border-radius:
+    5px 28px 5px 28px;
+
+  background:
+    linear-gradient(
+      135deg,
+
+      rgba(
+        5,
+        8,
+        22,
+        0.86
+      ),
+
+      rgba(
+        7,
+        16,
+        39,
+        0.64
+      )
+    );
 
   box-shadow:
-    0 30px 100px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 30px
+    100px
+    rgba(
+      0,
+      0,
+      0,
+      0.40
+    ),
 
-  /* backdrop-filter removed — it forces the GPU to recompose
-     the blurred backdrop every scroll frame, which is one of
-     the biggest causes of stutter here. The translucent
-     gradient alone gives the same visual result with no cost. */
-
-  transform: translateZ(0);
+    inset
+    0 1px 0
+    rgba(
+      255,
+      255,
+      255,
+      0.04
+    );
 }
+
 
 .about-greeting-card::before {
   content: '';
-  position: absolute;
-  top: -1px;
-  left: 30px;
-  width: 100px;
-  height: 1px;
-  background: linear-gradient(90deg, #22d3ee, transparent);
-  box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+
+  position:
+    absolute;
+
+  top:
+    -1px;
+
+  left:
+    30px;
+
+  width:
+    100px;
+
+  height:
+    1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #22d3ee,
+      transparent
+    );
+
+  box-shadow:
+    0 0 15px
+    rgba(
+      34,
+      211,
+      238,
+      0.42
+    );
 }
+
 
 .about-greeting-card h2 {
   margin: 0;
-  font-family: sans-serif;
-  font-size: clamp(2.4rem, 5vw, 5rem);
-  line-height: 0.95;
-  letter-spacing: -0.055em;
-  color: #f8fbff;
+
+  font-family:
+    sans-serif;
+
+  font-size:
+    clamp(
+      2.4rem,
+      5vw,
+      5rem
+    );
+
+  line-height:
+    0.95;
+
+  letter-spacing:
+    -0.055em;
+
+  color:
+    #f8fbff;
 }
+
 
 .about-greeting-card h3 {
-  margin: 8px 0 0;
-  font-family: sans-serif;
-  font-size: clamp(2rem, 4vw, 4.2rem);
-  line-height: 1;
-  letter-spacing: -0.05em;
-  color: #67e8f9;
+  margin:
+    8px 0 0;
+
+  font-family:
+    sans-serif;
+
+  font-size:
+    clamp(
+      2rem,
+      4vw,
+      4.2rem
+    );
+
+  line-height:
+    1;
+
+  letter-spacing:
+    -0.05em;
+
+  color:
+    #67e8f9;
 }
 
+
 .about-greeting-card p {
-  margin: 23px 0 0;
-  max-width: 410px;
-  font-size: clamp(0.9rem, 1vw, 1.05rem);
-  line-height: 1.7;
-  color: rgba(217, 226, 244, 0.7);
+  margin:
+    23px 0 0;
+
+  max-width:
+    410px;
+
+  font-size:
+    clamp(
+      0.9rem,
+      1vw,
+      1.05rem
+    );
+
+  line-height:
+    1.7;
+
+  color:
+    rgba(
+      217,
+      226,
+      244,
+      0.7
+    );
 }
+
 
 /* =========================================================
    CONTENT CARD
    ========================================================= */
 
 .about-content-card {
-  position: relative;
-  width: min(650px, 48vw);
-  padding: clamp(28px, 3.5vw, 50px);
+  position:
+    relative;
 
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 5px 30px 5px 30px;
+  width:
+    min(
+      650px,
+      48vw
+    );
 
-  background: linear-gradient(
-    145deg,
-    rgba(5, 8, 22, 0.84),
-    rgba(11, 16, 34, 0.62)
-  );
+  padding:
+    clamp(
+      28px,
+      3.5vw,
+      50px
+    );
+
+  border:
+    1px solid
+    rgba(
+      148,
+      163,
+      184,
+      0.13
+    );
+
+  border-radius:
+    5px 30px 5px 30px;
+
+  background:
+    linear-gradient(
+      145deg,
+
+      rgba(
+        5,
+        8,
+        22,
+        0.86
+      ),
+
+      rgba(
+        11,
+        16,
+        34,
+        0.64
+      )
+    );
 
   box-shadow:
-    0 30px 100px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    0 30px
+    100px
+    rgba(
+      0,
+      0,
+      0,
+      0.38
+    ),
 
-  /* backdrop-filter removed (same reason as greeting card). */
-
-  transform: translateZ(0);
+    inset
+    0 1px 0
+    rgba(
+      255,
+      255,
+      255,
+      0.04
+    );
 }
+
 
 .about-content-card::before {
   content: '';
-  position: absolute;
-  top: -1px;
-  left: 30px;
-  width: 100px;
-  height: 1px;
-  background: linear-gradient(90deg, #60a5fa, transparent);
-  box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
+
+  position:
+    absolute;
+
+  top:
+    -1px;
+
+  left:
+    30px;
+
+  width:
+    100px;
+
+  height:
+    1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #60a5fa,
+      transparent
+    );
+
+  box-shadow:
+    0 0 15px
+    rgba(
+      96,
+      165,
+      250,
+      0.35
+    );
 }
+
 
 /* =========================================================
    HEADINGS
@@ -465,420 +1000,948 @@
 
 .about-heading {
   margin: 0;
-  font-family: sans-serif;
-  font-size: clamp(2.8rem, 5.2vw, 5.7rem);
-  line-height: 0.9;
-  letter-spacing: -0.065em;
-  color: #f8fbff;
+
+  font-family:
+    sans-serif;
+
+  font-size:
+    clamp(
+      2.8rem,
+      5.2vw,
+      5.7rem
+    );
+
+  line-height:
+    0.9;
+
+  letter-spacing:
+    -0.065em;
+
+  color:
+    #f8fbff;
 }
+
 
 .about-heading span {
-  color: #60a5fa;
+  color:
+    #60a5fa;
 }
 
+
 .about-description {
-  max-width: 550px;
-  margin: 25px 0 0;
-  font-size: clamp(0.9rem, 1.05vw, 1.08rem);
-  line-height: 1.78;
-  color: rgba(217, 226, 244, 0.7);
+  max-width:
+    550px;
+
+  margin:
+    25px 0 0;
+
+  font-size:
+    clamp(
+      0.9rem,
+      1.05vw,
+      1.08rem
+    );
+
+  line-height:
+    1.78;
+
+  color:
+    rgba(
+      217,
+      226,
+      244,
+      0.7
+    );
 }
+
 
 /* =========================================================
    META
    ========================================================= */
 
 .about-meta {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 13px;
-  margin-top: 30px;
+  display:
+    grid;
 
-  font-family: sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  color: rgba(170, 181, 214, 0.52);
+  grid-template-columns:
+    auto 1fr auto;
+
+  align-items:
+    center;
+
+  gap:
+    13px;
+
+  margin-top:
+    30px;
+
+  font-family:
+    sans-serif;
+
+  font-size:
+    9px;
+
+  letter-spacing:
+    0.15em;
+
+  color:
+    rgba(
+      170,
+      181,
+      214,
+      0.52
+    );
 }
+
 
 .about-meta div {
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(103, 232, 249, 0.35),
-    transparent
-  );
+  height:
+    1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(
+        103,
+        232,
+        249,
+        0.35
+      ),
+      transparent
+    );
 }
 
+
 .about-meta strong {
-  color: rgba(103, 232, 249, 0.75);
+  color:
+    rgba(
+      103,
+      232,
+      249,
+      0.75
+    );
 }
+
 
 /* =========================================================
    MISSION
    ========================================================= */
 
 .about-mission-scene {
-  justify-content: flex-end;
+  justify-content:
+    flex-end;
 }
+
 
 .about-feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 9px;
-  margin-top: 30px;
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      1fr
+    );
+
+  gap:
+    9px;
+
+  margin-top:
+    30px;
 }
+
 
 .about-feature {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 120px;
-  padding: 18px;
-  border: 1px solid rgba(103, 232, 249, 0.12);
-  background: rgba(7, 16, 39, 0.42);
-  color: #67e8f9;
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    10px;
+
+  min-height:
+    120px;
+
+  padding:
+    18px;
+
+  border:
+    1px solid
+    rgba(
+      103,
+      232,
+      249,
+      0.10
+    );
+
+  background:
+    rgba(
+      7,
+      16,
+      39,
+      0.46
+    );
+
+  color:
+    #67e8f9;
 }
+
 
 .about-feature strong {
-  font-family: sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: #f8fbff;
+  font-family:
+    sans-serif;
+
+  font-size:
+    10px;
+
+  letter-spacing:
+    0.16em;
+
+  color:
+    #f8fbff;
 }
 
+
 .about-feature span {
-  font-size: 0.76rem;
-  line-height: 1.55;
-  color: rgba(217, 226, 244, 0.6);
+  font-size:
+    0.76rem;
+
+  line-height:
+    1.55;
+
+  color:
+    rgba(
+      217,
+      226,
+      244,
+      0.6
+    );
 }
+
 
 /* =========================================================
    DETAILS
    ========================================================= */
 
 .about-details-scene {
-  justify-content: center;
+  justify-content:
+    center;
 }
+
 
 .about-details-wrapper {
-  width: min(1100px, 90vw);
-  display: grid;
-  grid-template-columns: 1.5fr 0.75fr;
-  gap: 12px;
+  width:
+    min(
+      1100px,
+      90vw
+    );
+
+  display:
+    grid;
+
+  grid-template-columns:
+    1.5fr 0.75fr;
+
+  gap:
+    12px;
 }
+
 
 .about-details-main {
-  grid-row: span 2;
-  width: 100%;
+  grid-row:
+    span 2;
+
+  width:
+    100%;
 }
+
 
 .about-small-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 9px;
-  min-height: 150px;
-  padding: 24px;
+  display:
+    flex;
 
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  flex-direction:
+    column;
 
-  background: linear-gradient(
-    135deg,
-    rgba(5, 8, 22, 0.78),
-    rgba(11, 16, 34, 0.55)
-  );
+  justify-content:
+    center;
 
-  /* backdrop-filter removed. */
+  gap:
+    9px;
 
-  color: #67e8f9;
+  min-height:
+    150px;
+
+  padding:
+    24px;
+
+  border:
+    1px solid
+    rgba(
+      148,
+      163,
+      184,
+      0.12
+    );
+
+  background:
+    linear-gradient(
+      135deg,
+
+      rgba(
+        5,
+        8,
+        22,
+        0.80
+      ),
+
+      rgba(
+        11,
+        16,
+        34,
+        0.58
+      )
+    );
+
+  color:
+    #67e8f9;
 }
+
 
 .about-small-card strong {
-  font-family: sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: #f8fbff;
+  font-family:
+    sans-serif;
+
+  font-size:
+    10px;
+
+  letter-spacing:
+    0.16em;
+
+  color:
+    #f8fbff;
 }
 
+
 .about-small-card span {
-  max-width: 290px;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: rgba(217, 226, 244, 0.6);
+  max-width:
+    290px;
+
+  font-size:
+    0.8rem;
+
+  line-height:
+    1.6;
+
+  color:
+    rgba(
+      217,
+      226,
+      244,
+      0.6
+    );
 }
+
 
 /* =========================================================
    CLOSING
    ========================================================= */
 
 .about-closing-scene {
-  justify-content: center;
-  text-align: center;
+  justify-content:
+    center;
+
+  text-align:
+    center;
 }
+
 
 .about-closing {
-  max-width: 900px;
+  max-width:
+    900px;
 }
+
 
 .about-closing-label {
-  display: block;
-  margin-bottom: 22px;
+  display:
+    block;
 
-  font-family: sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  color: #67e8f9;
+  margin-bottom:
+    22px;
+
+  font-family:
+    sans-serif;
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.24em;
+
+  color:
+    #67e8f9;
 }
+
 
 .about-closing h2 {
-  margin: 0;
-  font-family: sans-serif;
-  font-size: clamp(3.2rem, 7vw, 7.4rem);
-  line-height: 0.86;
-  letter-spacing: -0.07em;
-  color: #f8fbff;
+  margin:
+    0;
+
+  font-family:
+    sans-serif;
+
+  font-size:
+    clamp(
+      3.2rem,
+      7vw,
+      7.4rem
+    );
+
+  line-height:
+    0.86;
+
+  letter-spacing:
+    -0.07em;
+
+  color:
+    #f8fbff;
 }
+
 
 .about-closing h2 span {
-  background: linear-gradient(90deg, #67e8f9, #60a5fa, #8b5cf6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background:
+    linear-gradient(
+      90deg,
+      #67e8f9,
+      #60a5fa,
+      #8b5cf6
+    );
+
+  -webkit-background-clip:
+    text;
+
+  background-clip:
+    text;
+
+  color:
+    transparent;
 }
+
 
 .about-closing p {
-  margin: 28px auto 0;
-  font-size: clamp(0.9rem, 1.05vw, 1.05rem);
-  line-height: 1.7;
-  color: rgba(217, 226, 244, 0.62);
+  margin:
+    28px auto 0;
+
+  font-size:
+    clamp(
+      0.9rem,
+      1.05vw,
+      1.05rem
+    );
+
+  line-height:
+    1.7;
+
+  color:
+    rgba(
+      217,
+      226,
+      244,
+      0.62
+    );
 }
+
 
 .about-continue {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 13px;
-  margin-top: 38px;
+  display:
+    flex;
 
-  font-family: sans-serif;
-  font-size: 8px;
-  letter-spacing: 0.2em;
-  color: rgba(170, 181, 214, 0.55);
+  flex-direction:
+    column;
+
+  align-items:
+    center;
+
+  gap:
+    13px;
+
+  margin-top:
+    38px;
+
+  font-family:
+    sans-serif;
+
+  font-size:
+    8px;
+
+  letter-spacing:
+    0.2em;
+
+  color:
+    rgba(
+      170,
+      181,
+      214,
+      0.55
+    );
 }
+
 
 .about-continue div {
-  width: 1px;
-  height: 46px;
-  background: linear-gradient(to bottom, #22d3ee, transparent);
+  width:
+    1px;
+
+  height:
+    46px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #22d3ee,
+      transparent
+    );
 }
+
 
 /* =========================================================
    PROGRESS
    ========================================================= */
 
 .about-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  pointer-events: none;
+  position:
+    absolute;
+
+  left:
+    0;
+
+  right:
+    0;
+
+  bottom:
+    0;
+
+  z-index:
+    100;
+
+  height:
+    2px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.035
+    );
+
+  pointer-events:
+    none;
 }
+
 
 .about-progress > div {
-  width: 100%;
-  height: 100%;
-  transform-origin: left center;
+  width:
+    100%;
 
-  background: linear-gradient(90deg, #22d3ee, #3b82f6, #8b5cf6);
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.45);
+  height:
+    100%;
 
-  will-change: transform;
+  transform-origin:
+    left center;
+
+  background:
+    linear-gradient(
+      90deg,
+      #22d3ee,
+      #3b82f6,
+      #8b5cf6
+    );
+
+  box-shadow:
+    0 0 12px
+    rgba(
+      34,
+      211,
+      238,
+      0.35
+    );
+
+  will-change:
+    transform;
 }
+
 
 /* =========================================================
    TABLET
    ========================================================= */
 
-@media (max-width: 1000px) {
-  .about-scroll-video {
-    width: 130vw;
-    height: 130vh;
-  }
+@media (
+  max-width: 1000px
+) {
 
   .about-greeting-card,
   .about-content-card {
-    width: 58vw;
+    width:
+      58vw;
   }
 
+
   .about-details-wrapper {
-    width: 90vw;
+    width:
+      90vw;
   }
 }
+
 
 /* =========================================================
    MOBILE
    ========================================================= */
 
-@media (max-width: 720px) {
+@media (
+  max-width: 720px
+) {
+
   .about-scroll-section {
-    height: 460vh;
+    height:
+      460vh;
   }
+
 
   .about-scroll-video {
-    width: 150vw;
-    height: 150vh;
-    object-fit: contain;
+    width:
+      100%;
+
+    height:
+      100%;
+
+    object-fit:
+      contain;
+
+    object-position:
+      center center;
   }
 
-  .about-telemetry {
-    top: 78px;
-    left: 18px;
-    font-size: 8px;
-    letter-spacing: 0.1em;
+
+  /*
+   * Keep side blending on mobile,
+   * but make it narrower.
+   */
+  .about-scroll-sticky::after {
+    background:
+      linear-gradient(
+        to right,
+
+        #030510 0%,
+
+        rgba(
+          3,
+          5,
+          16,
+          0.72
+        ) 4%,
+
+        rgba(
+          3,
+          5,
+          16,
+          0.25
+        ) 10%,
+
+        transparent 16%,
+
+        transparent 84%,
+
+        rgba(
+          3,
+          5,
+          16,
+          0.25
+        ) 90%,
+
+        rgba(
+          3,
+          5,
+          16,
+          0.72
+        ) 96%,
+
+        #030510 100%
+      );
   }
 
-  .about-telemetry-line {
-    display: none;
+
+  .about-video-bottom-fade {
+    height:
+      48%;
   }
+
 
   .about-scene {
-    padding: 110px 18px 60px;
+    padding:
+      110px
+      18px
+      60px;
   }
+
 
   .about-greeting-scene {
-    align-items: flex-end;
-    padding-bottom: 80px;
+    align-items:
+      flex-end;
+
+    padding-bottom:
+      80px;
   }
+
 
   .about-greeting-card {
-    width: 100%;
-    padding: 23px;
-    border-radius: 4px 20px 4px 20px;
+    width:
+      100%;
+
+    padding:
+      23px;
+
+    border-radius:
+      4px 20px 4px 20px;
   }
+
 
   .about-greeting-card h2 {
-    font-size: clamp(2.3rem, 11vw, 4.5rem);
+    font-size:
+      clamp(
+        2.3rem,
+        11vw,
+        4.5rem
+      );
   }
+
 
   .about-greeting-card h3 {
-    font-size: clamp(2rem, 9vw, 3.8rem);
+    font-size:
+      clamp(
+        2rem,
+        9vw,
+        3.8rem
+      );
   }
+
 
   .about-content-card {
-    width: 100%;
-    padding: 25px 21px;
-    border-radius: 4px 20px 4px 20px;
+    width:
+      100%;
+
+    padding:
+      25px 21px;
+
+    border-radius:
+      4px 20px 4px 20px;
   }
+
 
   .about-heading {
-    font-size: clamp(2.7rem, 12vw, 5rem);
+    font-size:
+      clamp(
+        2.7rem,
+        12vw,
+        5rem
+      );
   }
+
 
   .about-description {
-    font-size: 0.86rem;
-    line-height: 1.65;
+    font-size:
+      0.86rem;
+
+    line-height:
+      1.65;
   }
+
 
   .about-mission-scene {
-    justify-content: center;
+    justify-content:
+      center;
   }
+
 
   .about-feature-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
+    grid-template-columns:
+      repeat(
+        3,
+        1fr
+      );
+
+    gap:
+      5px;
   }
+
 
   .about-feature {
-    min-height: 95px;
-    padding: 11px;
+    min-height:
+      95px;
+
+    padding:
+      11px;
   }
+
 
   .about-feature span {
-    font-size: 0.65rem;
+    font-size:
+      0.65rem;
   }
+
 
   .about-feature strong {
-    font-size: 8px;
+    font-size:
+      8px;
   }
+
 
   .about-details-wrapper {
-    width: 100%;
-    grid-template-columns: 1fr;
+    width:
+      100%;
+
+    grid-template-columns:
+      1fr;
   }
+
 
   .about-details-main {
-    grid-row: auto;
+    grid-row:
+      auto;
   }
+
 
   .about-small-card {
-    min-height: 90px;
-    padding: 17px;
+    min-height:
+      90px;
+
+    padding:
+      17px;
   }
 
-  .about-details-wrapper .about-small-card:last-child {
-    display: none;
+
+  .about-details-wrapper
+  .about-small-card:last-child {
+    display:
+      none;
   }
+
 
   .about-closing h2 {
-    font-size: clamp(3.4rem, 16vw, 6rem);
+    font-size:
+      clamp(
+        3.4rem,
+        16vw,
+        6rem
+      );
   }
+
 
   .about-orbit-1 {
-    right: -70vw;
+    right:
+      -70vw;
   }
 
+
   .about-orbit-2 {
-    left: -60vw;
+    left:
+      -60vw;
   }
 }
+
 
 /* =========================================================
    SMALL MOBILE
    ========================================================= */
 
-@media (max-width: 430px) {
+@media (
+  max-width: 430px
+) {
+
   .about-scroll-section {
-    height: 480vh;
+    height:
+      480vh;
   }
+
 
   .about-scroll-video {
-    width: 165vw;
-    height: 165vh;
+    width:
+      100%;
+
+    height:
+      100%;
+
+    object-fit:
+      contain;
+
+    object-position:
+      center center;
   }
+
 
   .about-kicker {
-    font-size: 8px;
-    letter-spacing: 0.13em;
+    font-size:
+      8px;
+
+    letter-spacing:
+      0.13em;
   }
+
 
   .about-meta {
-    font-size: 7px;
+    font-size:
+      7px;
   }
+
 
   .about-feature span {
-    display: none;
+    display:
+      none;
   }
+
 
   .about-feature {
-    min-height: 72px;
+    min-height:
+      72px;
   }
 
+
   .about-small-card {
-    min-height: 80px;
+    min-height:
+      80px;
   }
 }
+
 
 /* =========================================================
    REDUCED MOTION
    ========================================================= */
 
-@media (prefers-reduced-motion: reduce) {
+@media (
+  prefers-reduced-motion: reduce
+) {
+
+  .about-scroll-sticky.about-scroll-sticky--active {
+    animation:
+      none;
+
+    opacity:
+      1;
+
+    transform:
+      none;
+
+    filter:
+      none;
+  }
+
+
   .about-star {
-    animation: none;
+    animation:
+      none;
   }
 }
