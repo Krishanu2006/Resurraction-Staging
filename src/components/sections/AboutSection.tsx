@@ -316,7 +316,7 @@ const DEFAULT_TARGETS:
   },
 
   mission: {
-    x: 87.3026,
+    x: 89.3026,
     y: 30.1212,
     scale: 0.78,
   },
