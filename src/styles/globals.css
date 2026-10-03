@@ -1050,3 +1050,62 @@ body,
    */
   mix-blend-mode: screen;
 }
+
+/* =========================================================
+   ROCKY CUSTOM CURSOR
+   ========================================================= */
+
+/* Hide the normal browser cursor */
+html,
+html *,
+body,
+body *,
+#root,
+#root *,
+.app-container,
+.app-container * {
+  cursor: none !important;
+}
+
+/* Rocky itself */
+.rocky-custom-cursor {
+  position: fixed !important;
+
+  left: 0 !important;
+  top: 0 !important;
+
+  width: 76px !important;
+  height: 76px !important;
+
+  max-width: none !important;
+  max-height: none !important;
+
+  display: block !important;
+
+  object-fit: contain !important;
+  object-position: center !important;
+
+  pointer-events: none !important;
+
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
+
+  z-index: 2147483647 !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+
+  transform:
+    translate3d(-200px, -200px, 0);
+
+  will-change: transform;
+
+  filter:
+    drop-shadow(
+      0 2px 5px rgba(0, 0, 0, 0.45)
+    )
+    drop-shadow(
+      0 0 5px rgba(34, 211, 238, 0.15)
+    );
+}

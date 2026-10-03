@@ -8,10 +8,12 @@ export const RockyCursor: React.FC = () => {
 
     if (!cursor) return;
 
-    let targetX = -100;
-    let targetY = -100;
-    let currentX = -100;
-    let currentY = -100;
+    let targetX = -200;
+    let targetY = -200;
+
+    let currentX = -200;
+    let currentY = -200;
+
     let animationFrame = 0;
 
     const handleMouseMove = (event: MouseEvent) => {
@@ -20,27 +22,35 @@ export const RockyCursor: React.FC = () => {
     };
 
     const animate = () => {
-      // Smooth cursor movement
-      currentX += (targetX - currentX) * 0.28;
-      currentY += (targetY - currentY) * 0.28;
+      currentX += (targetX - currentX) * 0.24;
+      currentY += (targetY - currentY) * 0.24;
 
-      cursor.style.transform = `translate3d(
-        ${currentX - 30}px,
-        ${currentY - 20}px,
-        0
-      )`;
+      cursor.style.transform = `
+        translate3d(
+          ${currentX - 30}px,
+          ${currentY - 20}px,
+          0
+        )
+      `;
 
       animationFrame = requestAnimationFrame(animate);
     };
 
-    window.addEventListener('mousemove', handleMouseMove, {
-      passive: true,
-    });
+    window.addEventListener(
+      'mousemove',
+      handleMouseMove,
+      { passive: true }
+    );
 
-    animationFrame = requestAnimationFrame(animate);
+    animationFrame =
+      requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener(
+        'mousemove',
+        handleMouseMove
+      );
+
       cancelAnimationFrame(animationFrame);
     };
   }, []);
@@ -51,8 +61,10 @@ export const RockyCursor: React.FC = () => {
       src="/assets/about/rocky.png"
       alt=""
       aria-hidden="true"
-      className="rocky-custom-cursor"
       draggable={false}
+      className="rocky-custom-cursor"
     />
   );
 };
+
+export default RockyCursor;
