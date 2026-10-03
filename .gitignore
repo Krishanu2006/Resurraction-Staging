@@ -1,6 +1,6 @@
 node_modules
-dist
-*.tsbuildinfo
+.env.example
 .env
 .env.local
-.env.*.local
+.agents/*
+dist
