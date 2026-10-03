@@ -487,10 +487,10 @@ export const HeroContent: React.FC<HeroContentProps> = ({
           position: 'absolute',
 
           left: '50%',
-          top: '50%',
+          top: '40%',
 
           width:
-            'min(520px, 72vw)',
+            'min(1000px, 90vw)',
 
           transform: `
             translate(-50%, -50%)
