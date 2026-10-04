@@ -891,7 +891,7 @@ export const HeroContent: React.FC<HeroContentProps> = ({
               '12px',
 
             background:
-              'linear-gradient(135deg, var(--stellar-cyan), var(--cosmic-blue))',
+              'white',
 
             color:
               '#03101c',

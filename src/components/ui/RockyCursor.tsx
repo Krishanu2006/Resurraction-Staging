@@ -1,162 +1,169 @@
-import React, {
+import {
   useEffect,
   useRef,
   useState,
 } from 'react';
 
-export const RockyCursor: React.FC = () => {
+const NORMAL_ROCKY =
+  '/assets/about/rocky.png';
+
+const POINTER_ROCKY =
+  '/assets/about/rocky-pointer.png';
+
+const RockyCursor = () => {
   const cursorRef =
-    useRef<HTMLImageElement | null>(null);
+    useRef<HTMLImageElement | null>(
+      null
+    );
+
+  const targetX =
+    useRef(-200);
+
+  const targetY =
+    useRef(-200);
+
+  const currentX =
+    useRef(-200);
+
+  const currentY =
+    useRef(-200);
+
+  const frameRef =
+    useRef<number | null>(null);
 
   const [isPointer, setIsPointer] =
     useState(false);
 
   useEffect(() => {
-    const cursor = cursorRef.current;
+    const handleMove =
+      (event: MouseEvent) => {
+        targetX.current =
+          event.clientX;
 
-    if (!cursor) return;
+        targetY.current =
+          event.clientY;
+      };
 
-    let targetX = -200;
-    let targetY = -200;
+    const handleOver =
+      (event: MouseEvent) => {
+        const target =
+          event.target as HTMLElement | null;
 
-    let currentX = -200;
-    let currentY = -200;
+        if (!target) return;
 
-    let animationFrame = 0;
+        const interactive =
+          target.closest(
+            'a, button, input, textarea, select, summary, [role="button"], [tabindex]:not([tabindex="-1"])'
+          );
 
-    const handleMouseMove = (
-      event: MouseEvent
-    ) => {
-      targetX = event.clientX;
-      targetY = event.clientY;
-    };
-
-    const handlePointerOver = (
-      event: MouseEvent
-    ) => {
-      const target =
-        event.target as HTMLElement | null;
-
-      if (!target) return;
-
-      const interactiveElement =
-        target.closest(
-          'a, button, input, textarea, select, [role="button"], [tabindex]'
+        setIsPointer(
+          Boolean(interactive)
         );
+      };
 
-      setIsPointer(
-        Boolean(interactiveElement)
-      );
-    };
-
-    const handlePointerOut = (
-      event: MouseEvent
-    ) => {
-      const target =
-        event.target as HTMLElement | null;
-
-      if (!target) return;
-
-      const interactiveElement =
-        target.closest(
-          'a, button, input, textarea, select, [role="button"], [tabindex]'
-        );
-
-      if (!interactiveElement) return;
-
-      const relatedTarget =
-        event.relatedTarget as Node | null;
-
-      if (
-        relatedTarget &&
-        interactiveElement.contains(
-          relatedTarget
-        )
-      ) {
-        return;
-      }
-
-      setIsPointer(false);
-    };
-
-    const animate = () => {
-      currentX +=
-        (targetX - currentX) * 0.22;
-
-      currentY +=
-        (targetY - currentY) * 0.22;
-
-      cursor.style.transform =
-        `translate3d(
-          ${currentX - 10}px,
-          ${currentY + 10}px,
-          0
-        )`;
-
-      animationFrame =
-        requestAnimationFrame(animate);
-    };
+    const handleLeave =
+      () => {
+        targetX.current = -200;
+        targetY.current = -200;
+      };
 
     window.addEventListener(
       'mousemove',
-      handleMouseMove,
-      { passive: true }
+      handleMove,
+      {
+        passive: true,
+      }
     );
 
     window.addEventListener(
       'mouseover',
-      handlePointerOver,
-      { passive: true }
+      handleOver,
+      {
+        passive: true,
+      }
     );
 
-    window.addEventListener(
-      'mouseout',
-      handlePointerOut,
-      { passive: true }
+    document.documentElement.addEventListener(
+      'mouseleave',
+      handleLeave
     );
 
-    animationFrame =
-      requestAnimationFrame(animate);
+    /*
+     * Animation loop.
+     *
+     * Rocky smoothly follows the pointer
+     * rather than jumping between mouse events.
+     */
+
+    const animate = () => {
+      currentX.current +=
+        (targetX.current -
+          currentX.current) *
+        0.28;
+
+      currentY.current +=
+        (targetY.current -
+          currentY.current) *
+        0.28;
+
+      if (cursorRef.current) {
+        cursorRef.current.style.transform =
+          `translate3d(${currentX.current}px, ${currentY.current}px, 0)`;
+      }
+
+      frameRef.current =
+        requestAnimationFrame(
+          animate
+        );
+    };
+
+    frameRef.current =
+      requestAnimationFrame(
+        animate
+      );
 
     return () => {
       window.removeEventListener(
         'mousemove',
-        handleMouseMove
+        handleMove
       );
 
       window.removeEventListener(
         'mouseover',
-        handlePointerOver
+        handleOver
       );
 
-      window.removeEventListener(
-        'mouseout',
-        handlePointerOut
+      document.documentElement.removeEventListener(
+        'mouseleave',
+        handleLeave
       );
 
-      cancelAnimationFrame(
-        animationFrame
-      );
+      if (
+        frameRef.current !== null
+      ) {
+        cancelAnimationFrame(
+          frameRef.current
+        );
+      }
     };
   }, []);
 
   return (
     <img
       ref={cursorRef}
+      className={
+        isPointer
+          ? 'rocky-custom-cursor rocky-custom-cursor--pointer'
+          : 'rocky-custom-cursor'
+      }
       src={
         isPointer
-          ? '/assets/about/rocky-pointer.png'
-          : '/assets/about/rocky.png'
+          ? POINTER_ROCKY
+          : NORMAL_ROCKY
       }
       alt=""
-      aria-hidden="true"
       draggable={false}
-      className={[
-        'rocky-custom-cursor',
-        isPointer
-          ? 'rocky-custom-cursor--pointer'
-          : '',
-      ].join(' ')}
+      aria-hidden="true"
     />
   );
 };

@@ -1,370 +1,41 @@
 /* =========================================================
-   RESURRACTION — DYNAMIC COSMIC DESIGN SYSTEM
-   Theme-aware tokens
+   RESURRACTION — DESIGN TOKENS
    ========================================================= */
-html,
-body,
-#root {
-  background-color: var(--theme-background);
-  color: var(--theme-text);
-  min-height: 100%;
-}
-
-body {
-  margin: 0;
-}
 
 :root {
-  /* -------------------------------------------------------
-     ACTIVE THEME
-     
-     These values are overridden by App.tsx through
-     inline CSS variables when a world is selected.
-     ------------------------------------------------------- */
+  /* Spacing scale */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
 
-  --theme-primary: #6B8E23;
-  --theme-secondary: #D97706;
-  --theme-accent: #E6E67A;
+  /* Radii */
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
 
-  --theme-background: #10140A;
-  --theme-surface: #1A1F0E;
-
-  --theme-text: #F4F1D0;
-  --theme-muted: #A9A77A;
-  --theme-border: #66752A;
-
-
-  /* -------------------------------------------------------
-     Core canvas
-     ------------------------------------------------------- */
-
-  --void: var(--theme-background);
-  --canvas: var(--theme-background);
-
-  --canvas-deep:
-    color-mix(
-      in srgb,
-      var(--theme-background) 82%,
-      #000000 18%
-    );
-
-  --canvas-blue:
-    color-mix(
-      in srgb,
-      var(--theme-background) 88%,
-      var(--theme-primary) 12%
-    );
-
-
-  /* -------------------------------------------------------
-     Surface hierarchy
-     ------------------------------------------------------- */
-
-  --surface-1: var(--theme-surface);
-
-  --surface-2:
-    color-mix(
-      in srgb,
-      var(--theme-surface) 82%,
-      var(--theme-primary) 18%
-    );
-
-  --surface-3:
-    color-mix(
-      in srgb,
-      var(--theme-surface) 68%,
-      var(--theme-primary) 32%
-    );
-
-
-  /* -------------------------------------------------------
-     Primary theme palette
-     ------------------------------------------------------- */
-
-  --stellar-cyan: var(--theme-primary);
-
-  --cyan-soft: var(--theme-accent);
-
-  --cosmic-blue: var(--theme-secondary);
-
-  --cosmic-blue-bright: var(--theme-accent);
-
-  /*
-     These are compatibility aliases.
-     They intentionally follow the selected world rather
-     than remaining permanently purple/pink/gold.
-  */
-
-  --nebula-purple: var(--theme-secondary);
-
-  --nebula-violet: var(--theme-primary);
-
-  --nebula-pink: var(--theme-accent);
-
-  --solar-gold: var(--theme-accent);
-
-
-  /* -------------------------------------------------------
-     Typography colors
-     ------------------------------------------------------- */
-
-  --text: var(--theme-text);
-
-  --text-dim:
-    color-mix(
-      in srgb,
-      var(--theme-text) 76%,
-      var(--theme-muted) 24%
-    );
-
-  --muted: var(--theme-muted);
-
-  --muted-dark:
-    color-mix(
-      in srgb,
-      var(--theme-muted) 65%,
-      var(--theme-background) 35%
-    );
-
-
-  /* -------------------------------------------------------
-     Compatibility aliases
-     ------------------------------------------------------- */
-
-  --ink: var(--text);
-
-  --ink-muted: var(--muted);
-
-  --ink-subtle: var(--muted-dark);
-
-  --inverse-ink: var(--theme-background);
-
-
-  /* -------------------------------------------------------
-     Borders / lines
-     ------------------------------------------------------- */
-
-  --hairline:
-    color-mix(
-      in srgb,
-      var(--theme-border) 32%,
-      transparent
-    );
-
-  --hairline-soft:
-    color-mix(
-      in srgb,
-      var(--theme-secondary) 18%,
-      transparent
-    );
-
-  --border-subtle:
-    color-mix(
-      in srgb,
-      var(--theme-border) 42%,
-      transparent
-    );
-
-  --border-cosmic:
-    color-mix(
-      in srgb,
-      var(--theme-secondary) 48%,
-      transparent
-    );
-
-  --border-cyan:
-    color-mix(
-      in srgb,
-      var(--theme-primary) 58%,
-      transparent
-    );
-
-
-  /* -------------------------------------------------------
-     Panels
-     ------------------------------------------------------- */
-
-  --panel-bg:
-    color-mix(
-      in srgb,
-      var(--theme-surface) 82%,
-      transparent
-    );
-
-  --panel-bg-solid: var(--theme-surface);
-
-  --panel-bg-elevated:
-    color-mix(
-      in srgb,
-      var(--theme-surface) 72%,
-      var(--theme-primary) 28%
-    );
-
-  --panel-backdrop: blur(18px);
-
-
-  /* -------------------------------------------------------
-     Typography
-     
-     Display  → Nasalization
-     Body     → Neue Stance
-     Technical→ Space Mono
-     ------------------------------------------------------- */
-
-  --font-display:
-    'Nasalization',
-    sans-serif;
-
-  --font-body:
-    'Neue Stance',
-    sans-serif;
-
-  --font-mono:
-    'Space Mono',
-    monospace;
-
-
-  /* -------------------------------------------------------
-     Additional explicit typography aliases
-     ------------------------------------------------------- */
-
-  --font-cosmic-display:
-    'Nasalization',
-    sans-serif;
-
-  --font-cosmic-body:
-    'Neue Stance',
-    sans-serif;
-
-  --font-cosmic-mono:
-    'Space Mono',
-    monospace;
-
-
-  /* -------------------------------------------------------
-     Layout
-     ------------------------------------------------------- */
-
-  --max-width: 1280px;
-
+  /* Container widths */
+  --max-width: 1200px;
   --max-width-wide: 1440px;
 
-  --header-height: 68px;
+  /* Header */
+  --header-height: 72px;
 
+  /* Typography rhythm */
+  --line-tight: 0.92;
+  --line-snug: 1.05;
+  --line-body: 1.75;
 
-  /* -------------------------------------------------------
-     Border radius
-     ------------------------------------------------------- */
-
-  --radius-xs: 4px;
-
-  --radius-sm: 6px;
-
-  --radius-md: 8px;
-
-  --radius-lg: 12px;
-
-  --radius-xl: 16px;
-
-  --radius-xxl: 24px;
-
-  --radius-cosmic: 32px;
-
-  --radius-pill: 9999px;
-
-
-  /* -------------------------------------------------------
-     Motion
-     ------------------------------------------------------- */
-
-  --transition-fast:
-    180ms cubic-bezier(0.16, 1, 0.3, 1);
-
-  --transition-normal:
-    320ms cubic-bezier(0.16, 1, 0.3, 1);
-
-  --transition-slow:
-    600ms cubic-bezier(0.16, 1, 0.3, 1);
-
-
-  /* -------------------------------------------------------
-     Controlled theme-aware glows
-     ------------------------------------------------------- */
-
-  --glow-cyan:
-    0 0 32px
-    color-mix(
-      in srgb,
-      var(--theme-primary) 22%,
-      transparent
-    );
-
-  --glow-blue:
-    0 0 32px
-    color-mix(
-      in srgb,
-      var(--theme-secondary) 22%,
-      transparent
-    );
-
-  --glow-purple:
-    0 0 36px
-    color-mix(
-      in srgb,
-      var(--theme-secondary) 20%,
-      transparent
-    );
-
-  --glow-gold:
-    0 0 30px
-    color-mix(
-      in srgb,
-      var(--theme-accent) 18%,
-      transparent
-    );
-
-
-  /* -------------------------------------------------------
-     Compatibility aliases
-     
-     Existing components can continue using the old names,
-     but those names now follow the selected world.
-     ------------------------------------------------------- */
-
-  --brand-peach: var(--theme-primary);
-
-  --brand-peach-light: var(--theme-accent);
-
-  --brand-peach-dark:
-    color-mix(
-      in srgb,
-      var(--theme-primary) 72%,
-      var(--theme-background) 28%
-    );
-
-  --crimson-deep:
-    color-mix(
-      in srgb,
-      var(--theme-background) 72%,
-      var(--theme-primary) 28%
-    );
-
-  --crimson: var(--theme-secondary);
-
-  --red-hot: var(--theme-secondary);
-
-  --white-hot: var(--theme-text);
-
-  --surface-glass: var(--panel-bg);
-
-  --border-panel: var(--border-subtle);
-
-  --border-peach: var(--border-cyan);
-
-  --hairline-crimson:
-    color-mix(
-      in srgb,
-      var(--theme-secondary) 22%,
-      transparent
-    );
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
 }

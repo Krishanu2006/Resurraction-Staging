@@ -14,9 +14,11 @@ import { FAQSection } from './components/sections/FAQSection';
 
 import { Footer } from './components/layout/Footer';
 
-import { RockyCursor } from './components/ui/RockyCursor';
+import RockyCursor from './components/ui/RockyCursor';
 import { BootLoader } from './components/ui/BootLoader';
 import { ThemeSelector } from './components/ui/ThemeSelector';
+
+import AdrianEnvironment from './components/Environment/AdrianEnvironment';
 
 import {
   themePalettes,
@@ -149,111 +151,118 @@ const App: React.FC = () => {
          ====================================================== */}
 
       {bootComplete && themeSelected && (
-        <div
-          id="app-theme"
-          style={
-            {
-              '--theme-primary': palette.primary,
-              '--theme-secondary': palette.secondary,
-              '--theme-accent': palette.accent,
-              '--theme-background': palette.background,
-              '--theme-surface': palette.surface,
-              '--theme-text': palette.text,
-              '--theme-muted': palette.muted,
-              '--theme-border': palette.border,
+        <>
+          {/* Persistent interactive space environment.
+              This sits behind the entire website. */}
+          <AdrianEnvironment />
 
-              backgroundColor:
-                'var(--theme-background)',
+          <div
+            id="app-theme"
+            style={
+              {
+                '--theme-primary': palette.primary,
+                '--theme-secondary': palette.secondary,
+                '--theme-accent': palette.accent,
+                '--theme-background': palette.background,
+                '--theme-surface': palette.surface,
+                '--theme-text': palette.text,
+                '--theme-muted': palette.muted,
+                '--theme-border': palette.border,
 
-              color:
-                'var(--theme-text)',
+                backgroundColor: 'transparent',
 
-              minHeight:
-                '100vh',
-            } as React.CSSProperties
-          }
-        >
-          <div className="app-container">
-            {/* ==================================================
-                HEADER
-               ================================================== */}
+                color: 'var(--theme-text)',
 
-            <Header />
+                minHeight: '100vh',
+              } as React.CSSProperties
+            }
+          >
+            <div className="app-container">
 
-            {/* ==================================================
-                MAIN CONTENT
-               ================================================== */}
+              {/* ==================================================
+                  HEADER
+                 ================================================== */}
 
-            <main id="main-content">
-              {/* =================================================
-                  HERO
-                 ================================================= */}
+              <Header />
 
-              <HeroSection />
+              {/* ==================================================
+                  MAIN CONTENT
+                 ================================================== */}
 
-              {/* =================================================
-                  ABOUT
-                 ================================================= */}
+              <main id="main-content">
 
-              <AboutSection active />
+                {/* =================================================
+                    HERO
+                   ================================================= */}
 
-              {/* =================================================
-                  TRACKS
-                 ================================================= */}
+                <HeroSection />
 
-              <TracksSection />
+                {/* =================================================
+                    ABOUT
+                   ================================================= */}
 
-              {/* =================================================
-                  PRIZES
-                 ================================================= */}
+                <AboutSection active />
 
-              <PrizesSection />
+                {/* =================================================
+                    TRACKS
+                   ================================================= */}
 
-              {/* =================================================
-                  TIMELINE
-                 ================================================= */}
+                <TracksSection />
 
-              <TimelineSection />
+                {/* =================================================
+                    PRIZES
+                   ================================================= */}
 
-              {/* =================================================
-                  SPONSORS
-                 ================================================= */}
+                <PrizesSection />
 
-              <SponsorsSection />
+                {/* =================================================
+                    TIMELINE
+                   ================================================= */}
 
-              {/* =================================================
-                  JURY
-                 ================================================= */}
+                <TimelineSection />
 
-              <JurySection />
+                {/* =================================================
+                    SPONSORS
+                   ================================================= */}
 
-              {/* =================================================
-                  RULES
-                 ================================================= */}
+                <SponsorsSection />
 
-              <RulesSection />
+                {/* =================================================
+                    JURY
+                   ================================================= */}
 
-              {/* =================================================
-                  FAQ
-                 ================================================= */}
+                <JurySection />
 
-              <FAQSection />
-            </main>
+                {/* =================================================
+                    RULES
+                   ================================================= */}
 
-            {/* ==================================================
-                FOOTER
-               ================================================== */}
+                <RulesSection />
 
-            <Footer />
+                {/* =================================================
+                    FAQ
+                   ================================================= */}
+
+                <FAQSection />
+
+              </main>
+
+              {/* ==================================================
+                  FOOTER
+                 ================================================== */}
+
+              <Footer />
+
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ========================================================
           ROCKY CUSTOM CURSOR
 
-          Rendered after the website so that it remains above
-          all sections, Three.js canvas, images and overlays.
+          Rendered after everything else so Rocky stays above
+          the Three.js environment, hero, sections and overlays.
          ======================================================== */}
 
       {bootComplete && <RockyCursor />}
