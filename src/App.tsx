@@ -76,46 +76,32 @@ const App: React.FC = () => {
   useEffect(() => {
     const root = document.documentElement;
 
-    root.style.setProperty(
-      '--theme-primary',
-      palette.primary
-    );
+    root.setAttribute('data-theme', selectedTheme);
 
-    root.style.setProperty(
-      '--theme-secondary',
-      palette.secondary
-    );
+    root.style.setProperty('--theme-primary', palette.primary);
+    root.style.setProperty('--theme-secondary', palette.secondary);
+    root.style.setProperty('--theme-accent', palette.accent);
+    root.style.setProperty('--theme-cta', palette.cta);
+    root.style.setProperty('--theme-cta-hover', palette.ctaHover);
+    root.style.setProperty('--theme-background', palette.background);
+    root.style.setProperty('--theme-surface', palette.surface);
+    root.style.setProperty('--theme-text', palette.text);
+    root.style.setProperty('--theme-muted', palette.muted);
+    root.style.setProperty('--theme-border', palette.border);
+    root.style.setProperty('--theme-gradient', palette.gradient);
+    root.style.setProperty('--theme-glow', palette.glow);
+    root.style.setProperty('--theme-glow-color', palette.glowColor);
+    root.style.setProperty('--theme-card-bg', palette.cardBg);
+    root.style.setProperty('--theme-card-border', palette.cardBorder);
 
-    root.style.setProperty(
-      '--theme-accent',
-      palette.accent
-    );
-
-    root.style.setProperty(
-      '--theme-background',
-      palette.background
-    );
-
-    root.style.setProperty(
-      '--theme-surface',
-      palette.surface
-    );
-
-    root.style.setProperty(
-      '--theme-text',
-      palette.text
-    );
-
-    root.style.setProperty(
-      '--theme-muted',
-      palette.muted
-    );
-
-    root.style.setProperty(
-      '--theme-border',
-      palette.border
-    );
-  }, [palette]);
+    // Compatibility aliases
+    root.style.setProperty('--adrian-green', palette.primary);
+    root.style.setProperty('--adrian-orange', palette.secondary);
+    root.style.setProperty('--space-black', palette.background);
+    root.style.setProperty('--adrian-text', palette.text);
+    root.style.setProperty('--adrian-muted', palette.muted);
+    root.style.setProperty('--adrian-border', palette.border);
+  }, [palette, selectedTheme]);
 
   /* ============================================================
      APP

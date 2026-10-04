@@ -88,28 +88,25 @@
    ========================================================= */
 
 :root {
-  --space-black: #010402;
-  --space-deep: #020806;
-  --space-green: #173d26;
+  --space-black: var(--theme-background, #0c0a06);
+  --space-deep: var(--theme-surface, #18130a);
+  --space-green: var(--theme-surface, #18130a);
 
-  --adrian-green: #86b84f;
-  --adrian-green-bright: #b7df62;
-  --adrian-green-soft: #9bcf5b;
+  --adrian-green: var(--theme-primary, #e5a93c);
+  --adrian-green-bright: var(--theme-accent, #ffd778);
+  --adrian-green-soft: var(--theme-primary, #e5a93c);
 
-  --adrian-orange: #e27632;
-  --adrian-orange-bright: #f58a3d;
-  --adrian-amber: #ff9a45;
-  --adrian-gold: #f1b94d;
+  --adrian-orange: var(--theme-secondary, #9e681c);
+  --adrian-orange-bright: var(--theme-accent, #ffd778);
+  --adrian-amber: var(--theme-secondary, #9e681c);
+  --adrian-gold: var(--theme-accent, #ffd778);
 
-  --adrian-text: #f2ead1;
-  --adrian-text-soft: rgba(242, 234, 209, 0.78);
-  --adrian-muted: rgba(231, 224, 198, 0.64);
+  --adrian-text: var(--theme-text, #fdf8eb);
+  --adrian-text-soft: color-mix(in srgb, var(--theme-text) 80%, transparent);
+  --adrian-muted: var(--theme-muted, #c2b193);
 
-  --adrian-border:
-    rgba(174, 192, 118, 0.19);
-
-  --adrian-orange-border:
-    rgba(241, 150, 67, 0.20);
+  --adrian-border: var(--theme-border, #5e4823);
+  --adrian-orange-border: var(--theme-border, #5e4823);
 }
 
 
@@ -129,8 +126,8 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: var(--header-height);
 
-  background: var(--space-black);
-  color: var(--adrian-text);
+  background: var(--theme-background, #0c0a06);
+  color: var(--theme-text, #fdf8eb);
   color-scheme: dark;
 }
 
@@ -141,30 +138,9 @@ body {
 
   font-family: 'Neue Stance', sans-serif;
   line-height: 1.6;
-  color: var(--adrian-text);
+  color: var(--theme-text, #fdf8eb);
 
-  background:
-    radial-gradient(
-      ellipse at 12% 24%,
-      rgba(102, 157, 56, 0.12),
-      transparent 32%
-    ),
-    radial-gradient(
-      ellipse at 86% 30%,
-      rgba(226, 118, 50, 0.13),
-      transparent 34%
-    ),
-    radial-gradient(
-      ellipse at 65% 82%,
-      rgba(241, 185, 77, 0.075),
-      transparent 38%
-    ),
-    radial-gradient(
-      ellipse at 32% 65%,
-      rgba(212, 91, 39, 0.055),
-      transparent 30%
-    ),
-    #010402;
+  background: var(--theme-background, #0c0a06);
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
