@@ -1,7 +1,7 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Header } from './components/layout/Header';
-import { HeroSection } from './components/hero/HeroSection';
+import HeroSection from './components/hero/HeroSection';
 
 import { AboutSection } from './components/sections/AboutSection';
 import { TracksSection } from './components/sections/TracksSection';
@@ -24,8 +24,16 @@ import {
 } from './config/theme';
 
 const App: React.FC = () => {
+  /* ============================================================
+     BOOT STATE
+     ============================================================ */
+
   const [bootComplete, setBootComplete] =
     useState(false);
+
+  /* ============================================================
+     THEME STATE
+     ============================================================ */
 
   const [themeSelected, setThemeSelected] =
     useState(false);
@@ -33,13 +41,36 @@ const App: React.FC = () => {
   const [selectedTheme, setSelectedTheme] =
     useState<ThemeId>('tau-ceti');
 
+  /* ============================================================
+     BOOT COMPLETE
+     ============================================================ */
+
   const handleBootComplete = useCallback(() => {
     setBootComplete(true);
   }, []);
 
+  /* ============================================================
+     THEME SELECTION
+     ============================================================ */
+
+  const handleThemeSelect = useCallback(
+    (themeId: ThemeId) => {
+      setSelectedTheme(themeId);
+      setThemeSelected(true);
+    },
+    []
+  );
+
+  /* ============================================================
+     ACTIVE THEME PALETTE
+     ============================================================ */
+
   const palette = themePalettes[selectedTheme];
-  console.log('THEME:', selectedTheme);
-  console.log('BACKGROUND:', palette.background);
+
+  /* ============================================================
+     APPLY THEME VARIABLES
+     ============================================================ */
+
   useEffect(() => {
     const root = document.documentElement;
 
@@ -84,11 +115,16 @@ const App: React.FC = () => {
     );
   }, [palette]);
 
+  /* ============================================================
+     APP
+     ============================================================ */
+
   return (
     <>
-      {/* =====================================================
-          BOOTLOADER
-         ===================================================== */}
+      {/* ======================================================
+          BOOT SEQUENCE
+          BootLoader → ThemeSelector → Website
+         ====================================================== */}
 
       {!bootComplete && (
         <BootLoader
@@ -96,22 +132,21 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* =====================================================
+      {/* ======================================================
           THEME SELECTOR
-         ===================================================== */}
+         ====================================================== */}
 
       {bootComplete && !themeSelected && (
         <ThemeSelector
           onSelect={(themeId) => {
-            setSelectedTheme(themeId as ThemeId);
-            setThemeSelected(true);
+            handleThemeSelect(themeId as ThemeId);
           }}
         />
       )}
 
-      {/* =====================================================
+      {/* ======================================================
           MAIN WEBSITE
-         ===================================================== */}
+         ====================================================== */}
 
       {bootComplete && themeSelected && (
         <div
@@ -126,51 +161,102 @@ const App: React.FC = () => {
               '--theme-text': palette.text,
               '--theme-muted': palette.muted,
               '--theme-border': palette.border,
-              backgroundColor: 'var(--theme-background)',
-              color: 'var(--theme-text)',
-              minHeight: '100vh',
+
+              backgroundColor:
+                'var(--theme-background)',
+
+              color:
+                'var(--theme-text)',
+
+              minHeight:
+                '100vh',
             } as React.CSSProperties
           }
         >
-          <div
-            className="app-container">
+          <div className="app-container">
+            {/* ==================================================
+                HEADER
+               ================================================== */}
+
             <Header />
 
+            {/* ==================================================
+                MAIN CONTENT
+               ================================================== */}
+
             <main id="main-content">
+              {/* =================================================
+                  HERO
+                 ================================================= */}
+
               <HeroSection />
+
+              {/* =================================================
+                  ABOUT
+                 ================================================= */}
 
               <AboutSection active />
 
+              {/* =================================================
+                  TRACKS
+                 ================================================= */}
+
               <TracksSection />
+
+              {/* =================================================
+                  PRIZES
+                 ================================================= */}
 
               <PrizesSection />
 
+              {/* =================================================
+                  TIMELINE
+                 ================================================= */}
+
               <TimelineSection />
+
+              {/* =================================================
+                  SPONSORS
+                 ================================================= */}
 
               <SponsorsSection />
 
+              {/* =================================================
+                  JURY
+                 ================================================= */}
+
               <JurySection />
 
+              {/* =================================================
+                  RULES
+                 ================================================= */}
+
               <RulesSection />
+
+              {/* =================================================
+                  FAQ
+                 ================================================= */}
 
               <FAQSection />
             </main>
 
+            {/* ==================================================
+                FOOTER
+               ================================================== */}
+
             <Footer />
           </div>
-        </div >
+        </div>
       )}
 
-      {/* =====================================================
-          ROCKY CURSOR
-          MUST BE LAST SO IT STAYS ABOVE EVERYTHING
-         ===================================================== */}
+      {/* ========================================================
+          ROCKY CUSTOM CURSOR
 
-      {
-        bootComplete && (
-          <RockyCursor />
-        )
-      }
+          Rendered after the website so that it remains above
+          all sections, Three.js canvas, images and overlays.
+         ======================================================== */}
+
+      {bootComplete && <RockyCursor />}
     </>
   );
 };
