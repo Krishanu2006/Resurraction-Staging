@@ -20,7 +20,7 @@ export type GlobalSpaceThemeConfig = {
   shootingStarColor: [number, number, number];
 };
 
-export const globalSpaceThemeConfigs: Record<ThemeId, GlobalSpaceThemeConfig> = {
+const globalSpaceThemeConfigs: Record<ThemeId, GlobalSpaceThemeConfig> = {
   'tau-ceti': {
     // Golden Dune World: warm amber, solar gold, bronze stardust
     nebulaA: 0x9e681c,
@@ -116,7 +116,7 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       const aboutEl = document.getElementById('about');
       if (!aboutEl) return;
       const rect = aboutEl.getBoundingClientRect();
-      const isAboutOrBelow = rect.top <= window.innerHeight * 0.8;
+      const isAboutOrBelow = rect.top <= window.innerHeight * 1.05;
       setInActiveArea(isAboutOrBelow);
     };
 
@@ -506,109 +506,7 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
     }
 
     /* ============================================================
-     * 5. GRAVITY ORB — translucent sphere that follows the cursor
-     * ============================================================ */
-    const orbUniforms = {
-      uOrbColor: { value: new THREE.Color(initialConfig.rockRimColor) },
-      uTime: { value: 0 },
-    };
-
-    const orbMaterial = new THREE.ShaderMaterial({
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.FrontSide,
-      uniforms: orbUniforms,
-      vertexShader: /* glsl */ `
-        varying vec3 vNormal;
-        varying vec3 vViewDir;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-          vViewDir = normalize(-mvPos.xyz);
-          gl_Position = projectionMatrix * mvPos;
-        }
-      `,
-      fragmentShader: /* glsl */ `
-        varying vec3 vNormal;
-        varying vec3 vViewDir;
-        uniform vec3 uOrbColor;
-        uniform float uTime;
-
-        void main() {
-          float rim = pow(1.0 - max(dot(vNormal, vViewDir), 0.0), 2.2);
-          float pulse = 0.75 + 0.25 * sin(uTime * 1.4);
-          vec3 col = uOrbColor * (rim * 1.8 + 0.1) * pulse;
-          float alpha = rim * 0.65 * pulse;
-          gl_FragColor = vec4(col, alpha);
-        }
-      `,
-    });
-
-    const orbMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(5.5, 24, 24),
-      orbMaterial
-    );
-    orbMesh.position.set(20, 10, -20);
-    scene.add(orbMesh);
-
-    // Gravity orb target (updated by mouse, lerped each frame)
-    const orbTarget = new THREE.Vector3(20, 10, -20);
-
-    /* ============================================================
-     * 6. ORBITING TORUS RING FRAGMENTS
-     * ============================================================ */
-    const torusUniforms = {
-      uRingColor: { value: new THREE.Color(initialConfig.rockRimColor) },
-      uTime: { value: 0 },
-    };
-
-    const torusMaterial = new THREE.ShaderMaterial({
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      wireframe: true,
-      uniforms: torusUniforms,
-      vertexShader: /* glsl */ `
-        void main() {
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: /* glsl */ `
-        uniform vec3 uRingColor;
-        uniform float uTime;
-        void main() {
-          float pulse = 0.5 + 0.5 * sin(uTime * 0.9);
-          gl_FragColor = vec4(uRingColor, 0.18 * pulse);
-        }
-      `,
-    });
-
-    type TorusData = { mesh: THREE.Mesh; orbitRadius: number; orbitSpeed: number; angle: number };
-    const torusRings: TorusData[] = [];
-
-    const torusConfigs = [
-      { r: 28, tube: 0.55, orbitR: 32, speed: 0.18, tilt: [0.6, 0.2, 0.0] as [number,number,number], z: -60 },
-      { r: 18, tube: 0.4,  orbitR: 48, speed: -0.12, tilt: [1.1, 0.4, 0.3] as [number,number,number], z: -75 },
-      { r: 38, tube: 0.7,  orbitR: 22, speed: 0.09, tilt: [0.3, 0.8, 0.5] as [number,number,number], z: -90 },
-    ];
-
-    torusConfigs.forEach((cfg, idx) => {
-      const geo = new THREE.TorusGeometry(cfg.r, cfg.tube, 8, 40);
-      const mesh = new THREE.Mesh(geo, torusMaterial);
-      mesh.rotation.set(...cfg.tilt);
-      mesh.position.set(0, 0, cfg.z);
-      scene.add(mesh);
-      torusRings.push({
-        mesh,
-        orbitRadius: cfg.orbitR,
-        orbitSpeed: cfg.speed,
-        angle: (idx * Math.PI * 2) / 3,
-      });
-    });
-
-    /* ============================================================
-     * 7. AURORA WISPS — flowing light curtains via vertex shader
+     * 5. AURORA WISPS — flowing light curtains via vertex shader
      * ============================================================ */
     const auroraUniforms = {
       uTime: { value: 0 },
@@ -772,6 +670,25 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
 
     let lastScrollY = window.scrollY;
     let scrollVelocity = 0;
+    let isCardHovered = false;
+    let cardHoverIntensity = 0;
+
+    const handlePointerOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const card = target.closest('[data-card], .card, .prize-card, .rule-item, .interactive-card');
+      if (card) isCardHovered = true;
+    };
+
+    const handlePointerOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const card = target.closest('[data-card], .card, .prize-card, .rule-item, .interactive-card');
+      if (!card) isCardHovered = false;
+    };
+
+    window.addEventListener('mouseover', handlePointerOver, { passive: true });
+    window.addEventListener('mouseout', handlePointerOut, { passive: true });
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -815,17 +732,21 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.getElapsedTime();
 
-      /* 1. Mouse smoothing */
+      /* 1. Mouse smoothing & Card Hover Surge */
       mouse.x += (mouse.targetX - mouse.x) * 0.05;
       mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
       mouse.worldX = mouse.x * boundsX * 0.85;
       mouse.worldY = mouse.y * boundsY * 0.85;
 
-      /* 2. Camera deep-space parallax drift */
+      cardHoverIntensity += ((isCardHovered ? 1.0 : 0.0) - cardHoverIntensity) * 0.08;
+
+      /* 2. Camera deep-space parallax drift with hover focus */
       if (!reducedMotion) {
-        camera.position.x += (mouse.x * 14 - camera.position.x) * 0.035;
-        camera.position.y += (mouse.y * 10 - camera.position.y) * 0.035;
+        const camParallax = 14 + cardHoverIntensity * 8;
+        camera.position.x += (mouse.x * camParallax - camera.position.x) * 0.035;
+        camera.position.y += (mouse.y * (camParallax * 0.7) - camera.position.y) * 0.035;
+        camera.position.z += ((95 - cardHoverIntensity * 8) - camera.position.z) * 0.04;
         camera.lookAt(0, 0, 0);
       }
 
@@ -833,7 +754,7 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       const currentTheme = themeRef.current;
       const targetConfig =
         globalSpaceThemeConfigs[currentTheme] || globalSpaceThemeConfigs['tau-ceti'];
-      const themeLerp = Math.min(delta * 2.8, 0.1);
+      const themeLerp = Math.min(delta * 6.0, 0.25);
 
       currentC1.lerp(new THREE.Color(targetConfig.starColor1), themeLerp);
       currentC2.lerp(new THREE.Color(targetConfig.starColor2), themeLerp);
@@ -852,14 +773,18 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       nebulaUniforms.uColorC.value.copy(currentNebulaC);
       nebulaUniforms.uOpacity.value = THREE.MathUtils.lerp(
         nebulaUniforms.uOpacity.value,
-        targetConfig.nebulaOpacity,
+        targetConfig.nebulaOpacity + cardHoverIntensity * 0.08,
         themeLerp
       );
 
-      // Update rock uniforms
+      // Update rock uniforms with card hover 3D lighting shift
       rockUniforms.uRockColor.value.copy(currentRock);
       rockUniforms.uRimColor.value.copy(currentRockRim);
-      rockUniforms.uLightPos.value.set(mouse.x * 40 - 20, mouse.y * 30 + 40, 50);
+      rockUniforms.uLightPos.value.set(
+        mouse.x * (40 + cardHoverIntensity * 25) - 20,
+        mouse.y * (30 + cardHoverIntensity * 20) + 40,
+        50 + cardHoverIntensity * 20
+      );
 
       // Update stars uniform
       starMaterial.uniforms.uTime.value = elapsed;
@@ -1016,33 +941,12 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       mPosAttr.needsUpdate = true;
       mColAttr.needsUpdate = true;
 
-      /* 7. Gravity Orb — lerp toward cursor, themed rim glow */
-      if (!reducedMotion) {
-        orbTarget.set(mouse.worldX * 0.55, mouse.worldY * 0.45, -20);
-        orbMesh.position.lerp(orbTarget, 0.025);
-      }
-      orbUniforms.uTime.value = elapsed;
-      orbUniforms.uOrbColor.value.copy(currentRockRim);
-
-      /* 8. Orbiting Torus Rings — slow gyroscopic spin */
-      if (!reducedMotion) {
-        torusRings.forEach((td) => {
-          td.angle += td.orbitSpeed * delta;
-          td.mesh.rotation.y += td.orbitSpeed * delta * 0.4;
-          td.mesh.rotation.x += td.orbitSpeed * delta * 0.2;
-          td.mesh.position.x = Math.cos(td.angle) * td.orbitRadius * 0.18;
-          td.mesh.position.y = Math.sin(td.angle) * td.orbitRadius * 0.12;
-        });
-      }
-      torusUniforms.uTime.value = elapsed;
-      torusUniforms.uRingColor.value.copy(currentRockRim);
-
-      /* 9. Aurora Wisps — update time + theme colors */
+      /* 7. Aurora Wisps — update time + theme colors */
       auroraUniforms.uTime.value = elapsed;
       auroraUniforms.uColorA.value.copy(currentNebulaA);
       auroraUniforms.uColorC.value.copy(currentNebulaC);
 
-      /* 10. Atmospheric Planetary Spheres & Horizon Line */
+      /* 8. Atmospheric Planetary Spheres & Horizon Line */
       planetUniforms.uBaseColor.value.copy(currentNebulaB);
       planetUniforms.uAtmosphereColor.value.copy(currentNebulaC);
       planetUniforms.uGlowColor.value.copy(currentC2);
@@ -1055,7 +959,7 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
         planet3Mesh.rotation.y = elapsed * 0.025;
       }
 
-      /* 11. Render */
+      /* 9. Render */
       renderer.render(scene, camera);
     };
 
@@ -1069,6 +973,8 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       cancelAnimationFrame(animId);
       window.removeEventListener('mousemove', handlePointerMove);
       window.removeEventListener('touchmove', handlePointerMove);
+      window.removeEventListener('mouseover', handlePointerOver);
+      window.removeEventListener('mouseout', handlePointerOut);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
 
@@ -1083,11 +989,7 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       meteorGeometry.dispose();
       meteorMaterial.dispose();
 
-      // New elements cleanup
-      orbMesh.geometry.dispose();
-      orbMaterial.dispose();
-      torusRings.forEach((td) => { td.mesh.geometry.dispose(); });
-      torusMaterial.dispose();
+      // Atmospheric background elements cleanup
       auroraMeshes.forEach((am) => { am.geometry.dispose(); });
       auroraMaterial.dispose();
 
@@ -1119,7 +1021,7 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
         height: '100vh',
         pointerEvents: 'none',
         zIndex: 0,
-        opacity: inActiveArea ? 0.85 : 0,
+        opacity: inActiveArea ? 0.95 : 0,
         transition: 'opacity 750ms cubic-bezier(0.16, 1, 0.3, 1)',
         willChange: 'opacity',
       }}

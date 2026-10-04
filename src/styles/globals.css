@@ -507,15 +507,7 @@ svg {
    SECTION-SPECIFIC BACKGROUNDS
    ========================================================= */
 
-#about {
-  background:
-    color-mix(
-      in srgb,
-      var(--theme-background) 88%,
-      var(--theme-surface) 12%
-    );
-}
-
+#about,
 #tracks,
 #prize,
 #timeline,
@@ -982,84 +974,186 @@ svg {
    Hide native browser cursor while Rocky exists
    --------------------------------------------------------- */
 
-body:has(.rocky-custom-cursor),
-html:has(.rocky-custom-cursor) {
-  cursor: none !important;
+@media (pointer: fine) {
+  html.has-rocky-cursor,
+  html.has-rocky-cursor *,
+  body.has-rocky-cursor,
+  body.has-rocky-cursor *,
+  body:has(.rocky-custom-cursor),
+  body:has(.rocky-custom-cursor) *,
+  html:has(.rocky-custom-cursor),
+  html:has(.rocky-custom-cursor) * {
+    cursor: none !important;
+  }
 }
-
-body:has(.rocky-custom-cursor) *,
-html:has(.rocky-custom-cursor) * {
-  cursor: none !important;
-}
-
 
 /* ---------------------------------------------------------
-   Rocky base
+   Rocky Thruster Aura Glow (Behind Rocky)
+   --------------------------------------------------------- */
+
+.rocky-cursor-aura {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 70px !important;
+  height: 70px !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  z-index: 2147483646 !important;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--theme-accent, #22d3ee) 45%, transparent) 0%,
+    color-mix(in srgb, var(--theme-accent, #22d3ee) 15%, transparent) 45%,
+    transparent 70%
+  ) !important;
+  filter: blur(8px);
+  will-change: transform, opacity;
+  transition: opacity 300ms ease, width 250ms ease, height 250ms ease;
+}
+
+.rocky-cursor-aura--active {
+  width: 90px !important;
+  height: 90px !important;
+  filter: blur(12px) !important;
+  animation: rocky-aura-pulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes rocky-aura-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0.95;
+  }
+}
+
+/* ---------------------------------------------------------
+   Rocky Wrapper Container
+   --------------------------------------------------------- */
+
+.rocky-custom-cursor-wrapper {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  pointer-events: none !important;
+  z-index: 2147483647 !important;
+  will-change: transform;
+  transition: opacity 250ms ease;
+}
+
+/* ---------------------------------------------------------
+   Rocky Base Image
    --------------------------------------------------------- */
 
 .rocky-custom-cursor {
-  position: fixed !important;
-
-  left: 0 !important;
-  top: 0 !important;
-
-  width: 80px !important;
-  height: 80px !important;
-
-  min-width: 56px !important;
-  min-height: 56px !important;
-
+  width: 76px !important;
+  height: 76px !important;
+  min-width: 50px !important;
+  min-height: 50px !important;
   max-width: none !important;
   max-height: none !important;
-
   display: block !important;
-
   object-fit: contain !important;
   object-position: center !important;
-
   pointer-events: none !important;
-
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-user-drag: none !important;
+  will-change: transform, filter, width, height;
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 240ms ease,
+              width 200ms ease,
+              height 200ms ease;
 
-  opacity: 1 !important;
-  visibility: visible !important;
-
-  z-index: 2147483647 !important;
-
-  will-change:
-    transform,
-    width,
-    height;
-
-  transform:
-    translate3d(-200px, -200px, 0);
-
-  transition:
-    width 160ms ease,
-    height 160ms ease,
-    filter 160ms ease;
+  /* Default Idle: Soft cosmic rim lighting */
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 0 8px color-mix(in srgb, var(--theme-accent, #22d3ee) 25%, transparent));
+  animation: rocky-hover-bob 3s ease-in-out infinite alternate;
 }
 
+@keyframes rocky-hover-bob {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1.5deg);
+  }
+  100% {
+    transform: translateY(2px) rotate(-1.5deg);
+  }
+}
 
 /* ---------------------------------------------------------
-   Normal Rocky
+   State 1: Pointer Hover (Buttons, Links, Selectors)
    --------------------------------------------------------- */
 
-.rocky-custom-cursor:not(
-  .rocky-custom-cursor--pointer
-) {
-  width: 80px !important;
-  height: 80px !important;
+.rocky-custom-cursor--pointer {
+  width: 82px !important;
+  height: 82px !important;
+  transform: scale(1.1) rotate(-6deg) !important;
+  animation: rocky-pointer-wiggle 1.4s ease-in-out infinite alternate !important;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6))
+          drop-shadow(0 0 14px var(--theme-accent, #22d3ee))
+          drop-shadow(0 0 24px color-mix(in srgb, var(--theme-accent, #22d3ee) 50%, transparent)) !important;
+}
 
-  filter:
-    drop-shadow(
-      0 2px 5px rgba(0, 0, 0, 0.45)
-    )
-    drop-shadow(
-      0 0 5px rgba(34, 211, 238, 0.15)
-    );
+@keyframes rocky-pointer-wiggle {
+  0% {
+    transform: scale(1.08) rotate(-7deg) translateY(0);
+  }
+  100% {
+    transform: scale(1.14) rotate(-3deg) translateY(-4px);
+  }
+}
+
+/* ---------------------------------------------------------
+   State 2: Card / Rich Container Hover (Inspect Mode)
+   --------------------------------------------------------- */
+
+.rocky-custom-cursor--card {
+  width: 84px !important;
+  height: 84px !important;
+  transform: scale(1.12) rotate(4deg) !important;
+  animation: rocky-card-scan 2.2s ease-in-out infinite alternate !important;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 12px color-mix(in srgb, var(--theme-accent, #22d3ee) 65%, transparent))
+          drop-shadow(0 0 20px color-mix(in srgb, var(--theme-accent, #22d3ee) 35%, transparent)) !important;
+}
+
+@keyframes rocky-card-scan {
+  0% {
+    transform: scale(1.1) rotate(2deg) translateY(-2px);
+  }
+  100% {
+    transform: scale(1.16) rotate(6deg) translateY(3px);
+  }
+}
+
+/* ---------------------------------------------------------
+   State 3: Text Input Hover (Focus Mode)
+   --------------------------------------------------------- */
+
+.rocky-custom-cursor--text {
+  width: 70px !important;
+  height: 70px !important;
+  transform: scale(0.95) rotate(-3deg) !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 0 10px var(--theme-accent, #22d3ee)) !important;
+}
+
+/* ---------------------------------------------------------
+   State 4: Mouse Down / Click (Squash & Rebound)
+   --------------------------------------------------------- */
+
+.rocky-custom-cursor--pressed {
+  width: 78px !important;
+  height: 78px !important;
+  transform: scale(0.85, 0.85) rotate(-4deg) translateY(4px) !important;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7))
+          drop-shadow(0 0 18px var(--theme-accent, #22d3ee)) !important;
+  transition: transform 80ms ease-out, filter 80ms ease-out !important;
 }
 
 /* ============================================================

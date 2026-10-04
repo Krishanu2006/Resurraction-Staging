@@ -375,6 +375,7 @@ export const TracksSection: React.FC = () => {
                 return (
                   <article
                     key={planet.id}
+                    data-card="true"
                     className={`
                       planet-card
                       ${
@@ -641,26 +642,16 @@ export const TracksSection: React.FC = () => {
 
           pointer-events: none;
 
-          opacity: 0.16;
+          opacity: 0.12;
 
           background-image:
             linear-gradient(
-              rgba(
-                103,
-                232,
-                249,
-                0.025
-              ) 1px,
+              color-mix(in srgb, var(--theme-accent, #e5a93c) 8%, transparent) 1px,
               transparent 1px
             ),
             linear-gradient(
               90deg,
-              rgba(
-                103,
-                232,
-                249,
-                0.025
-              ) 1px,
+              color-mix(in srgb, var(--theme-accent, #e5a93c) 8%, transparent) 1px,
               transparent 1px
             );
 
@@ -702,7 +693,7 @@ export const TracksSection: React.FC = () => {
           margin-bottom: 15px;
 
           color:
-            var(--stellar-cyan);
+            var(--theme-accent, var(--stellar-cyan));
 
           font-family:
             var(--font-mono);
@@ -725,16 +716,11 @@ export const TracksSection: React.FC = () => {
           height: 1px;
 
           background:
-            var(--stellar-cyan);
+            var(--theme-accent, var(--stellar-cyan));
 
           box-shadow:
             0 0 12px
-            rgba(
-              34,
-              211,
-              238,
-              0.6
-            );
+            var(--theme-accent, rgba(34, 211, 238, 0.6));
         }
 
 
@@ -753,19 +739,19 @@ export const TracksSection: React.FC = () => {
 
           font-weight: 500;
 
-          line-height: 0.98;
+          line-height: 1.05;
 
           letter-spacing:
-            -0.055em;
+            0.02em;
 
           color:
-            var(--text);
+            var(--theme-text, var(--text));
         }
 
 
         .tracks-title span {
           color:
-            var(--stellar-cyan);
+            var(--theme-accent, var(--stellar-cyan));
         }
 
 
@@ -776,7 +762,7 @@ export const TracksSection: React.FC = () => {
             19px 0 0;
 
           color:
-            var(--muted);
+            var(--theme-muted, var(--muted));
 
           font-family:
             var(--font-body);
@@ -813,25 +799,15 @@ export const TracksSection: React.FC = () => {
 
           border:
             1px solid
-            rgba(
-              103,
-              232,
-              249,
-              0.16
-            );
+            color-mix(in srgb, var(--theme-accent, #e5a93c) 25%, transparent);
 
           border-radius: 50%;
 
           background:
-            rgba(
-              7,
-              16,
-              39,
-              0.72
-            );
+            color-mix(in srgb, var(--theme-surface, #140e08) 85%, rgba(0, 0, 0, 0.6));
 
           color:
-            var(--muted);
+            var(--theme-muted, #94a3b8);
 
           cursor: pointer;
 
@@ -839,7 +815,8 @@ export const TracksSection: React.FC = () => {
             transform 180ms ease,
             color 180ms ease,
             border-color 180ms ease,
-            background 180ms ease;
+            background 180ms ease,
+            box-shadow 180ms ease;
         }
 
 
@@ -848,23 +825,17 @@ export const TracksSection: React.FC = () => {
             translateY(-2px);
 
           border-color:
-            rgba(
-              34,
-              211,
-              238,
-              0.5
-            );
+            var(--theme-accent, #e5a93c);
 
           background:
-            rgba(
-              34,
-              211,
-              238,
-              0.08
-            );
+            color-mix(in srgb, var(--theme-accent, #e5a93c) 15%, transparent);
 
           color:
-            var(--stellar-cyan);
+            var(--theme-accent, #e5a93c);
+
+          box-shadow:
+            0 0 16px
+            color-mix(in srgb, var(--theme-accent, #e5a93c) 35%, transparent);
         }
 
 
@@ -930,14 +901,15 @@ export const TracksSection: React.FC = () => {
 
           border:
             1px solid
-            var(--theme-card-border, rgba(148, 163, 184, 0.2));
+            color-mix(in srgb, var(--theme-border, #453216) 60%, rgba(255, 255, 255, 0.12));
 
           border-radius: 22px;
 
           background:
-            var(--theme-card-bg, rgba(11, 15, 25, 0.85));
+            color-mix(in srgb, var(--theme-surface, #140e08) 88%, rgba(0, 0, 0, 0.8));
 
-          backdrop-filter: blur(14px);
+          backdrop-filter: blur(20px) saturate(160%);
+          -webkit-backdrop-filter: blur(20px) saturate(160%);
 
           box-shadow:
             0 25px 80px
@@ -945,8 +917,9 @@ export const TracksSection: React.FC = () => {
               0,
               0,
               0,
-              0.48
-            );
+              0.55
+            ),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
 
           cursor: pointer;
 
@@ -1226,35 +1199,21 @@ export const TracksSection: React.FC = () => {
             rgba(
               255,
               255,
-              255,
-              0.12
-            );
+          border:
+            1px solid
+            color-mix(in srgb, var(--theme-border, #453216) 60%, rgba(255, 255, 255, 0.15));
 
           border-radius:
-            11px;
+            14px;
 
           background:
-            linear-gradient(
-              180deg,
-              rgba(
-                3,
-                5,
-                16,
-                0.28
-              ),
-              rgba(
-                3,
-                5,
-                16,
-                0.72
-              )
-            );
+            color-mix(in srgb, var(--theme-surface, #140e08) 88%, rgba(0, 0, 0, 0.85));
 
           backdrop-filter:
-            blur(5px);
+            blur(16px) saturate(180%);
 
           -webkit-backdrop-filter:
-            blur(5px);
+            blur(16px) saturate(180%);
 
           box-shadow:
             0 10px 30px
@@ -1262,8 +1221,9 @@ export const TracksSection: React.FC = () => {
               0,
               0,
               0,
-              0.18
-            );
+              0.4
+            ),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
         }
 
 
@@ -1470,19 +1430,9 @@ export const TracksSection: React.FC = () => {
           background:
             linear-gradient(
               90deg,
-              #050816 0%,
-              rgba(
-                5,
-                8,
-                22,
-                0.88
-              ) 22%,
-              rgba(
-                5,
-                8,
-                22,
-                0
-              ) 100%
+              var(--theme-background, #030510) 0%,
+              color-mix(in srgb, var(--theme-background, #030510) 80%, transparent) 24%,
+              transparent 100%
             );
         }
 
@@ -1493,19 +1443,9 @@ export const TracksSection: React.FC = () => {
           background:
             linear-gradient(
               270deg,
-              #050816 0%,
-              rgba(
-                5,
-                8,
-                22,
-                0.88
-              ) 22%,
-              rgba(
-                5,
-                8,
-                22,
-                0
-              ) 100%
+              var(--theme-background, #030510) 0%,
+              color-mix(in srgb, var(--theme-background, #030510) 80%, transparent) 24%,
+              transparent 100%
             );
         }
 
