@@ -22,18 +22,18 @@ export type GlobalSpaceThemeConfig = {
 
 const globalSpaceThemeConfigs: Record<ThemeId, GlobalSpaceThemeConfig> = {
   'tau-ceti': {
-    // Golden Dune World: warm amber, solar gold, bronze stardust
-    nebulaA: 0x9e681c,
-    nebulaB: 0x3d2508,
-    nebulaC: 0xe5a93c,
-    nebulaOpacity: 0.22,
-    starColor1: 0xffe4a0,
-    starColor2: 0xe5a93c,
+    // Orange & Green World: vibrant orange nebula, emerald stardust, bio-green aura
+    nebulaA: 0x22c55e,
+    nebulaB: 0x0f1a0c,
+    nebulaC: 0xf97316,
+    nebulaOpacity: 0.24,
+    starColor1: 0x4ade80,
+    starColor2: 0xf97316,
     starColor3: 0xffffff,
-    dustColor: 0xd4a559,
-    rockColor: 0x2e2015,
-    rockRimColor: 0xe5a93c,
-    shootingStarColor: [1.0, 0.85, 0.45],
+    dustColor: 0x84cc16,
+    rockColor: 0x182415,
+    rockRimColor: 0xf97316,
+    shootingStarColor: [1.0, 0.48, 0.1],
   },
   miller: {
     // Monochrome Tidal World: pure steel gray, silver mist, graphite void (NO blue!)

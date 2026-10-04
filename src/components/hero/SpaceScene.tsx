@@ -44,25 +44,25 @@ export type SpaceHeroThemeConfig = {
 
 export const spaceHeroThemeConfigs: Record<ThemeId, SpaceHeroThemeConfig> = {
   'tau-ceti': {
-    // Golden Dune World: warm amber, solar gold, bronze void
-    background: 0x0c0a06,
-    nebulaA: 0x9e681c,
-    nebulaB: 0x3d2508,
-    nebulaC: 0xe5a93c,
-    nebulaEdge: 0x1a1005,
-    atmosphereGlow: 0xffd778,
-    atmosphereBoost: 1.0,
-    rimColorA: 0xffd778,
-    rimColorB: 0xe5a93c,
-    planetTint: 0xfff4dc,
+    // Orange & Green Bio-dusk World: vibrant orange nebula, bio-green aura, emerald dust
+    background: 0x080c06,
+    nebulaA: 0x22c55e,
+    nebulaB: 0x0f1a0c,
+    nebulaC: 0xf97316,
+    nebulaEdge: 0x050a04,
+    atmosphereGlow: 0x4ade80,
+    atmosphereBoost: 1.1,
+    rimColorA: 0xf97316,
+    rimColorB: 0x22c55e,
+    planetTint: 0xf4fce3,
     isGrayscale: false,
-    sunLight: 0xffd89a,
-    ambientLight: 0x2e2015,
-    starColor1: 0xffe4a0,
-    starColor2: 0xe5a93c,
+    sunLight: 0xfb923c,
+    ambientLight: 0x111a0e,
+    starColor1: 0x4ade80,
+    starColor2: 0xf97316,
     starColor3: 0xffffff,
-    dustColor: 0xd4a559,
-    shootingStarColor: [1.0, 0.85, 0.45],
+    dustColor: 0x84cc16,
+    shootingStarColor: [1.0, 0.48, 0.1],
   },
   miller: {
     // Pure gray / silver monochrome tidal aesthetic - ZERO blue!
