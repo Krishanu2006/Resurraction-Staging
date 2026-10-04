@@ -25,7 +25,7 @@ export const RulesSection: React.FC = () => {
         <div className="max-w-[1050px] mx-auto mt-10 space-y-4">
           {rulesData.map((category, index) => (
             <Reveal key={category.id} delay={index * 40}>
-              <Card className="group overflow-hidden border border-theme-border/50 bg-theme-card-bg/60 backdrop-blur-md transition-all duration-300 hover:border-theme-primary/40">
+              <Card className="group overflow-hidden hover:border-theme-primary/50 transition-all duration-300">
                 <details className="rule-item">
                   <summary className="list-none cursor-pointer flex items-center justify-between gap-4 p-5 sm:p-6 select-none transition-colors">
                     <div className="flex items-start sm:items-center gap-4 min-w-0">

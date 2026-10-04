@@ -2,6 +2,7 @@ import React from 'react';
 
 import { SectionHeading } from '../ui/SectionHeading';
 import { Reveal } from '../ui/Reveal';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { timelineData } from '../../data/timeline';
 
@@ -31,7 +32,7 @@ export const TimelineSection: React.FC = () => {
           <div className="space-y-6">
             {timelineData.map((item, index) => (
               <Reveal key={item.id} delay={index * 55}>
-                <div className="relative grid grid-cols-[50px_1fr] sm:grid-cols-[70px_30px_230px_1fr] gap-4 sm:gap-6 items-start p-4 sm:p-6 rounded-xl border border-theme-border/30 bg-theme-card-bg/40 backdrop-blur-md hover:border-theme-primary/40 transition-all duration-300">
+                <Card className="relative grid grid-cols-[50px_1fr] sm:grid-cols-[70px_30px_230px_1fr] gap-4 sm:gap-6 items-start p-4 sm:p-6 hover:border-theme-primary/50 transition-all duration-300">
                   <div className="hidden sm:block">
                     <Badge
                       variant="outline"
@@ -68,7 +69,7 @@ export const TimelineSection: React.FC = () => {
                   <p className="col-span-2 sm:col-span-1 text-muted-foreground text-sm leading-relaxed sm:pt-0.5">
                     {item.description}
                   </p>
-                </div>
+                </Card>
               </Reveal>
             ))}
           </div>

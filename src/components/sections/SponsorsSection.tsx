@@ -28,7 +28,7 @@ export const SponsorsSection: React.FC = () => {
         <div className="space-y-6 mt-10">
           {sponsorTiers.map((tier, index) => (
             <Reveal key={tier.id} delay={index * 60}>
-              <Card className="border border-theme-border/50 bg-theme-card-bg/60 backdrop-blur-md transition-all duration-300 hover:border-theme-primary/40">
+              <Card className="hover:border-theme-primary/50 transition-all duration-300">
                 <CardHeader className="flex flex-row items-center justify-between pb-4">
                   <div>
                     <Badge
@@ -57,7 +57,11 @@ export const SponsorsSection: React.FC = () => {
                     {tier.slots.map((slot) => (
                       <div
                         key={slot.id}
-                        className="min-h-[110px] p-4 flex flex-col justify-between rounded-lg border border-theme-border/30 bg-black/20 hover:border-theme-accent/40 hover:bg-theme-accent/5 transition-all duration-200"
+                        className="min-h-[110px] p-4 flex flex-col justify-between rounded-lg border border-[color-mix(in_srgb,var(--theme-border)_45%,rgba(255,255,255,0.08))] bg-[color-mix(in_srgb,var(--theme-surface)_72%,rgba(0,0,0,0.65))] backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] hover:border-theme-accent/50 hover:bg-theme-accent/10 transition-all duration-200"
+                        style={{
+                          WebkitBackdropFilter: 'blur(12px)',
+                          backdropFilter: 'blur(12px)',
+                        }}
                       >
                         <span className="text-foreground/90 text-sm font-medium">
                           {slot.label.replace(' // INCOMING', '')}

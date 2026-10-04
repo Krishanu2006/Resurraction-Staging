@@ -25,7 +25,7 @@ export const JurySection: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
           {juryMembersData.map((member, index) => (
             <Reveal key={member.id} delay={index * 60}>
-              <Card className="h-full min-h-[300px] flex flex-col justify-between p-6 sm:p-7 border border-theme-border/50 bg-theme-card-bg/60 backdrop-blur-md transition-all duration-300 hover:border-theme-primary/50 hover:shadow-lg hover:shadow-theme-primary/5">
+              <Card className="h-full min-h-[300px] flex flex-col justify-between p-6 sm:p-7 hover:border-theme-primary/50 hover:shadow-lg hover:shadow-theme-primary/10 transition-all duration-300">
                 <div>
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-theme-primary/10 border border-theme-primary/20 text-theme-accent">

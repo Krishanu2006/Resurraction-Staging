@@ -403,6 +403,22 @@ svg {
 
 
 /* =========================================================
+   FROSTED GLASS EFFECT SYSTEM
+   ========================================================= */
+
+.frosted-card,
+.glass-panel,
+.glass-card,
+.interactive-card {
+  background: color-mix(in srgb, var(--theme-surface, #121820) 84%, rgba(0, 0, 0, 0.72)) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-border, rgba(255, 255, 255, 0.15)) 65%, rgba(255, 255, 255, 0.12)) !important;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+
+/* =========================================================
    CONTAINERS
    ========================================================= */
 

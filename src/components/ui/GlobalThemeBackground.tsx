@@ -108,16 +108,16 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
   }, [themeId]);
 
   /*
-   * Observe scroll to activate ONLY below About section (Tracks & beyond)
-   * Hero and About are completely excluded.
+   * Observe scroll to activate from About section downwards
+   * Hero is excluded.
    */
   useEffect(() => {
     const checkPosition = () => {
-      const tracksEl = document.getElementById('tracks');
-      if (!tracksEl) return;
-      const rect = tracksEl.getBoundingClientRect();
-      const isBelowAbout = rect.top <= window.innerHeight * 0.95;
-      setInActiveArea(isBelowAbout);
+      const aboutEl = document.getElementById('about');
+      if (!aboutEl) return;
+      const rect = aboutEl.getBoundingClientRect();
+      const isAboutOrBelow = rect.top <= window.innerHeight * 0.8;
+      setInActiveArea(isAboutOrBelow);
     };
 
     window.addEventListener('scroll', checkPosition, { passive: true });
