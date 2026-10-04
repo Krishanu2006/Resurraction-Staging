@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -11,6 +10,9 @@ import tauCetiImage from './track_images/taucetie.png';
 import millerImage from './track_images/miller.png';
 import pandoraImage from './track_images/pandora.png';
 import keplerImage from './track_images/kepler.png';
+
+import { SectionHeading } from '../ui/SectionHeading';
+
 
 type PlanetCard = {
   id: string;
@@ -26,6 +28,7 @@ type PlanetCard = {
   skills: string;
   status: string;
 };
+
 
 const planetCards: PlanetCard[] = [
   {
@@ -89,17 +92,20 @@ const planetCards: PlanetCard[] = [
   },
 ];
 
+
 const clamp = (
   value: number,
   min: number,
   max: number,
 ) => Math.min(Math.max(value, min), max);
 
+
 export const TracksSection: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   const totalCards = planetCards.length;
+
 
   const goNext = () => {
     if (totalCards <= 1) return;
@@ -108,6 +114,7 @@ export const TracksSection: React.FC = () => {
       (current) => (current + 1) % totalCards,
     );
   };
+
 
   const goPrevious = () => {
     if (totalCards <= 1) return;
@@ -119,6 +126,7 @@ export const TracksSection: React.FC = () => {
     );
   };
 
+
   const goTo = (index: number) => {
     setActiveIndex(
       clamp(
@@ -128,6 +136,7 @@ export const TracksSection: React.FC = () => {
       ),
     );
   };
+
 
   /*
    * Automatic carousel
@@ -149,11 +158,14 @@ export const TracksSection: React.FC = () => {
     };
   }, [isPaused, totalCards]);
 
+
   /*
    * Touch swipe handling for mobile & tablet
    */
+
   const touchStartX = React.useRef<number | null>(null);
   const touchStartY = React.useRef<number | null>(null);
+
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -161,25 +173,38 @@ export const TracksSection: React.FC = () => {
     setIsPaused(true);
   };
 
+
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
+    if (
+      touchStartX.current === null ||
+      touchStartY.current === null
+    ) {
+      return;
+    }
+
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
+
     const dx = touchEndX - touchStartX.current;
     const dy = touchEndY - touchStartY.current;
 
     // Check if horizontal swipe is dominant and exceeds threshold
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 36) {
+    if (
+      Math.abs(dx) > Math.abs(dy) &&
+      Math.abs(dx) > 36
+    ) {
       if (dx < 0) {
         goNext();
       } else {
         goPrevious();
       }
     }
+
     touchStartX.current = null;
     touchStartY.current = null;
     setIsPaused(false);
   };
+
 
   /*
    * Keyboard navigation
@@ -211,17 +236,18 @@ export const TracksSection: React.FC = () => {
     };
   }, [totalCards, activeIndex]);
 
+
   if (totalCards === 0) {
     return (
       <section
         id="tracks"
-        className="section tracks-section"
+        className="section-tracks-section"
       >
         <div className="container">
           <div className="tracks-empty">
             <span>02 — TRACKS</span>
 
-            <h2>
+            <h2 className="tracks-empty-title">
               Explore your frontier.
             </h2>
 
@@ -265,6 +291,7 @@ export const TracksSection: React.FC = () => {
     );
   }
 
+
   return (
     <section
       id="tracks"
@@ -272,6 +299,7 @@ export const TracksSection: React.FC = () => {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
+
       <div className="container">
 
         {/* =====================================================
@@ -280,23 +308,13 @@ export const TracksSection: React.FC = () => {
 
         <div className="tracks-header">
 
-          <div>
+          <div className="tracks-heading-wrapper">
 
-            <div className="tracks-kicker">
-              <span className="tracks-kicker-line" />
-              <span>02 — TRACKS</span>
-            </div>
-
-            <h2 className="tracks-title">
-              Explore your
-              <span> frontier.</span>
-            </h2>
-
-            <p className="tracks-subtitle">
-              Navigate through the challenge domains
-              and discover the frontiers where
-              technology meets imagination.
-            </p>
+            <SectionHeading
+              code="02 — Tracks"
+              title="Explore your frontier."
+              subtitle="Navigate through the challenge domains and discover the frontiers where technology meets imagination."
+            />
 
           </div>
 
@@ -316,6 +334,7 @@ export const TracksSection: React.FC = () => {
                 strokeWidth={1.5}
               />
             </button>
+
 
             <button
               type="button"
@@ -344,13 +363,17 @@ export const TracksSection: React.FC = () => {
           onTouchEnd={handleTouchEnd}
         >
 
-          <div className="tracks-track" style={{ perspective: 1200 }}>
+          <div
+            className="tracks-track"
+            style={{ perspective: 1200 }}
+          >
 
             {planetCards.map(
               (planet, index) => {
 
                 const offset =
                   index - activeIndex;
+
 
                 /*
                  * Circular carousel positioning.
@@ -359,18 +382,20 @@ export const TracksSection: React.FC = () => {
                 const normalizedOffset =
                   offset > totalCards / 2
                     ? offset - totalCards
-                    : offset <
-                        -totalCards / 2
+                    : offset < -totalCards / 2
                       ? offset + totalCards
                       : offset;
 
+
                 const isActive =
                   normalizedOffset === 0;
+
 
                 const isNear =
                   Math.abs(
                     normalizedOffset,
                   ) <= 1;
+
 
                 /*
                  * Active card:
@@ -388,16 +413,19 @@ export const TracksSection: React.FC = () => {
                   rotateY(${normalizedOffset * -10}deg)
                 `;
 
+
                 if (isActive) {
                   transform =
                     'translateX(0) scale(1) rotateY(0deg)';
                 }
+
 
                 const opacity = isActive
                   ? 1
                   : isNear
                     ? 0.48
                     : 0;
+
 
                 const zIndex = isActive
                   ? 10
@@ -408,6 +436,7 @@ export const TracksSection: React.FC = () => {
                           normalizedOffset,
                         ),
                     );
+
 
                 return (
                   <article
@@ -1079,7 +1108,7 @@ export const TracksSection: React.FC = () => {
         .planet-card:not(
           .planet-card-active
         )
-        .planet-card-image {
+          .planet-card-image {
           filter:
             brightness(0.72)
             saturate(0.82);
@@ -1148,14 +1177,14 @@ export const TracksSection: React.FC = () => {
             color-mix(
               in srgb,
               var(--planet-accent)
-                42%,
+              42%,
               transparent
             ),
             0 0 65px
             color-mix(
               in srgb,
               var(--planet-accent)
-                16%,
+              16%,
               transparent
             );
 
@@ -1227,7 +1256,7 @@ export const TracksSection: React.FC = () => {
             color-mix(
               in srgb,
               var(--planet-accent)
-                46%,
+              46%,
               rgba(
                 148,
                 163,
@@ -1248,7 +1277,7 @@ export const TracksSection: React.FC = () => {
               color-mix(
                 in srgb,
                 var(--planet-accent)
-                  13%,
+                13%,
                 transparent
               );
         }
@@ -1870,8 +1899,10 @@ export const TracksSection: React.FC = () => {
         }
 
       `}</style>
+
     </section>
   );
 };
+
 
 export default TracksSection;
