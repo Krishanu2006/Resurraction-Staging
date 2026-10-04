@@ -253,7 +253,7 @@ const SpaceScene: React.FC<
     scene.fog =
       new THREE.FogExp2(
         bgHex,
-        0.00045
+        0.0016
       );
 
     /* ============================================================
@@ -343,7 +343,7 @@ const SpaceScene: React.FC<
           window.innerWidth,
           window.innerHeight
         ),
-        0.72,
+        0.95,
         0.75,
         0.12
       );
@@ -1311,7 +1311,7 @@ const SpaceScene: React.FC<
 
     const nebulaMaterial =
       createNebulaMaterial(
-        0.32
+        0.68
       );
 
     const nebula =
@@ -1338,7 +1338,7 @@ const SpaceScene: React.FC<
 
     const backMaterial =
       createNebulaMaterial(
-        0.18
+        0.42
       );
 
     const nebulaBack =
