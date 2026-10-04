@@ -203,11 +203,19 @@ const SpaceScene: React.FC<
         profile.background
       );
 
-    scene.fog =
+    /* ------------------------------------------------------------
+     * FOG — created once and captured in a local const so
+     * TypeScript can narrow the type. `scene.fog` is typed as
+     * `Fog | FogBase | null`, but `fog` below is `FogExp2`.
+     * ------------------------------------------------------------ */
+
+    const fog =
       new THREE.FogExp2(
         profile.fogGreen,
         0.00042
       );
+
+    scene.fog = fog;
 
     /* ============================================================
      * CAMERA
@@ -364,7 +372,6 @@ const SpaceScene: React.FC<
           void main() {
             vec3 dir = normalize(vWorldDir);
 
-            // --- GREEN BASE ---
             float h = dir.y;
             float tUp = smoothstep(-0.5, 0.9, h);
 
@@ -375,27 +382,19 @@ const SpaceScene: React.FC<
               skyBase = mix(uGreenMid, uGreenZenith, (tUp - 0.5) * 2.0);
             }
 
-            // --- BIG ORANGE PATCHES ---
-            // Low spatial frequency = big patches.
             vec3 np = dir * 1.6 + vec3(uTime * 0.010, 0.0, uTime * 0.006);
 
             float patchField = fbm(np, 4);
 
-            // Very low-frequency drift so groups of
-            // patches move slowly through the sky.
             float drift = fbm(dir * 0.7 + vec3(uTime * 0.015, 0.0, 0.0), 3);
 
             float combined = patchField * 0.75 + drift * 0.25;
 
-            // Lower thresholds + wider smoothing = big
-            // soft patches with gradual edges.
             float smallPatch = smoothstep(0.58, 0.78, combined);
             float largePatch = smoothstep(0.48, 0.68, combined) * 0.7;
 
             float orangeAmount = max(smallPatch, largePatch);
 
-            // Slow breathing so each patch appears and
-            // disappears over several seconds.
             float flicker = 0.5 + 0.5 * sin(
               uTime * 0.28 +
               combined * 10.0
@@ -403,7 +402,6 @@ const SpaceScene: React.FC<
 
             orangeAmount *= flicker;
 
-            // Soft blend so patches fade in from green.
             vec3 color = skyBase;
             color = mix(color, color + uOrange * 0.85, orangeAmount);
 
@@ -684,13 +682,11 @@ const SpaceScene: React.FC<
             },
 
             fogColor: {
-              value: scene.fog.color,
+              value: fog.color,
             },
 
             fogDensity: {
-              value:
-                (scene.fog as THREE.FogExp2)
-                  .density,
+              value: fog.density,
             },
           },
 
@@ -981,13 +977,11 @@ const SpaceScene: React.FC<
             },
 
             fogColor: {
-              value: scene.fog.color,
+              value: fog.color,
             },
 
             fogDensity: {
-              value:
-                (scene.fog as THREE.FogExp2)
-                  .density,
+              value: fog.density,
             },
           },
 
@@ -1389,7 +1383,6 @@ const SpaceScene: React.FC<
                 stretched.y *=
                   1.35;
 
-                // --- GREEN BASE ---
                 float n =
                   warpedFbm(
                     stretched *
@@ -1411,8 +1404,6 @@ const SpaceScene: React.FC<
                     n
                   );
 
-                // --- BIG ORANGE PATCHES ---
-                // Low spatial frequency = big patches.
                 vec2 patchUV =
                   stretched * 1.7 +
                   vec2(
@@ -1423,8 +1414,6 @@ const SpaceScene: React.FC<
                 float patchField =
                   fbm(patchUV);
 
-                // Lower thresholds + wider smoothing
-                // = large soft patches with gradual edges.
                 float smallPatch =
                   smoothstep(
                     0.55,
@@ -1445,8 +1434,6 @@ const SpaceScene: React.FC<
                     largePatch
                   );
 
-                // Slow breathing so each patch is visible
-                // as it appears and fades.
                 float flicker =
                   0.5 +
                   0.5 *
@@ -1458,7 +1445,6 @@ const SpaceScene: React.FC<
                 orangeAmount *=
                   flicker;
 
-                // --- COLOR ---
                 vec3 color =
                   uGreen *
                   (
@@ -2102,13 +2088,11 @@ const SpaceScene: React.FC<
           },
 
           fogColor: {
-            value: scene.fog.color,
+            value: fog.color,
           },
 
           fogDensity: {
-            value:
-              (scene.fog as THREE.FogExp2)
-                .density,
+            value: fog.density,
           },
         },
 
