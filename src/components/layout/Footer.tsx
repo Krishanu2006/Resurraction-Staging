@@ -19,12 +19,13 @@ export const Footer: React.FC = () => {
     <footer
       style={{
         position: 'relative',
+        zIndex: 1,
         overflow: 'hidden',
         padding: '90px 0 25px',
         background:
-          'linear-gradient(180deg, #050816, #030510)',
+          'color-mix(in srgb, var(--theme-background) 65%, transparent 35%)',
         borderTop:
-          '1px solid var(--border-subtle)',
+          '1px solid var(--theme-border)',
       }}
     >
       {/* Atmospheric glow */}
@@ -62,6 +63,7 @@ export const Footer: React.FC = () => {
             <img
               src="/assets/brand/resurraction-logo.png"
               alt="RESURRACTION"
+              className="theme-logo"
               style={{
                 width: 190,
                 height: 'auto',
@@ -85,19 +87,25 @@ export const Footer: React.FC = () => {
 
             <a
               href="#hero"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="interactive-button"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 7,
                 marginTop: 25,
                 color:
-                  'var(--stellar-cyan)',
+                  'var(--theme-accent)',
                 fontSize: 11,
                 fontFamily:
                   'var(--font-mono)',
                 letterSpacing: '.08em',
                 textTransform:
                   'uppercase',
+                transition: 'all 200ms ease',
               }}
             >
               Back to top
@@ -230,7 +238,7 @@ export const Footer: React.FC = () => {
 
       <style>{`
         footer a:hover {
-          color: var(--stellar-cyan) !important;
+          color: var(--theme-accent) !important;
         }
 
         @media (max-width: 750px) {

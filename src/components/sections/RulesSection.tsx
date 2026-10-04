@@ -57,7 +57,7 @@ export const RulesSection: React.FC = () => {
                     <span
                       style={{
                         color:
-                          'var(--stellar-cyan)',
+                          'var(--theme-accent)',
                         fontFamily:
                           'var(--font-mono)',
                         fontSize: 9,
@@ -155,19 +155,28 @@ export const RulesSection: React.FC = () => {
       </div>
 
       <style>{`
+        .rule-item {
+          transition: background-color 250ms ease;
+          border-radius: var(--radius-sm);
+        }
+
+        .rule-item:hover {
+          background-color: color-mix(in srgb, var(--theme-surface) 60%, transparent);
+        }
+
         .rule-item summary::-webkit-details-marker {
           display: none;
         }
 
         .rule-item[open] .rule-chevron {
           transform: rotate(180deg);
-          color: var(--stellar-cyan);
+          color: var(--theme-accent) !important;
         }
 
         .rule-chevron {
           transition:
-            transform 180ms ease,
-            color 180ms ease;
+            transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+            color 250ms ease;
         }
 
         @media (max-width: 650px) {

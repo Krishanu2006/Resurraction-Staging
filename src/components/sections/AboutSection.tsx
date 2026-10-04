@@ -1043,7 +1043,9 @@ export const AboutSection:
 
 
             <h2>
-              Hello Earthlings!
+              Hello
+              <br />
+              Earthlings!
             </h2>
 
 
@@ -1205,7 +1207,9 @@ export const AboutSection:
               <br />
 
               <span>
-                Infinite possibilities.
+                Infinite
+                <br />
+                possibilities.
               </span>
 
             </h2>

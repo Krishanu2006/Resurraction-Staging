@@ -47,7 +47,7 @@ const planetCards: PlanetCard[] = [
     id: 'millers-planet',
     image: millerImage,
     name: "Miller's Planet",
-    accent: '#60a5fa',
+    accent: '#94a3b8',
 
     event: 'HACKBOX',
     title: 'Enter. Hack. Escape.',
@@ -62,7 +62,7 @@ const planetCards: PlanetCard[] = [
     id: 'pandora',
     image: pandoraImage,
     name: 'Pandora',
-    accent: '#38bdf8',
+    accent: '#00d2ff',
 
     event: 'COMPETITIVE PROGRAMMING',
     title: 'Think Beyond O(n).',
@@ -150,6 +150,38 @@ export const TracksSection: React.FC = () => {
   }, [isPaused, totalCards]);
 
   /*
+   * Touch swipe handling for mobile & tablet
+   */
+  const touchStartX = React.useRef<number | null>(null);
+  const touchStartY = React.useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setIsPaused(true);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const dx = touchEndX - touchStartX.current;
+    const dy = touchEndY - touchStartY.current;
+
+    // Check if horizontal swipe is dominant and exceeds threshold
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 36) {
+      if (dx < 0) {
+        goNext();
+      } else {
+        goPrevious();
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+    setIsPaused(false);
+  };
+
+  /*
    * Keyboard navigation
    */
 
@@ -177,7 +209,7 @@ export const TracksSection: React.FC = () => {
         handleKeyDown,
       );
     };
-  });
+  }, [totalCards, activeIndex]);
 
   if (totalCards === 0) {
     return (
@@ -275,7 +307,7 @@ export const TracksSection: React.FC = () => {
 
             <button
               type="button"
-              className="tracks-arrow"
+              className="tracks-arrow interactive-button"
               onClick={goPrevious}
               aria-label="Previous planet"
             >
@@ -287,7 +319,7 @@ export const TracksSection: React.FC = () => {
 
             <button
               type="button"
-              className="tracks-arrow"
+              className="tracks-arrow interactive-button"
               onClick={goNext}
               aria-label="Next planet"
             >
@@ -303,12 +335,16 @@ export const TracksSection: React.FC = () => {
 
 
         {/* =====================================================
-            CAROUSEL
+            CAROUSEL WITH TOUCH SWIPE & 3D PERSPECTIVE
             ===================================================== */}
 
-        <div className="tracks-carousel">
+        <div
+          className="tracks-carousel"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
 
-          <div className="tracks-track">
+          <div className="tracks-track" style={{ perspective: 1200 }}>
 
             {planetCards.map(
               (planet, index) => {
@@ -341,19 +377,20 @@ export const TracksSection: React.FC = () => {
                  * center + full size
                  *
                  * Side cards:
-                 * smaller + partially visible
+                 * smaller + partially visible with 3D tilt
                  */
 
                 let transform = `
                   translateX(
                     ${normalizedOffset * 76}%
                   )
-                  scale(0.82)
+                  scale(0.84)
+                  rotateY(${normalizedOffset * -10}deg)
                 `;
 
                 if (isActive) {
                   transform =
-                    'translateX(0) scale(1)';
+                    'translateX(0) scale(1) rotateY(0deg)';
                 }
 
                 const opacity = isActive
@@ -636,12 +673,7 @@ export const TracksSection: React.FC = () => {
               ),
               transparent 34%
             ),
-            linear-gradient(
-              180deg,
-              #050816 0%,
-              #060a18 50%,
-              #050816 100%
-            );
+            var(--theme-background);
         }
 
 
@@ -1490,19 +1522,13 @@ export const TracksSection: React.FC = () => {
           background:
             linear-gradient(
               90deg,
-              #050816 0%,
-              rgba(
-                5,
-                8,
-                22,
-                0.88
+              var(--theme-background) 0%,
+              color-mix(
+                in srgb,
+                var(--theme-background) 88%,
+                transparent
               ) 22%,
-              rgba(
-                5,
-                8,
-                22,
-                0
-              ) 100%
+              transparent 100%
             );
         }
 
@@ -1513,19 +1539,13 @@ export const TracksSection: React.FC = () => {
           background:
             linear-gradient(
               270deg,
-              #050816 0%,
-              rgba(
-                5,
-                8,
-                22,
-                0.88
+              var(--theme-background) 0%,
+              color-mix(
+                in srgb,
+                var(--theme-background) 88%,
+                transparent
               ) 22%,
-              rgba(
-                5,
-                8,
-                22,
-                0
-              ) 100%
+              transparent 100%
             );
         }
 

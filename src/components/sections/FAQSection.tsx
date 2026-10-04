@@ -38,9 +38,14 @@ export const FAQSection: React.FC = () => {
                 delay={index * 35}
               >
                 <article
+                  className="faq-item"
                   style={{
                     borderBottom:
-                      '1px solid var(--hairline)',
+                      '1px solid var(--border-subtle)',
+                    marginBottom: 0,
+                    padding: '0 8px',
+                    background: 'transparent',
+                    transition: 'background 250ms ease, border-color 250ms ease',
                   }}
                 >
                   <button
@@ -63,20 +68,22 @@ export const FAQSection: React.FC = () => {
                       padding: '23px 0',
                       textAlign: 'left',
                       color: active
-                        ? 'var(--stellar-cyan)'
+                        ? 'var(--theme-accent)'
                         : 'var(--text)',
                       background:
                         'transparent',
                       border: 0,
+                      cursor: 'pointer',
                     }}
                   >
                     <span
                       style={{
                         color:
-                          'var(--muted-dark)',
+                          'var(--theme-accent)',
                         fontFamily:
                           'var(--font-mono)',
                         fontSize: 9,
+                        opacity: active ? 1 : 0.6,
                       }}
                     >
                       {String(
@@ -100,7 +107,7 @@ export const FAQSection: React.FC = () => {
                       size={17}
                       color={
                         active
-                          ? 'var(--stellar-cyan)'
+                          ? 'var(--theme-accent)'
                           : 'var(--muted)'
                       }
                       style={{
@@ -108,41 +115,53 @@ export const FAQSection: React.FC = () => {
                           ? 'rotate(180deg)'
                           : 'none',
                         transition:
-                          'transform 180ms ease',
+                          'transform 250ms ease, color 250ms ease',
                       }}
                     />
                   </button>
 
-                  {active && (
-                    <div
-                      style={{
-                        padding:
-                          '0 42px 25px 68px',
-                      }}
-                    >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateRows: active ? '1fr' : '0fr',
+                      transition: 'grid-template-rows 320ms cubic-bezier(0.16, 1, 0.3, 1)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div style={{ minHeight: 0, overflow: 'hidden' }}>
                       <div
                         style={{
-                          width: 32,
-                          height: 1,
-                          marginBottom: 14,
-                          background:
-                            'var(--stellar-cyan)',
-                        }}
-                      />
-
-                      <p
-                        style={{
-                          maxWidth: 760,
-                          color:
-                            'var(--muted)',
-                          fontSize: 14,
-                          lineHeight: 1.85,
+                          padding: '0 42px 25px 68px',
+                          opacity: active ? 1 : 0,
+                          transform: active ? 'translateY(0)' : 'translateY(-6px)',
+                          transition: 'opacity 250ms ease 50ms, transform 280ms cubic-bezier(0.16, 1, 0.3, 1) 50ms',
                         }}
                       >
-                        {item.answer}
-                      </p>
+                        <div
+                          style={{
+                            width: 32,
+                            height: 1,
+                            marginBottom: 14,
+                            background:
+                              'var(--theme-accent)',
+                            boxShadow: '0 0 10px var(--theme-accent)',
+                          }}
+                        />
+
+                        <p
+                          style={{
+                            maxWidth: 760,
+                            color:
+                              'var(--muted)',
+                            fontSize: 14,
+                            lineHeight: 1.85,
+                          }}
+                        >
+                          {item.answer}
+                        </p>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </article>
               </Reveal>
             );

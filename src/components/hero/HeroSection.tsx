@@ -5,6 +5,7 @@ import React, {
 
 import { HeroContent } from './HeroContent';
 import SpaceScene from './SpaceScene';
+import { type ThemeId } from '../../config/theme';
 
 interface HeroSectionProps {
   /**
@@ -16,6 +17,11 @@ interface HeroSectionProps {
    * Starts the cinematic handoff into About.
    */
   handoff?: boolean;
+
+  /**
+   * Active world theme to align the video grading & mood.
+   */
+  themeId?: ThemeId;
 }
 
 export const HeroSection: React.FC<
@@ -23,6 +29,7 @@ export const HeroSection: React.FC<
 > = ({
   onHeroComplete,
   handoff = false,
+  themeId,
 }) => {
   const [
     scrollProgress,
@@ -188,17 +195,16 @@ export const HeroSection: React.FC<
           transform:
             'translate3d(0, 0, 0)',
           background:
-            '#02040a',
+            'var(--theme-background)',
         }}
       >
         {/* =================================================
-            INTERACTIVE THREE.JS SPACE SCENE
+            INTERACTIVE THREE.JS SPACE SCENE (THEME MATCHED)
             ================================================= */}
 
         <SpaceScene
-          scrollProgress={
-            scrollProgress
-          }
+          scrollProgress={scrollProgress}
+          themeId={themeId}
         />
 
         {/* =================================================
@@ -257,9 +263,9 @@ export const HeroSection: React.FC<
                   scrollProgress * 100
                 }%`,
                 background:
-                  'linear-gradient(90deg, var(--stellar-cyan), var(--nebula-purple))',
+                  'linear-gradient(90deg, var(--theme-accent), var(--theme-primary), var(--theme-cta))',
                 boxShadow:
-                  '0 0 12px rgba(34,211,238,0.6)',
+                  '0 0 14px var(--theme-accent)',
                 transition:
                   'width 80ms linear',
               }}

@@ -15,6 +15,7 @@ type Theme = {
   number: string;
   name: string;
   subtitle: string;
+  badge: string;
   image: string;
   available: boolean;
   accent: string;
@@ -25,37 +26,41 @@ const themes: Theme[] = [
     id: 'tau-ceti',
     number: '01',
     name: 'TAU CETI e',
-    subtitle: 'PRIMARY WORLD',
+    subtitle: 'Golden Dune World',
+    badge: '🟡 TAU CETI e',
     image: tauCetiImage,
     available: true,
-    accent: '#22d3ee',
+    accent: '#E5A93C',
   },
   {
     id: 'miller',
     number: '02',
     name: "MILLER'S PLANET",
-    subtitle: 'OCEAN WORLD',
+    subtitle: 'Monochrome Tidal World',
+    badge: "⚪ MILLER'S PLANET",
     image: millerImage,
     available: true,
-    accent: '#60a5fa',
+    accent: '#E2E8F0',
   },
   {
     id: 'pandora',
     number: '03',
     name: 'PANDORA',
-    subtitle: 'ALIEN FRONTIER',
+    subtitle: 'Bioluminescent Ocean & Sky',
+    badge: '🔵 PANDORA',
     image: pandoraImage,
     available: true,
-    accent: '#8b5cf6',
+    accent: '#00D2FF',
   },
   {
     id: 'kepler',
     number: '04',
     name: 'KEPLER-186f',
-    subtitle: 'DISTANT WORLD',
+    subtitle: 'Red Grass World',
+    badge: '🔴 KEPLER-186f',
     image: keplerImage,
     available: true,
-    accent: '#fbbf24',
+    accent: '#FF3344',
   },
 ];
 

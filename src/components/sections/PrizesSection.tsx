@@ -27,7 +27,7 @@ export const PrizesSection: React.FC = () => {
 
         <Reveal delay={80}>
           <div
-            className="prize-feature"
+            className="prize-feature interactive-card"
             style={{
               position: 'relative',
               overflow: 'hidden',
@@ -35,11 +35,12 @@ export const PrizesSection: React.FC = () => {
               gridTemplateColumns: '1.2fr .8fr',
               minHeight: 390,
               border:
-                '1px solid var(--border-cosmic)',
+                '1px solid var(--theme-border)',
               borderRadius:
                 'var(--radius-xl)',
               background:
-                'linear-gradient(135deg, #0b1229, #0a1025 55%, #101b3b)',
+                'var(--theme-card-bg, color-mix(in srgb, var(--theme-surface) 85%, transparent))',
+              boxShadow: 'var(--theme-shadow)',
             }}
           >
             <div
@@ -55,7 +56,7 @@ export const PrizesSection: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 9,
-                  color: 'var(--stellar-cyan)',
+                  color: 'var(--theme-accent)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: 10,
                   letterSpacing: '.13em',
@@ -64,6 +65,7 @@ export const PrizesSection: React.FC = () => {
                 <Trophy
                   size={17}
                   strokeWidth={1.4}
+                  className="animate-energy-pulse"
                 />
                 {prizePoolOverview.title}
               </div>
@@ -71,14 +73,15 @@ export const PrizesSection: React.FC = () => {
               <div
                 style={{
                   marginTop: 28,
-                  color: 'var(--text)',
+                  color: 'var(--theme-accent)',
                   fontFamily:
                     'var(--font-display)',
                   fontSize:
-                    'clamp(3.2rem, 8vw, 7rem)',
+                    'clamp(2.2rem, 7vw, 6.5rem)',
                   fontWeight: 600,
-                  lineHeight: .88,
-                  letterSpacing: '-.065em',
+                  lineHeight: .92,
+                  letterSpacing: '-.055em',
+                  textShadow: '0 0 35px var(--theme-glow-color, rgba(255, 255, 255, 0.2))',
                 }}
               >
                 {prizePoolOverview.highlight}
@@ -106,40 +109,41 @@ export const PrizesSection: React.FC = () => {
                 minHeight: 300,
                 overflow: 'hidden',
                 background:
-                  'radial-gradient(circle at 50% 50%, rgba(34,211,238,.14), transparent 23%), radial-gradient(circle at 50% 50%, rgba(59,130,246,.08), transparent 52%)',
+                  'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--theme-accent) 20%, transparent), transparent 55%)',
               }}
             >
               <div
+                className="animate-spin-orbit"
                 style={{
                   position: 'absolute',
                   width: 270,
                   height: 100,
                   left: '50%',
                   top: '50%',
-                  transform:
-                    'translate(-50%, -50%) rotate(-18deg)',
                   border:
-                    '1px solid rgba(34,211,238,.24)',
+                    '1px dashed var(--theme-accent)',
+                  opacity: 0.5,
                   borderRadius: '50%',
                 }}
               />
 
               <div
+                className="animate-spin-orbit-reverse"
                 style={{
                   position: 'absolute',
                   width: 220,
                   height: 80,
                   left: '50%',
                   top: '50%',
-                  transform:
-                    'translate(-50%, -50%) rotate(25deg)',
                   border:
-                    '1px solid rgba(139,92,246,.18)',
+                    '1px solid var(--theme-cta)',
+                  opacity: 0.4,
                   borderRadius: '50%',
                 }}
               />
 
               <div
+                className="animate-logo-breath"
                 style={{
                   position: 'absolute',
                   width: 95,
@@ -150,9 +154,9 @@ export const PrizesSection: React.FC = () => {
                     'translate(-50%, -50%)',
                   borderRadius: '50%',
                   background:
-                    'radial-gradient(circle at 35% 28%, #b8f4ff, #2775b7 38%, #07142d 78%)',
+                    'radial-gradient(circle at 35% 28%, var(--theme-accent), var(--theme-primary) 50%, var(--theme-background) 90%)',
                   boxShadow:
-                    '0 0 45px rgba(34,211,238,.22)',
+                    '0 0 45px var(--theme-glow-color, rgba(255, 255, 255, 0.3))',
                 }}
               />
             </div>
@@ -177,18 +181,18 @@ export const PrizesSection: React.FC = () => {
               delay={130 + index * 60}
             >
               <article
-                className="prize-card"
+                className="prize-card interactive-card"
                 style={{
                   minHeight: 250,
                   padding: 28,
                   border:
-                    '1px solid var(--border-subtle)',
+                    '1px solid var(--theme-border)',
                   borderRadius:
                     'var(--radius-lg)',
                   background:
-                    'var(--surface-1)',
+                    'var(--theme-card-bg, color-mix(in srgb, var(--theme-surface) 85%, transparent))',
                   transition:
-                    'border-color var(--transition-normal), transform var(--transition-normal)',
+                    'border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal)',
                 }}
               >
                 <div
@@ -201,7 +205,7 @@ export const PrizesSection: React.FC = () => {
                   <span
                     style={{
                       color:
-                        'var(--stellar-cyan)',
+                        'var(--theme-accent)',
                       fontFamily:
                         'var(--font-mono)',
                       fontSize: 9,
@@ -213,7 +217,7 @@ export const PrizesSection: React.FC = () => {
 
                   <ArrowUpRight
                     size={16}
-                    color="var(--muted-dark)"
+                    color="var(--theme-accent)"
                   />
                 </div>
 
@@ -234,7 +238,7 @@ export const PrizesSection: React.FC = () => {
                   style={{
                     marginTop: 10,
                     color:
-                      'var(--cosmic-blue-bright)',
+                      'var(--theme-accent)',
                     fontFamily:
                       'var(--font-display)',
                     fontSize: 20,
@@ -262,8 +266,10 @@ export const PrizesSection: React.FC = () => {
 
       <style>{`
         .prize-card:hover {
-          transform: translateY(-3px);
-          border-color: var(--border-cyan) !important;
+          transform: translateY(-4px);
+          border-color: var(--theme-accent) !important;
+          background: color-mix(in srgb, var(--theme-surface) 85%, var(--theme-accent) 12%) !important;
+          box-shadow: 0 0 25px var(--theme-glow-color, rgba(255, 255, 255, 0.2)) !important;
         }
 
         @media (max-width: 800px) {
