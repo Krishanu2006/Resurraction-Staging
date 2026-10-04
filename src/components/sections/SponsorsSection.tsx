@@ -39,11 +39,13 @@ export const SponsorsSection: React.FC = () => {
                 style={{
                   padding: 30,
                   border:
-                    '1px solid var(--border-subtle)',
+                    '1px solid var(--theme-card-border, var(--theme-border))',
                   borderRadius:
                     'var(--radius-lg)',
                   background:
-                    'linear-gradient(145deg, #0d1530, #090f22)',
+                    'var(--theme-card-bg, rgba(13, 21, 48, 0.8))',
+                  backdropFilter:
+                    'blur(12px)',
                 }}
               >
                 <div
@@ -60,7 +62,7 @@ export const SponsorsSection: React.FC = () => {
                     <div
                       style={{
                         color:
-                          'var(--stellar-cyan)',
+                          'var(--theme-accent)',
                         fontFamily:
                           'var(--font-mono)',
                         fontSize: 9,
@@ -87,7 +89,7 @@ export const SponsorsSection: React.FC = () => {
                   <Handshake
                     size={23}
                     strokeWidth={1.3}
-                    color="var(--cosmic-blue-bright)"
+                    color="var(--theme-accent)"
                   />
                 </div>
 
@@ -116,9 +118,11 @@ export const SponsorsSection: React.FC = () => {
                         justifyContent:
                           'space-between',
                         border:
-                          '1px solid var(--hairline)',
+                          '1px solid var(--theme-card-border, var(--hairline))',
                         background:
-                          'rgba(5,8,22,.55)',
+                          'color-mix(in srgb, var(--theme-background) 75%, transparent)',
+                        borderRadius:
+                          'var(--radius-xs)',
                         transition:
                           'border-color var(--transition-fast), background var(--transition-fast)',
                       }}
@@ -156,9 +160,9 @@ export const SponsorsSection: React.FC = () => {
                             height: 5,
                             borderRadius: '50%',
                             background:
-                              'var(--stellar-cyan)',
+                              'var(--theme-accent)',
                             boxShadow:
-                              '0 0 8px rgba(34,211,238,.4)',
+                              '0 0 8px var(--theme-glow-color)',
                           }}
                         />
 

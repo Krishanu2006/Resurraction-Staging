@@ -76,7 +76,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
 
         <span
           style={{
-            color: 'var(--stellar-cyan)',
+            color: 'var(--theme-accent)',
           }}
         >
           {number}
@@ -91,7 +91,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
             height: '1px',
 
             background:
-              'rgba(96, 165, 250, 0.35)',
+              'var(--theme-border)',
           }}
         />
 

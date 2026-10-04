@@ -26,7 +26,7 @@ export const RulesSection: React.FC = () => {
             maxWidth: 1050,
             margin: '0 auto',
             borderTop:
-              '1px solid var(--border-subtle)',
+              '1px solid var(--theme-border)',
           }}
         >
           {rulesData.map(
@@ -39,7 +39,7 @@ export const RulesSection: React.FC = () => {
                   className="rule-item"
                   style={{
                     borderBottom:
-                      '1px solid var(--hairline)',
+                      '1px solid var(--theme-card-border, var(--hairline))',
                   }}
                 >
                   <summary
@@ -57,7 +57,7 @@ export const RulesSection: React.FC = () => {
                     <span
                       style={{
                         color:
-                          'var(--stellar-cyan)',
+                          'var(--theme-accent)',
                         fontFamily:
                           'var(--font-mono)',
                         fontSize: 9,

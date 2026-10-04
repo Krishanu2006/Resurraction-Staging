@@ -85,11 +85,11 @@ export const Header: React.FC = () => {
         zIndex: 100,
 
         background: scrolled
-          ? 'rgba(5,8,22,.94)'
-          : 'rgba(5,8,22,.72)',
+          ? 'color-mix(in srgb, var(--theme-background) 88%, transparent)'
+          : 'color-mix(in srgb, var(--theme-background) 65%, transparent)',
 
         borderBottom:
-          '1px solid var(--border-subtle)',
+          '1px solid var(--theme-border)',
 
         backdropFilter:
           'blur(18px)',
@@ -195,11 +195,11 @@ export const Header: React.FC = () => {
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            height: 1,
+                            height: 2,
                             background:
-                              'var(--stellar-cyan)',
+                              'var(--theme-accent)',
                             boxShadow:
-                              '0 0 8px rgba(34,211,238,.4)',
+                              '0 0 10px var(--theme-glow-color)',
                           }}
                         />
                       )}
@@ -221,16 +221,18 @@ export const Header: React.FC = () => {
             alignItems: 'center',
             gap: 6,
             color:
-              'var(--inverse-ink)',
+              'var(--theme-background)',
             background:
-              'var(--stellar-cyan)',
+              'var(--theme-cta)',
             border:
-              '1px solid var(--stellar-cyan)',
+              '1px solid var(--theme-cta)',
+            boxShadow:
+              '0 0 16px var(--theme-glow-color)',
             padding: '9px 14px',
             borderRadius:
               'var(--radius-xs)',
             fontSize: 10,
-            fontWeight: 700,
+            fontWeight: 750,
             letterSpacing: '.08em',
             textTransform:
               'uppercase',
@@ -298,10 +300,10 @@ export const Header: React.FC = () => {
                   padding:
                     '15px 0',
                   borderBottom:
-                    '1px solid var(--hairline)',
+                    '1px solid var(--theme-border)',
                   color:
                     active === id
-                      ? 'var(--stellar-cyan)'
+                      ? 'var(--theme-accent)'
                       : 'var(--text)',
                   fontSize: 15,
                 }}
@@ -311,14 +313,14 @@ export const Header: React.FC = () => {
                 {active === id && (
                   <span
                     style={{
-                      width: 5,
-                      height: 5,
+                      width: 6,
+                      height: 6,
                       borderRadius:
                         '50%',
                       background:
-                        'var(--stellar-cyan)',
+                        'var(--theme-accent)',
                       boxShadow:
-                        '0 0 10px rgba(34,211,238,.5)',
+                        '0 0 10px var(--theme-glow-color)',
                     }}
                   />
                 )}
@@ -330,14 +332,14 @@ export const Header: React.FC = () => {
 
       <style>{`
         .nav-link:hover {
-          color: var(--stellar-cyan) !important;
+          color: var(--theme-accent) !important;
         }
 
         .mobile-nav {
           display: none;
           padding: 8px 22px 22px;
-          background: rgba(5,8,22,.98);
-          border-top: 1px solid var(--hairline);
+          background: color-mix(in srgb, var(--theme-background) 95%, transparent);
+          border-top: 1px solid var(--theme-border);
         }
 
         @media (max-width: 900px) {

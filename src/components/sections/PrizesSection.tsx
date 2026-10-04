@@ -35,11 +35,13 @@ export const PrizesSection: React.FC = () => {
               gridTemplateColumns: '1.2fr .8fr',
               minHeight: 390,
               border:
-                '1px solid var(--border-cosmic)',
+                '1px solid var(--theme-card-border, var(--theme-border))',
               borderRadius:
                 'var(--radius-xl)',
               background:
-                'linear-gradient(135deg, #0b1229, #0a1025 55%, #101b3b)',
+                'linear-gradient(135deg, color-mix(in srgb, var(--theme-card-bg) 95%, black), color-mix(in srgb, var(--theme-surface) 80%, var(--theme-primary) 20%))',
+              boxShadow:
+                'var(--theme-glow)',
             }}
           >
             <div
@@ -55,7 +57,7 @@ export const PrizesSection: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 9,
-                  color: 'var(--stellar-cyan)',
+                  color: 'var(--theme-accent)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: 10,
                   letterSpacing: '.13em',
@@ -150,9 +152,9 @@ export const PrizesSection: React.FC = () => {
                     'translate(-50%, -50%)',
                   borderRadius: '50%',
                   background:
-                    'radial-gradient(circle at 35% 28%, #b8f4ff, #2775b7 38%, #07142d 78%)',
+                    'radial-gradient(circle at 35% 28%, var(--theme-accent), var(--theme-primary) 38%, var(--theme-background) 78%)',
                   boxShadow:
-                    '0 0 45px rgba(34,211,238,.22)',
+                    '0 0 45px var(--theme-glow-color)',
                 }}
               />
             </div>
@@ -182,11 +184,13 @@ export const PrizesSection: React.FC = () => {
                   minHeight: 250,
                   padding: 28,
                   border:
-                    '1px solid var(--border-subtle)',
+                    '1px solid var(--theme-card-border, var(--theme-border))',
                   borderRadius:
                     'var(--radius-lg)',
                   background:
-                    'var(--surface-1)',
+                    'var(--theme-card-bg, var(--surface-1))',
+                  backdropFilter:
+                    'blur(12px)',
                   transition:
                     'border-color var(--transition-normal), transform var(--transition-normal)',
                 }}
@@ -201,7 +205,7 @@ export const PrizesSection: React.FC = () => {
                   <span
                     style={{
                       color:
-                        'var(--stellar-cyan)',
+                        'var(--theme-accent)',
                       fontFamily:
                         'var(--font-mono)',
                       fontSize: 9,
@@ -234,7 +238,7 @@ export const PrizesSection: React.FC = () => {
                   style={{
                     marginTop: 10,
                     color:
-                      'var(--cosmic-blue-bright)',
+                      'var(--theme-accent)',
                     fontFamily:
                       'var(--font-display)',
                     fontSize: 20,

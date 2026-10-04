@@ -32,7 +32,7 @@ const planetCards: PlanetCard[] = [
     id: 'tau-ceti-e',
     image: tauCetiImage,
     name: 'Tau Ceti e',
-    accent: '#58d68d',
+    accent: '#e5a93c',
 
     event: 'BUILDATHON',
     title: 'Build. Break. Rebuild.',
@@ -47,7 +47,7 @@ const planetCards: PlanetCard[] = [
     id: 'millers-planet',
     image: millerImage,
     name: "Miller's Planet",
-    accent: '#60a5fa',
+    accent: '#e2e8f0',
 
     event: 'HACKBOX',
     title: 'Enter. Hack. Escape.',
@@ -62,7 +62,7 @@ const planetCards: PlanetCard[] = [
     id: 'pandora',
     image: pandoraImage,
     name: 'Pandora',
-    accent: '#38bdf8',
+    accent: '#00d2ff',
 
     event: 'COMPETITIVE PROGRAMMING',
     title: 'Think Beyond O(n).',
@@ -77,7 +77,7 @@ const planetCards: PlanetCard[] = [
     id: 'kepler-186f',
     image: keplerImage,
     name: 'Kepler-186f',
-    accent: '#ff7043',
+    accent: '#ff3344',
 
     event: 'WORKSHOPS',
     title: 'Learn. Build. Evolve.',
@@ -624,24 +624,7 @@ export const TracksSection: React.FC = () => {
         .tracks-section {
           position: relative;
           overflow: hidden;
-
-          background:
-            radial-gradient(
-              circle at 50% 45%,
-              rgba(
-                59,
-                130,
-                246,
-                0.075
-              ),
-              transparent 34%
-            ),
-            linear-gradient(
-              180deg,
-              #050816 0%,
-              #060a18 50%,
-              #050816 100%
-            );
+          background: transparent;
         }
 
 
@@ -947,17 +930,14 @@ export const TracksSection: React.FC = () => {
 
           border:
             1px solid
-            rgba(
-              148,
-              163,
-              184,
-              0.14
-            );
+            var(--theme-card-border, rgba(148, 163, 184, 0.2));
 
           border-radius: 22px;
 
           background:
-            #030510;
+            var(--theme-card-bg, rgba(11, 15, 25, 0.85));
+
+          backdrop-filter: blur(14px);
 
           box-shadow:
             0 25px 80px

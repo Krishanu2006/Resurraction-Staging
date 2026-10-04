@@ -11,11 +11,123 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 import { themePalettes, type ThemeId } from '../../config/theme';
+import tauCetiImage from '../sections/track_images/taucetie.png';
+import millerImage from '../sections/track_images/miller.png';
+import pandoraImage from '../sections/track_images/pandora.png';
+import keplerImage from '../sections/track_images/kepler.png';
 
 interface SpaceSceneProps {
   scrollProgress?: number;
   themeId?: ThemeId;
 }
+
+export type SpaceHeroThemeConfig = {
+  background: number;
+  nebulaA: number;
+  nebulaB: number;
+  nebulaC: number;
+  nebulaEdge: number;
+  atmosphereGlow: number;
+  atmosphereBoost: number;
+  rimColorA: number;
+  rimColorB: number;
+  planetTint: number;
+  isGrayscale: boolean;
+  sunLight: number;
+  ambientLight: number;
+  starColor1: number;
+  starColor2: number;
+  starColor3: number;
+  dustColor: number;
+  shootingStarColor: [number, number, number];
+};
+
+export const spaceHeroThemeConfigs: Record<ThemeId, SpaceHeroThemeConfig> = {
+  'tau-ceti': {
+    // Golden Dune World: warm amber, solar gold, bronze void
+    background: 0x0c0a06,
+    nebulaA: 0x9e681c,
+    nebulaB: 0x3d2508,
+    nebulaC: 0xe5a93c,
+    nebulaEdge: 0x1a1005,
+    atmosphereGlow: 0xffd778,
+    atmosphereBoost: 1.0,
+    rimColorA: 0xffd778,
+    rimColorB: 0xe5a93c,
+    planetTint: 0xfff4dc,
+    isGrayscale: false,
+    sunLight: 0xffd89a,
+    ambientLight: 0x2e2015,
+    starColor1: 0xffe4a0,
+    starColor2: 0xe5a93c,
+    starColor3: 0xffffff,
+    dustColor: 0xd4a559,
+    shootingStarColor: [1.0, 0.85, 0.45],
+  },
+  miller: {
+    // Pure gray / silver monochrome tidal aesthetic - ZERO blue!
+    background: 0x07090e,
+    nebulaA: 0x475569,
+    nebulaB: 0x1e293b,
+    nebulaC: 0x94a3b8,
+    nebulaEdge: 0x0f172a,
+    atmosphereGlow: 0xd8e2ed,
+    atmosphereBoost: 0.9,
+    rimColorA: 0xe2e8f0,
+    rimColorB: 0x94a3b8,
+    planetTint: 0xf1f5f9,
+    isGrayscale: true, // Forces planet texture to pure grayscale in shader!
+    sunLight: 0xf8fafc,
+    ambientLight: 0x1e293b,
+    starColor1: 0xffffff,
+    starColor2: 0xe2e8f0,
+    starColor3: 0x94a3b8,
+    dustColor: 0x94a3b8,
+    shootingStarColor: [0.95, 0.95, 0.98],
+  },
+  pandora: {
+    // Bioluminescent alien ocean & sky: electric cyan, royal sapphire blue
+    background: 0x030a14,
+    nebulaA: 0x0052cc,
+    nebulaB: 0x071b40,
+    nebulaC: 0x00d2ff,
+    nebulaEdge: 0x020815,
+    atmosphereGlow: 0x00f0ff,
+    atmosphereBoost: 1.25,
+    rimColorA: 0x00f0ff,
+    rimColorB: 0x0052cc,
+    planetTint: 0xe0f7ff,
+    isGrayscale: false,
+    sunLight: 0x7dd3fc,
+    ambientLight: 0x0c274d,
+    starColor1: 0x00f0ff,
+    starColor2: 0x38bdf8,
+    starColor3: 0xffffff,
+    dustColor: 0x7dd3fc,
+    shootingStarColor: [0.15, 0.85, 1.0],
+  },
+  kepler: {
+    // Red grass world: crimson red, ruby dusk, vermilion
+    background: 0x0e0305,
+    nebulaA: 0x8a1825,
+    nebulaB: 0x38090f,
+    nebulaC: 0xff3344,
+    nebulaEdge: 0x180407,
+    atmosphereGlow: 0xff3344,
+    atmosphereBoost: 1.15,
+    rimColorA: 0xff3344,
+    rimColorB: 0x8a1825,
+    planetTint: 0xfff0f2,
+    isGrayscale: false,
+    sunLight: 0xff808a,
+    ambientLight: 0x331015,
+    starColor1: 0xff7a59,
+    starColor2: 0xff3344,
+    starColor3: 0xfff0f2,
+    dustColor: 0xff808a,
+    shootingStarColor: [1.0, 0.42, 0.50],
+  },
+};
 
 const clamp = (
   value: number,
@@ -55,6 +167,8 @@ const SpaceScene: React.FC<
   const scrollRef =
     useRef(scrollProgress);
 
+  const themeRef = useRef<ThemeId>(themeId || 'tau-ceti');
+
   const mouseRef = useRef({
     x: 0,
     y: 0,
@@ -79,6 +193,27 @@ const SpaceScene: React.FC<
       scrollProgress;
   }, [scrollProgress]);
 
+  /*
+   * Keep theme synced with prop or html data-theme
+   */
+  useEffect(() => {
+    if (themeId) {
+      themeRef.current = themeId;
+      return;
+    }
+    const root = document.documentElement;
+    const currentAttr = (root.getAttribute('data-theme') as ThemeId) || 'tau-ceti';
+    themeRef.current = currentAttr;
+
+    const observer = new MutationObserver(() => {
+      const updatedAttr = (root.getAttribute('data-theme') as ThemeId) || 'tau-ceti';
+      themeRef.current = updatedAttr;
+    });
+
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, [themeId]);
+
   useEffect(() => {
     const container =
       containerRef.current;
@@ -93,9 +228,12 @@ const SpaceScene: React.FC<
     const isMobile =
       window.innerWidth < 768;
 
-    const activeThemeKey = (themeId || document.documentElement.getAttribute('data-theme') || 'tau-ceti') as ThemeId;
-    const activePalette = themePalettes[activeThemeKey] || themePalettes['tau-ceti'];
-    const bgHex = new THREE.Color(activePalette.background).getHex();
+    const initialThemeId = (themeRef.current || 'tau-ceti') as ThemeId;
+    const initialConfig =
+      spaceHeroThemeConfigs[initialThemeId] || spaceHeroThemeConfigs['tau-ceti'];
+    const activePalette =
+      themePalettes[initialThemeId] || themePalettes['tau-ceti'];
+    const bgHex = initialConfig.background;
     const primaryHex = new THREE.Color(activePalette.primary).getHex();
     const secondaryHex = new THREE.Color(activePalette.secondary).getHex();
     const accentHex = new THREE.Color(activePalette.accent).getHex();
@@ -791,7 +929,7 @@ const SpaceScene: React.FC<
       createStarCluster(
         700,
         120,
-        0x7cff9b,
+        initialConfig.starColor1,
         0.16
       );
 
@@ -799,7 +937,7 @@ const SpaceScene: React.FC<
       createStarCluster(
         450,
         100,
-        0xffdf6b,
+        initialConfig.starColor2,
         0.14
       );
 
@@ -807,7 +945,7 @@ const SpaceScene: React.FC<
       createStarCluster(
         300,
         80,
-        0xff9a45,
+        initialConfig.starColor3,
         0.12
       );
 
@@ -842,6 +980,34 @@ const SpaceScene: React.FC<
                   0
                 ),
             },
+
+            uColorA: {
+              value:
+                new THREE.Color(
+                  initialConfig.nebulaA
+                ),
+            },
+
+            uColorB: {
+              value:
+                new THREE.Color(
+                  initialConfig.nebulaB
+                ),
+            },
+
+            uColorC: {
+              value:
+                new THREE.Color(
+                  initialConfig.nebulaC
+                ),
+            },
+
+            uColorEdge: {
+              value:
+                new THREE.Color(
+                  initialConfig.nebulaEdge
+                ),
+            },
           },
 
           vertexShader:
@@ -871,6 +1037,10 @@ const SpaceScene: React.FC<
               uniform float uTime;
               uniform float uOpacity;
               uniform vec2 uMouse;
+              uniform vec3 uColorA;
+              uniform vec3 uColorB;
+              uniform vec3 uColorC;
+              uniform vec3 uColorEdge;
 
               float hash(
                 vec2 p
@@ -1082,35 +1252,14 @@ const SpaceScene: React.FC<
                     n
                   );
 
-                vec3 green =
-                  vec3(
-                    0.10,
-                    0.65,
-                    0.31
-                  );
-
-                vec3 yellow =
-                  vec3(
-                    0.95,
-                    0.72,
-                    0.18
-                  );
-
-                vec3 orange =
-                  vec3(
-                    0.95,
-                    0.28,
-                    0.08
-                  );
-
-                float greenMask =
+                float maskA =
                   smoothstep(
                     0.15,
                     0.65,
                     n
                   );
 
-                float orangeMask =
+                float maskB =
                   smoothstep(
                     0.72,
                     0.92,
@@ -1119,24 +1268,20 @@ const SpaceScene: React.FC<
 
                 vec3 color =
                   mix(
-                    green,
-                    yellow,
-                    greenMask
+                    uColorA,
+                    uColorB,
+                    maskA
                   );
 
                 color =
                   mix(
                     color,
-                    orange,
-                    orangeMask
+                    uColorC,
+                    maskB
                   );
 
                 color +=
-                  vec3(
-                    0.04,
-                    0.07,
-                    0.14
-                  ) *
+                  uColorEdge *
                   smoothstep(
                     0.55,
                     0.9,
@@ -1231,31 +1376,76 @@ const SpaceScene: React.FC<
     const planetGroup =
       new THREE.Group();
 
-    const planetTexture =
-      new THREE.TextureLoader().load(
-        '/assets/hero/tau-ceti-adrian.jpg'
-      );
+    const textureLoader =
+      new THREE.TextureLoader();
 
-    planetTexture.colorSpace =
-      THREE.SRGBColorSpace;
+    const planetTextures: Record<ThemeId, THREE.Texture> = {
+      'tau-ceti':
+        textureLoader.load(
+          tauCetiImage
+        ),
+      miller:
+        textureLoader.load(
+          millerImage
+        ),
+      pandora:
+        textureLoader.load(
+          pandoraImage
+        ),
+      kepler:
+        textureLoader.load(
+          keplerImage
+        ),
+    };
 
-    planetTexture.minFilter =
-      THREE.LinearMipmapLinearFilter;
-
-    planetTexture.magFilter =
-      THREE.LinearFilter;
-
-    planetTexture.anisotropy =
-      renderer.capabilities.getMaxAnisotropy();
+    Object.values(planetTextures).forEach(
+      (tex) => {
+        tex.colorSpace =
+          THREE.SRGBColorSpace;
+        tex.minFilter =
+          THREE.LinearMipmapLinearFilter;
+        tex.magFilter =
+          THREE.LinearFilter;
+        tex.anisotropy =
+          renderer.capabilities.getMaxAnisotropy();
+      }
+    );
 
     const planetUniforms = {
       uPlanetTexture: {
         value:
-          planetTexture,
+          planetTextures[initialThemeId] ||
+          planetTextures['tau-ceti'],
       },
 
       uHoverBoost: {
         value: 0,
+      },
+
+      uPlanetTint: {
+        value:
+          new THREE.Color(
+            initialConfig.planetTint
+          ),
+      },
+
+      uRimA: {
+        value:
+          new THREE.Color(
+            initialConfig.rimColorA
+          ),
+      },
+
+      uRimB: {
+        value:
+          new THREE.Color(
+            initialConfig.rimColorB
+          ),
+      },
+
+      uIsGrayscale: {
+        value:
+          initialConfig.isGrayscale ? 1.0 : 0.0,
       },
     };
 
@@ -1310,6 +1500,10 @@ const SpaceScene: React.FC<
           /* glsl */ `
             uniform sampler2D uPlanetTexture;
             uniform float uHoverBoost;
+            uniform vec3 uPlanetTint;
+            uniform vec3 uRimA;
+            uniform vec3 uRimB;
+            uniform float uIsGrayscale;
 
             varying vec3 vNormal;
             varying vec3 vWorldPos;
@@ -1378,6 +1572,20 @@ const SpaceScene: React.FC<
                   uv
                 );
 
+              if (uIsGrayscale > 0.5) {
+                float gray =
+                  dot(
+                    reference.rgb,
+                    vec3(
+                      0.299,
+                      0.587,
+                      0.114
+                    )
+                  );
+                reference.rgb =
+                  vec3(gray);
+              }
+
               vec3 N =
                 normalize(
                   vNormal
@@ -1418,6 +1626,7 @@ const SpaceScene: React.FC<
 
               vec3 color =
                 reference.rgb *
+                uPlanetTint *
                 lighting;
 
               float luminance =
@@ -1456,26 +1665,18 @@ const SpaceScene: React.FC<
                 );
 
               color +=
-                vec3(
-                  0.18,
-                  1.0,
-                  0.08
-                ) *
+                uRimA *
                 fresnel *
                 (
-                  0.18 +
+                  0.24 +
                   uHoverBoost *
-                  0.08
+                  0.10
                 );
 
               color +=
-                vec3(
-                  1.0,
-                  0.28,
-                  0.035
-                ) *
+                uRimB *
                 fresnel *
-                0.035;
+                0.08;
 
               gl_FragColor =
                 vec4(
@@ -1518,7 +1719,7 @@ const SpaceScene: React.FC<
           glowColor: {
             value:
               new THREE.Color(
-                0x9cff80
+                initialConfig.atmosphereGlow
               ),
           },
 
@@ -1636,7 +1837,7 @@ const SpaceScene: React.FC<
 
     const sunLight =
       new THREE.DirectionalLight(
-        0xffd89a,
+        initialConfig.sunLight,
         2.5
       );
 
@@ -1650,11 +1851,14 @@ const SpaceScene: React.FC<
       sunLight
     );
 
-    scene.add(
+    const ambientLight =
       new THREE.AmbientLight(
-        0x23382d,
+        initialConfig.ambientLight,
         0.25
-      )
+      );
+
+    scene.add(
+      ambientLight
     );
 
     /* ============================================================
@@ -1744,6 +1948,13 @@ const SpaceScene: React.FC<
             value:
               0.20,
           },
+
+          uColor: {
+            value:
+              new THREE.Color(
+                initialConfig.dustColor
+              ),
+          },
         },
 
         vertexShader:
@@ -1774,6 +1985,7 @@ const SpaceScene: React.FC<
         fragmentShader:
           /* glsl */ `
             uniform float uOpacity;
+            uniform vec3 uColor;
 
             void main() {
               vec2 c =
@@ -1799,11 +2011,7 @@ const SpaceScene: React.FC<
 
               gl_FragColor =
                 vec4(
-                  vec3(
-                    0.72,
-                    0.78,
-                    0.72
-                  ),
+                  uColor,
                   a *
                   uOpacity
                 );
@@ -2286,6 +2494,14 @@ const SpaceScene: React.FC<
     const pointerVec =
       new THREE.Vector2();
 
+    let lastThemeId: ThemeId =
+      initialThemeId;
+
+    const currentBgColor =
+      new THREE.Color(
+        initialConfig.background
+      );
+
     const animate =
       () => {
         animationFrame =
@@ -2307,6 +2523,110 @@ const SpaceScene: React.FC<
             clock.getDelta(),
             0.05
           );
+
+        /* ---------------- Theme Interpolation ---------------- */
+        const currentThemeId =
+          (themeRef.current || 'tau-ceti') as ThemeId;
+        const activeConfig =
+          spaceHeroThemeConfigs[currentThemeId] ||
+          spaceHeroThemeConfigs['tau-ceti'];
+        const tLerp =
+          Math.min(dt * 3.5, 0.12);
+
+        // Background & Fog
+        currentBgColor.lerp(
+          new THREE.Color(activeConfig.background),
+          tLerp
+        );
+        scene.background = currentBgColor;
+        if (scene.fog) {
+          scene.fog.color = currentBgColor;
+        }
+
+        // Texture Swap on Theme Switch
+        if (lastThemeId !== currentThemeId) {
+          lastThemeId = currentThemeId;
+          const nextTex = planetTextures[currentThemeId];
+          if (nextTex) {
+            planetMaterial.uniforms.uPlanetTexture.value = nextTex;
+          }
+        }
+
+        // Planet uniforms
+        planetMaterial.uniforms.uPlanetTint.value.lerp(
+          new THREE.Color(activeConfig.planetTint),
+          tLerp
+        );
+        planetMaterial.uniforms.uRimA.value.lerp(
+          new THREE.Color(activeConfig.rimColorA),
+          tLerp
+        );
+        planetMaterial.uniforms.uRimB.value.lerp(
+          new THREE.Color(activeConfig.rimColorB),
+          tLerp
+        );
+        planetMaterial.uniforms.uIsGrayscale.value =
+          THREE.MathUtils.lerp(
+            planetMaterial.uniforms.uIsGrayscale.value,
+            activeConfig.isGrayscale ? 1.0 : 0.0,
+            tLerp * 2.5
+          );
+
+        // Atmosphere glow
+        atmosphereMaterial.uniforms.glowColor.value.lerp(
+          new THREE.Color(activeConfig.atmosphereGlow),
+          tLerp
+        );
+
+        // Nebula materials
+        [nebulaMaterial, backMaterial].forEach((mat) => {
+          mat.uniforms.uColorA.value.lerp(
+            new THREE.Color(activeConfig.nebulaA),
+            tLerp
+          );
+          mat.uniforms.uColorB.value.lerp(
+            new THREE.Color(activeConfig.nebulaB),
+            tLerp
+          );
+          mat.uniforms.uColorC.value.lerp(
+            new THREE.Color(activeConfig.nebulaC),
+            tLerp
+          );
+          mat.uniforms.uColorEdge.value.lerp(
+            new THREE.Color(activeConfig.nebulaEdge),
+            tLerp
+          );
+        });
+
+        // Lights
+        sunLight.color.lerp(
+          new THREE.Color(activeConfig.sunLight),
+          tLerp
+        );
+        ambientLight.color.lerp(
+          new THREE.Color(activeConfig.ambientLight),
+          tLerp
+        );
+
+        // Star clusters
+        greenCluster.material.uniforms.uColor.value.lerp(
+          new THREE.Color(activeConfig.starColor1),
+          tLerp
+        );
+        yellowCluster.material.uniforms.uColor.value.lerp(
+          new THREE.Color(activeConfig.starColor2),
+          tLerp
+        );
+        orangeCluster.material.uniforms.uColor.value.lerp(
+          new THREE.Color(activeConfig.starColor3),
+          tLerp
+        );
+
+        // Dust
+        dustMaterial.uniforms.uColor.value.lerp(
+          new THREE.Color(activeConfig.dustColor),
+          tLerp
+        );
 
         /* ---------------- Pointer ---------------- */
 
@@ -2958,7 +3278,7 @@ const SpaceScene: React.FC<
         }
       );
 
-      planetTexture.dispose();
+      Object.values(planetTextures).forEach((tex) => tex.dispose());
 
       renderer.dispose();
 
@@ -3001,7 +3321,7 @@ const SpaceScene: React.FC<
           'hidden',
 
         background:
-          '#010207',
+          'var(--theme-background, #010207)',
 
         pointerEvents:
           'auto',

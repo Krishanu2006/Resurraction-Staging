@@ -14,11 +14,10 @@ import { FAQSection } from './components/sections/FAQSection';
 
 import { Footer } from './components/layout/Footer';
 
-import RockyCursor from './components/ui/RockyCursor';
+import { RockyCursor } from './components/ui/RockyCursor';
 import { BootLoader } from './components/ui/BootLoader';
 import { ThemeSelector } from './components/ui/ThemeSelector';
-
-import AdrianEnvironment from './components/Environment/AdrianEnvironment';
+import GlobalThemeBackground from './components/ui/GlobalThemeBackground';
 
 import {
   themePalettes,
@@ -67,7 +66,7 @@ const App: React.FC = () => {
      ACTIVE THEME PALETTE
      ============================================================ */
 
-  const palette = themePalettes[selectedTheme];
+  const palette = themePalettes[selectedTheme] || themePalettes['tau-ceti'];
 
   /* ============================================================
      APPLY THEME VARIABLES
@@ -94,13 +93,16 @@ const App: React.FC = () => {
     root.style.setProperty('--theme-card-bg', palette.cardBg);
     root.style.setProperty('--theme-card-border', palette.cardBorder);
 
-    // Compatibility aliases
-    root.style.setProperty('--adrian-green', palette.primary);
-    root.style.setProperty('--adrian-orange', palette.secondary);
-    root.style.setProperty('--space-black', palette.background);
-    root.style.setProperty('--adrian-text', palette.text);
-    root.style.setProperty('--adrian-muted', palette.muted);
-    root.style.setProperty('--adrian-border', palette.border);
+    // Compatibility tokens for design system
+    root.style.setProperty('--stellar-cyan', palette.accent);
+    root.style.setProperty('--cyan-soft', palette.accent);
+    root.style.setProperty('--cosmic-blue', palette.secondary);
+    root.style.setProperty('--cosmic-blue-bright', palette.accent);
+    root.style.setProperty('--surface-1', palette.cardBg);
+    root.style.setProperty('--surface-2', `color-mix(in srgb, ${palette.surface} 80%, ${palette.primary} 20%)`);
+    root.style.setProperty('--border-subtle', palette.cardBorder);
+    root.style.setProperty('--border-cosmic', palette.border);
+    root.style.setProperty('--hairline', palette.cardBorder);
   }, [palette, selectedTheme]);
 
   /* ============================================================
@@ -137,118 +139,116 @@ const App: React.FC = () => {
          ====================================================== */}
 
       {bootComplete && themeSelected && (
-        <>
-          {/* Persistent interactive space environment.
-              This sits behind the entire website. */}
-          <AdrianEnvironment />
+        <div
+          id="app-theme"
+          style={
+            {
+              '--theme-primary': palette.primary,
+              '--theme-secondary': palette.secondary,
+              '--theme-accent': palette.accent,
+              '--theme-background': palette.background,
+              '--theme-surface': palette.surface,
+              '--theme-text': palette.text,
+              '--theme-muted': palette.muted,
+              '--theme-border': palette.border,
 
-          <div
-            id="app-theme"
-            style={
-              {
-                '--theme-primary': palette.primary,
-                '--theme-secondary': palette.secondary,
-                '--theme-accent': palette.accent,
-                '--theme-background': palette.background,
-                '--theme-surface': palette.surface,
-                '--theme-text': palette.text,
-                '--theme-muted': palette.muted,
-                '--theme-border': palette.border,
+              backgroundColor: 'var(--theme-background)',
 
-                backgroundColor: 'transparent',
+              color: 'var(--theme-text)',
 
-                color: 'var(--theme-text)',
+              minHeight: '100vh',
+              position: 'relative',
+            } as React.CSSProperties
+          }
+        >
+          {/* ====================================================
+              3D INTERACTIVE DEEP SPACE BACKGROUND
+              Active from Tracks section downwards; Hero & About
+              are excluded by internal scroll-bounds observer.
+             ==================================================== */}
+          <GlobalThemeBackground themeId={selectedTheme} />
 
-                minHeight: '100vh',
-              } as React.CSSProperties
-            }
-          >
-            <div className="app-container">
+          <div className="app-container" style={{ position: 'relative', zIndex: 1 }}>
+            {/* ==================================================
+                HEADER
+               ================================================== */}
 
-              {/* ==================================================
-                  HEADER
-                 ================================================== */}
+            <Header />
 
-              <Header />
+            {/* ==================================================
+                MAIN CONTENT
+               ================================================== */}
 
-              {/* ==================================================
-                  MAIN CONTENT
-                 ================================================== */}
+            <main id="main-content">
+              {/* =================================================
+                  HERO
+                 ================================================= */}
 
-              <main id="main-content">
+              <HeroSection themeId={selectedTheme} />
 
-                {/* =================================================
-                    HERO
-                   ================================================= */}
+              {/* =================================================
+                  ABOUT
+                 ================================================= */}
 
-                <HeroSection />
+              <AboutSection active />
 
-                {/* =================================================
-                    ABOUT
-                   ================================================= */}
+              {/* =================================================
+                  TRACKS
+                 ================================================= */}
 
-                <AboutSection />
+              <TracksSection />
 
-                {/* =================================================
-                    TRACKS
-                   ================================================= */}
+              {/* =================================================
+                  PRIZES
+                 ================================================= */}
 
-                <TracksSection />
+              <PrizesSection />
 
-                {/* =================================================
-                    PRIZES
-                   ================================================= */}
+              {/* =================================================
+                  TIMELINE
+                 ================================================= */}
 
-                <PrizesSection />
+              <TimelineSection />
 
-                {/* =================================================
-                    TIMELINE
-                   ================================================= */}
+              {/* =================================================
+                  SPONSORS
+                 ================================================= */}
 
-                <TimelineSection />
+              <SponsorsSection />
 
-                {/* =================================================
-                    SPONSORS
-                   ================================================= */}
+              {/* =================================================
+                  JURY
+                 ================================================= */}
 
-                <SponsorsSection />
+              <JurySection />
 
-                {/* =================================================
-                    JURY
-                   ================================================= */}
+              {/* =================================================
+                  RULES
+                 ================================================= */}
 
-                <JurySection />
+              <RulesSection />
 
-                {/* =================================================
-                    RULES
-                   ================================================= */}
+              {/* =================================================
+                  FAQ
+                 ================================================= */}
 
-                <RulesSection />
+              <FAQSection />
+            </main>
 
-                {/* =================================================
-                    FAQ
-                   ================================================= */}
+            {/* ==================================================
+                FOOTER
+               ================================================== */}
 
-                <FAQSection />
-
-              </main>
-
-              {/* ==================================================
-                  FOOTER
-                 ================================================== */}
-
-              <Footer />
-
-            </div>
+            <Footer />
           </div>
-        </>
+        </div>
       )}
 
       {/* ========================================================
           ROCKY CUSTOM CURSOR
 
-          Rendered after everything else so Rocky stays above
-          the Three.js environment, hero, sections and overlays.
+          Rendered after the website so that it remains above
+          all sections, Three.js canvas, images and overlays.
          ======================================================== */}
 
       {bootComplete && <RockyCursor />}

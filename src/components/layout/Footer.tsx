@@ -22,9 +22,9 @@ export const Footer: React.FC = () => {
         overflow: 'hidden',
         padding: '90px 0 25px',
         background:
-          'linear-gradient(180deg, #050816, #030510)',
+          'linear-gradient(180deg, color-mix(in srgb, var(--theme-background) 85%, transparent), color-mix(in srgb, var(--theme-background) 96%, black))',
         borderTop:
-          '1px solid var(--border-subtle)',
+          '1px solid var(--theme-border)',
       }}
     >
       {/* Atmospheric glow */}
@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
           bottom: -150,
           borderRadius: '50%',
           background:
-            'radial-gradient(circle, rgba(59,130,246,.08), transparent 70%)',
+            'radial-gradient(circle, var(--theme-glow-color), transparent 70%)',
           pointerEvents: 'none',
         }}
       />
@@ -91,7 +91,7 @@ export const Footer: React.FC = () => {
                 gap: 7,
                 marginTop: 25,
                 color:
-                  'var(--stellar-cyan)',
+                  'var(--theme-accent)',
                 fontSize: 11,
                 fontFamily:
                   'var(--font-mono)',
@@ -230,7 +230,7 @@ export const Footer: React.FC = () => {
 
       <style>{`
         footer a:hover {
-          color: var(--stellar-cyan) !important;
+          color: var(--theme-accent) !important;
         }
 
         @media (max-width: 750px) {

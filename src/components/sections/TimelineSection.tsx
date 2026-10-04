@@ -49,7 +49,7 @@ export const TimelineSection: React.FC = () => {
                 <div
                   style={{
                     color:
-                      'var(--stellar-cyan)',
+                      'var(--theme-accent)',
                     fontFamily:
                       'var(--font-mono)',
                     fontSize: 10,
@@ -69,9 +69,9 @@ export const TimelineSection: React.FC = () => {
                     marginTop: 4,
                     borderRadius: '50%',
                     background:
-                      'var(--stellar-cyan)',
+                      'var(--theme-accent)',
                     boxShadow:
-                      '0 0 0 5px var(--void), 0 0 18px rgba(34,211,238,.3)',
+                      '0 0 0 5px var(--theme-background), 0 0 18px var(--theme-glow-color)',
                     position: 'relative',
                     zIndex: 2,
                   }}
@@ -95,7 +95,7 @@ export const TimelineSection: React.FC = () => {
                     style={{
                       marginTop: 8,
                       color:
-                        'var(--cosmic-blue-bright)',
+                        'var(--theme-accent)',
                       fontFamily:
                         'var(--font-mono)',
                       fontSize: 9,

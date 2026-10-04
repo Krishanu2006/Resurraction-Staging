@@ -451,6 +451,9 @@ svg {
 
   overflow:
     hidden;
+
+  background:
+    transparent;
 }
 
 
@@ -484,9 +487,7 @@ svg {
    SECTION-SPECIFIC BACKGROUNDS
    ========================================================= */
 
-#about,
-#timeline,
-#faq {
+#about {
   background:
     color-mix(
       in srgb,
@@ -497,15 +498,12 @@ svg {
 
 #tracks,
 #prize,
+#timeline,
 #sponsors,
 #organizers,
-#rules {
-  background:
-    color-mix(
-      in srgb,
-      var(--theme-background) 78%,
-      var(--theme-surface) 22%
-    );
+#rules,
+#faq {
+  background: transparent !important;
 }
 
 /* =========================================================

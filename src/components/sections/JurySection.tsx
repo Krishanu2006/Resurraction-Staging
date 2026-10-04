@@ -27,7 +27,7 @@ export const JurySection: React.FC = () => {
             gridTemplateColumns:
               'repeat(4, 1fr)',
             gap: 1,
-            background: 'var(--hairline)',
+            background: 'var(--theme-card-border, var(--hairline))',
           }}
         >
           {juryMembersData.map(
@@ -42,7 +42,9 @@ export const JurySection: React.FC = () => {
                     minHeight: 300,
                     padding: 28,
                     background:
-                      'var(--surface-1)',
+                      'var(--theme-card-bg, var(--surface-1))',
+                    backdropFilter:
+                      'blur(12px)',
                     transition:
                       'background var(--transition-normal)',
                   }}
@@ -58,7 +60,7 @@ export const JurySection: React.FC = () => {
                     <UsersRound
                       size={21}
                       strokeWidth={1.3}
-                      color="var(--stellar-cyan)"
+                      color="var(--theme-accent)"
                     />
 
                     <span

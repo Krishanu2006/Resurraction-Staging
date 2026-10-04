@@ -28,7 +28,7 @@ const themes: Theme[] = [
     subtitle: 'PRIMARY WORLD',
     image: tauCetiImage,
     available: true,
-    accent: '#22d3ee',
+    accent: '#e5a93c',
   },
   {
     id: 'miller',
@@ -37,7 +37,7 @@ const themes: Theme[] = [
     subtitle: 'OCEAN WORLD',
     image: millerImage,
     available: true,
-    accent: '#60a5fa',
+    accent: '#e2e8f0',
   },
   {
     id: 'pandora',
@@ -46,7 +46,7 @@ const themes: Theme[] = [
     subtitle: 'ALIEN FRONTIER',
     image: pandoraImage,
     available: true,
-    accent: '#8b5cf6',
+    accent: '#00d2ff',
   },
   {
     id: 'kepler',
@@ -55,7 +55,7 @@ const themes: Theme[] = [
     subtitle: 'DISTANT WORLD',
     image: keplerImage,
     available: true,
-    accent: '#fbbf24',
+    accent: '#ff3344',
   },
 ];
 

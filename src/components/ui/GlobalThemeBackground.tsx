@@ -116,7 +116,7 @@ export const GlobalThemeBackground: React.FC<GlobalThemeBackgroundProps> = ({
       const tracksEl = document.getElementById('tracks');
       if (!tracksEl) return;
       const rect = tracksEl.getBoundingClientRect();
-      const isBelowAbout = rect.top <= window.innerHeight * 0.88;
+      const isBelowAbout = rect.top <= window.innerHeight * 0.95;
       setInActiveArea(isBelowAbout);
     };
 

@@ -25,7 +25,7 @@ export const FAQSection: React.FC = () => {
             maxWidth: 950,
             margin: '0 auto',
             borderTop:
-              '1px solid var(--border-subtle)',
+              '1px solid var(--theme-border)',
           }}
         >
           {faqData.map((item, index) => {
@@ -40,7 +40,7 @@ export const FAQSection: React.FC = () => {
                 <article
                   style={{
                     borderBottom:
-                      '1px solid var(--hairline)',
+                      '1px solid var(--theme-card-border, var(--hairline))',
                   }}
                 >
                   <button
@@ -63,7 +63,7 @@ export const FAQSection: React.FC = () => {
                       padding: '23px 0',
                       textAlign: 'left',
                       color: active
-                        ? 'var(--stellar-cyan)'
+                        ? 'var(--theme-accent)'
                         : 'var(--text)',
                       background:
                         'transparent',
@@ -72,8 +72,9 @@ export const FAQSection: React.FC = () => {
                   >
                     <span
                       style={{
-                        color:
-                          'var(--muted-dark)',
+                        color: active
+                          ? 'var(--theme-accent)'
+                          : 'var(--muted-dark)',
                         fontFamily:
                           'var(--font-mono)',
                         fontSize: 9,
