@@ -41,11 +41,11 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     dragStartY: 0,
   });
 
+  // Focus on a celestial body (subtle camera lean, no zoom)
   const interactionRef = useRef({
-    warp: 0,
-    warpTarget: 0,
     focus: null as THREE.Object3D | null,
     focusStrength: 0,
+    focusPull: new THREE.Vector3(), // world position of the focused object
   });
 
   useEffect(() => {
@@ -97,7 +97,6 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    // Matches your original brightness
     renderer.toneMappingExposure = 1.05;
 
     container.appendChild(renderer.domElement);
@@ -106,11 +105,8 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
      * POST PROCESSING
      * ============================================================ */
     const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
 
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
-
-    // Same bloom values as original — preserves brightness
     const bloom = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
       0.72,
@@ -122,7 +118,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     composer.addPass(new OutputPass());
 
     /* ============================================================
-     * STAR FIELD — soft circular anti-aliased stars
+     * STAR FIELD — soft circular stars, no stretching
      * ============================================================ */
 
     const STELLAR_COLORS = [
@@ -153,6 +149,8 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       points: THREE.Points;
       material: THREE.ShaderMaterial;
       geometry: THREE.BufferGeometry;
+      baseRotationY: number;
+      baseRotationX: number;
     }
     const starLayers: StarLayer[] = [];
 
@@ -167,6 +165,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       const positions = new Float32Array(count * 3);
       const colors = new Float32Array(count * 3);
       const phases = new Float32Array(count);
+      const speeds = new Float32Array(count); // twinkle speed variation
       const sizes = new Float32Array(count);
 
       const tmpColor = new THREE.Color();
@@ -196,6 +195,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
         colors[i3 + 2] = tmpColor.b * b;
 
         phases[i] = Math.random() * Math.PI * 2;
+        speeds[i] = 0.5 + Math.random() * 1.4;
         sizes[i] = size * (0.55 + Math.random() * 0.85);
       }
 
@@ -203,28 +203,27 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+      geometry.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
       geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
 
       const material = new THREE.ShaderMaterial({
         transparent: true,
         depthWrite: false,
-        // Kept additive to match original brightness
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
           uPixelRatio: { value: pixelRatio },
           uTwinkle: { value: twinkle },
-          uStretch: { value: 0 },
         },
         vertexShader: /* glsl */ `
           attribute float aPhase;
+          attribute float aSpeed;
           attribute float aSize;
           attribute vec3 color;
 
           uniform float uTime;
           uniform float uPixelRatio;
           uniform float uTwinkle;
-          uniform float uStretch;
 
           varying vec3 vColor;
           varying float vTwinkle;
@@ -232,16 +231,16 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
           void main() {
             vColor = color;
 
-            float tw = sin(uTime * 1.5 + aPhase * 6.2831) * 0.5 + 0.5;
+            // Two-layer twinkle for richer variation
+            float t1 = sin(uTime * aSpeed + aPhase) * 0.5 + 0.5;
+            float t2 = sin(uTime * aSpeed * 0.43 + aPhase * 1.7) * 0.5 + 0.5;
+            float tw = mix(t1, t2, 0.5);
+
             vTwinkle = mix(1.0, 0.55 + tw * 0.75, uTwinkle);
 
-            vec3 pos = position;
-            vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-            vec2 dir = normalize(mv.xy + 0.0001);
-            mv.xy -= dir * uStretch * (1.0 + abs(mv.z) * 0.02) * 30.0;
-
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
             gl_Position = projectionMatrix * mv;
-            gl_PointSize = aSize * uPixelRatio * (1.0 + uStretch * 2.2);
+            gl_PointSize = aSize * uPixelRatio;
           }
         `,
         fragmentShader: /* glsl */ `
@@ -249,16 +248,13 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
           varying float vTwinkle;
 
           void main() {
-            // Circular anti-aliased falloff — no squares ever
             vec2 c = gl_PointCoord - 0.5;
             float d = length(c);
 
             float core = smoothstep(0.5, 0.02, d);
             float halo = smoothstep(0.5, 0.18, d) * 0.28;
 
-            // Soft disk with subtle power curve = realistic stellar profile
             float alpha = pow(core, 1.35) + halo;
-
             if (alpha < 0.01) discard;
 
             vec3 col = vColor * vTwinkle;
@@ -270,15 +266,21 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       const points = new THREE.Points(geometry, material);
       starGroup.add(points);
 
-      starLayers.push({ points, material, geometry });
+      starLayers.push({
+        points,
+        material,
+        geometry,
+        baseRotationY: 0,
+        baseRotationX: 0,
+      });
     };
 
-    createStarLayer(isMobile ? 1500 : 2600, 850, 1.3, 0.35, 0.30, 1.0);
-    createStarLayer(isMobile ? 800 : 1300, 600, 2.0, 0.55, 0.40, 1.05);
-    createStarLayer(isMobile ? 400 : 650, 400, 3.0, 0.75, 0.50, 1.10);
+    createStarLayer(isMobile ? 1500 : 2600, 850, 1.3, 0.45, 0.30, 1.0);
+    createStarLayer(isMobile ? 800 : 1300, 600, 2.0, 0.65, 0.40, 1.05);
+    createStarLayer(isMobile ? 400 : 650, 400, 3.0, 0.80, 0.50, 1.10);
 
     /* ============================================================
-     * COLORED STAR CLUSTERS (soft circular dots)
+     * COLORED STAR CLUSTERS
      * ============================================================ */
 
     const createStarCluster = (
@@ -289,6 +291,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     ) => {
       const positions = new Float32Array(count * 3);
       const sizes = new Float32Array(count);
+      const phases = new Float32Array(count);
 
       for (let i = 0; i < count; i++) {
         const i3 = i * 3;
@@ -300,11 +303,13 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
         positions[i3 + 2] = -80 - Math.random() * 160;
 
         sizes[i] = 0.7 + Math.random() * 0.9;
+        phases[i] = Math.random() * Math.PI * 2;
       }
 
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+      geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
 
       const material = new THREE.ShaderMaterial({
         transparent: true,
@@ -314,11 +319,16 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
           uColor: { value: new THREE.Color(color) },
           uOpacity: { value: opacity },
           uPixelRatio: { value: pixelRatio },
+          uTime: { value: 0 },
         },
         vertexShader: /* glsl */ `
           attribute float aSize;
+          attribute float aPhase;
           uniform float uPixelRatio;
+          uniform float uTime;
+          varying float vTw;
           void main() {
+            vTw = 0.7 + sin(uTime * 1.2 + aPhase) * 0.3;
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
             gl_Position = projectionMatrix * mv;
             gl_PointSize = aSize * uPixelRatio * 1.9;
@@ -327,13 +337,14 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
         fragmentShader: /* glsl */ `
           uniform vec3 uColor;
           uniform float uOpacity;
+          varying float vTw;
           void main() {
             vec2 c = gl_PointCoord - 0.5;
             float d = length(c);
             float a = smoothstep(0.5, 0.05, d);
-            a *= a; // tighter core = cleaner dots
+            a *= a;
             if (a < 0.01) discard;
-            gl_FragColor = vec4(uColor, a * uOpacity);
+            gl_FragColor = vec4(uColor * vTw, a * uOpacity);
           }
         `,
       });
@@ -348,7 +359,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     const orangeCluster = createStarCluster(300, 80, 0xff9a45, 0.12);
 
     /* ============================================================
-     * PROCEDURAL NEBULA (domain-warped FBM, additive, same opacity)
+     * PROCEDURAL NEBULA
      * ============================================================ */
 
     const createNebulaMaterial = (opacity: number) =>
@@ -360,6 +371,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
           uTime: { value: 0 },
           uOpacity: { value: opacity },
           uMouse: { value: new THREE.Vector2(0, 0) },
+          uHover: { value: 0 },
         },
         vertexShader: /* glsl */ `
           varying vec2 vUv;
@@ -374,6 +386,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
           uniform float uTime;
           uniform float uOpacity;
           uniform vec2 uMouse;
+          uniform float uHover;
 
           float hash(vec2 p) {
             return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -402,7 +415,6 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
             return v;
           }
 
-          // Domain-warped FBM = organic, filamentary structure
           float warpedFbm(vec2 p, float t) {
             vec2 q = vec2(
               fbm(p + vec2(0.0, t * 0.05)),
@@ -422,7 +434,6 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
 
             float d = length(uv);
 
-            // Anisotropic shape so it never looks square
             vec2 stretched = uv;
             stretched.y *= 1.35;
 
@@ -441,12 +452,11 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
             vec3 color = mix(green, yellow, greenMask);
             color = mix(color, orange, orangeMask);
 
-            // Faint cool rim for atmospheric depth
             color += vec3(0.04, 0.07, 0.14) * smoothstep(0.55, 0.9, d);
 
             float edge = smoothstep(0.85, 0.15, d);
 
-            float alpha = cloud * edge * uOpacity;
+            float alpha = cloud * edge * uOpacity * (1.0 + uHover * 0.6);
             gl_FragColor = vec4(color, alpha);
           }
         `,
@@ -472,7 +482,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     scene.add(nebulaBack);
 
     /* ============================================================
-     * PLANET — realistic shader (continents, clouds, terminator)
+     * PLANET
      * ============================================================ */
 
     const planetGroup = new THREE.Group();
@@ -583,7 +593,6 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     );
     planetGroup.add(planet);
 
-    // Atmosphere shell
     const atmosphereMaterial = new THREE.ShaderMaterial({
       transparent: true,
       side: THREE.BackSide,
@@ -611,7 +620,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
         void main() {
           vec3 viewDir = normalize(cameraPosition - vWorldPosition);
           float intensity = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 3.0);
-          gl_FragColor = vec4(glowColor, intensity * (0.35 + uBoost * 0.25));
+          gl_FragColor = vec4(glowColor, intensity * (0.35 + uBoost * 0.30));
         }
       `,
     });
@@ -627,15 +636,13 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     planetGroup.scale.setScalar(0.72);
     scene.add(planetGroup);
 
-    // Lights (planet has custom shader so these are mostly for safety)
     const sunLight = new THREE.DirectionalLight(0xffd89a, 2.5);
     sunLight.position.set(-180, 120, 80);
     scene.add(sunLight);
-
     scene.add(new THREE.AmbientLight(0x23382d, 0.25));
 
     /* ============================================================
-     * SPACE DUST (circular, soft)
+     * SPACE DUST
      * ============================================================ */
 
     const dustCount = isMobile ? 700 : 1400;
@@ -687,7 +694,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     scene.add(dust);
 
     /* ============================================================
-     * SHOOTING STARS — tapered trails
+     * SHOOTING STARS
      * ============================================================ */
 
     const shootingStarGroup = new THREE.Group();
@@ -711,7 +718,6 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-      // Vertex colors along the trail (bright at head, fade to tail)
       const colors = new Float32Array(segmentCount * 3);
       for (let i = 0; i < segmentCount; i++) {
         const t = i / (segmentCount - 1);
@@ -749,7 +755,17 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     for (let i = 0; i < shootingStarCount; i++) createShootingStar();
 
     /* ============================================================
-     * POINTER / DRAG / CLICK
+     * RAYCAST TARGETS
+     * ============================================================ */
+
+    const raycaster = new THREE.Raycaster();
+    const pointerVec = new THREE.Vector2();
+
+    // Invisible hit-plate for the nebulae (they're huge transparent planes)
+    // Raycasting against the visible meshes works since they're planes with real geometry.
+
+    /* ============================================================
+     * INPUT
      * ============================================================ */
 
     const m = mouseRef.current;
@@ -781,34 +797,39 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       m.dragY *= 0.4;
     };
 
-    const handleClick = () => {
+    // Click a body → gently "focus" (no zoom, no warp).
+    // Click empty space → release focus.
+    const handleClick = (event: MouseEvent) => {
+      // Ignore drags
       if (Math.abs(m.dragX) > 0.01 || Math.abs(m.dragY) > 0.01) return;
-      interactionRef.current.warpTarget = 1.0;
-    };
 
-    const handleDoubleClick = () => {
-      const targets: THREE.Object3D[] = [planetGroup, nebula, nebulaBack];
-      interactionRef.current.focus =
-        targets[Math.floor(Math.random() * targets.length)];
+      const cx = (event.clientX / window.innerWidth) * 2 - 1;
+      const cy = -(event.clientY / window.innerHeight) * 2 + 1;
+      pointerVec.set(cx, cy);
+      raycaster.setFromCamera(pointerVec, camera);
+
+      const targets: THREE.Object3D[] = [planet, nebula, nebulaBack];
+      const hits = raycaster.intersectObjects(targets, false);
+
+      if (hits.length > 0) {
+        // Find the owning group for planet
+        const hit = hits[0].object;
+        if (hit === planet) {
+          interactionRef.current.focus = planetGroup;
+        } else {
+          interactionRef.current.focus = hit;
+        }
+      } else {
+        interactionRef.current.focus = null;
+      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === 'Space') {
-        event.preventDefault();
-        interactionRef.current.warpTarget = 1.0;
-      }
       if (event.code === 'ArrowLeft') m.targetX -= 0.1;
       if (event.code === 'ArrowRight') m.targetX += 0.1;
       if (event.code === 'ArrowUp') m.targetY -= 0.1;
       if (event.code === 'ArrowDown') m.targetY += 0.1;
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      const speed = Math.min(Math.abs(event.deltaY) / 500, 1);
-      interactionRef.current.warpTarget = Math.max(
-        interactionRef.current.warpTarget,
-        speed * 0.85
-      );
+      if (event.code === 'Escape') interactionRef.current.focus = null;
     };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
@@ -816,9 +837,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     window.addEventListener('pointerup', handlePointerUp, { passive: true });
     window.addEventListener('pointercancel', handlePointerUp, { passive: true });
     window.addEventListener('click', handleClick);
-    window.addEventListener('dblclick', handleDoubleClick);
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('wheel', handleWheel, { passive: true });
 
     /* ============================================================
      * RESIZE
@@ -869,9 +888,9 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
     let lastScroll = scrollRef.current;
     let smoothScroll = scrollRef.current;
 
-    // Raycaster for planet hover
-    const raycaster = new THREE.Raycaster();
-    const pointerVec = new THREE.Vector2();
+    // Focus pull vector (world space)
+    const focusVec = new THREE.Vector3();
+    const focusCurrent = new THREE.Vector3();
 
     const animate = () => {
       animationFrame = requestAnimationFrame(animate);
@@ -880,7 +899,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       const elapsed = clock.getElapsedTime();
       const dt = Math.min(clock.getDelta(), 0.05);
 
-      /* ---------------- Pointer smoothing ---------------- */
+      /* ---------------- Pointer ---------------- */
       m.x = lerp(m.x, m.targetX, 0.08);
       m.y = lerp(m.y, m.targetY, 0.08);
 
@@ -895,22 +914,23 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       lastScroll = scroll;
       smoothScroll = lerp(smoothScroll, scroll, 0.06);
 
-      /* ---------------- Warp ---------------- */
+      /* ---------------- Focus pull ---------------- */
       const ir = interactionRef.current;
-      ir.warpTarget *= 0.94;
-      ir.warp = lerp(ir.warp, ir.warpTarget, 0.12);
-      const warp = clamp(ir.warp, 0, 1);
-
-      /* ---------------- Focus ---------------- */
       if (ir.focus) {
-        ir.focusStrength = lerp(ir.focusStrength, 0.15, 0.02);
+        ir.focus.getWorldPosition(focusVec);
+        ir.focusStrength = lerp(ir.focusStrength, 1.0, 0.03);
       } else {
-        ir.focusStrength = lerp(ir.focusStrength, 0, 0.02);
+        ir.focusStrength = lerp(ir.focusStrength, 0, 0.03);
       }
+      focusCurrent.lerp(focusVec, 0.03);
+
+      // Focus affects camera slightly - a subtle parallax lean, NOT a zoom
+      const focusLeanX = clamp(focusCurrent.x * 0.0008, -0.35, 0.35) * ir.focusStrength;
+      const focusLeanY = clamp(focusCurrent.y * 0.0008, -0.35, 0.35) * ir.focusStrength;
 
       /* ---------------- Camera ---------------- */
-      const targetCameraX = m.x * 1.8 + dragOffsetX;
-      const targetCameraY = -m.y * 1.25 + dragOffsetY;
+      const targetCameraX = m.x * 1.8 + dragOffsetX + focusLeanX;
+      const targetCameraY = -m.y * 1.25 + dragOffsetY + focusLeanY;
 
       const damping = reducedMotion ? 1 : 0.05;
       cameraX = lerp(cameraX, targetCameraX, damping);
@@ -920,7 +940,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
 
       camera.position.x = cameraX;
       camera.position.y = cameraY;
-      camera.position.z = 8 - travel - warp * 5;
+      camera.position.z = 8 - travel;
 
       camera.rotation.z = lerp(
         camera.rotation.z,
@@ -937,24 +957,29 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       starLayers.forEach((layer, index) => {
         const depth = index + 1;
         layer.material.uniforms.uTime.value = elapsed;
-        layer.material.uniforms.uStretch.value = warp * (0.4 + depth * 0.3);
 
+        // Parallax with drag sensitivity scaled by depth
         layer.points.rotation.y = lerp(
           layer.points.rotation.y,
-          m.x * 0.025 * depth,
+          m.x * 0.025 * depth + m.dragX * 0.15 * depth,
           0.025
         );
         layer.points.rotation.x = lerp(
           layer.points.rotation.x,
-          m.y * 0.015 * depth,
+          m.y * 0.015 * depth + m.dragY * 0.12 * depth,
           0.025
         );
 
+        // Slow drift
         layer.points.position.z =
           Math.sin(elapsed * (0.015 + index * 0.008)) * 2;
       });
 
       /* ---------------- Clusters ---------------- */
+      greenCluster.material.uniforms.uTime.value = elapsed;
+      yellowCluster.material.uniforms.uTime.value = elapsed;
+      orangeCluster.material.uniforms.uTime.value = elapsed;
+
       greenCluster.points.rotation.y = lerp(
         greenCluster.points.rotation.y,
         m.x * 0.018,
@@ -990,27 +1015,45 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       planet.rotation.z = Math.sin(elapsed * 0.1) * 0.015;
       atmosphere.rotation.copy(planet.rotation);
 
-      // Hover detection on planet
+      /* ---------------- Hover detection ---------------- */
       pointerVec.set(m.x, -m.y);
       raycaster.setFromCamera(pointerVec, camera);
-      const hits = raycaster.intersectObject(planet, false);
-      const hoverTarget = hits.length > 0 ? 1 : 0;
+
+      const planetHits = raycaster.intersectObject(planet, false);
+      const hoverPlanet = planetHits.length > 0 ? 1 : 0;
+
       planetUniforms.uHoverBoost.value = lerp(
         planetUniforms.uHoverBoost.value,
-        hoverTarget,
+        hoverPlanet,
         0.08
       );
       atmosphereMaterial.uniforms.uBoost.value =
         planetUniforms.uHoverBoost.value;
 
+      // Nebula hover
+      const nebulaHits = raycaster.intersectObject(nebula, false);
+      const nebulaBackHits = raycaster.intersectObject(nebulaBack, false);
+
+      const hoverNebula = nebulaHits.length > 0 ? 1 : 0;
+      const hoverBack = nebulaBackHits.length > 0 ? 1 : 0;
+
+      nebulaMaterial.uniforms.uHover.value = lerp(
+        nebulaMaterial.uniforms.uHover.value,
+        hoverNebula,
+        0.06
+      );
+      backMaterial.uniforms.uHover.value = lerp(
+        backMaterial.uniforms.uHover.value,
+        hoverBack,
+        0.06
+      );
+
       /* ---------------- Dust ---------------- */
       dust.rotation.y = elapsed * 0.002;
       dust.rotation.x = m.y * 0.012;
-
       if (Math.abs(scrollDelta) > 0.0001) {
         dust.position.z += scrollDelta * 80;
       }
-      dust.position.z -= warp * 5;
 
       /* ---------------- Shooting stars ---------------- */
       shootingStars.forEach((star) => {
@@ -1041,7 +1084,6 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
         star.line.position.x += star.dir.x * 1.6 * star.speed;
         star.line.position.y += star.dir.y * 1.6 * star.speed;
 
-        // Build tapered trail
         const positions = star.line.geometry.attributes.position.array as Float32Array;
         const segCount = positions.length / 3;
         const tailLength = 20;
@@ -1064,15 +1106,11 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
         }
       });
 
-      /* ---------------- Bloom (matches original brightness profile) ---------------- */
+      /* ---------------- Bloom (unchanged from original profile) ---------------- */
       bloom.strength =
-        0.58 +
-        Math.sin(elapsed * 0.35) * 0.045 +
-        smoothstep(scroll) * 0.16 +
-        warp * 0.35;
+        0.58 + Math.sin(elapsed * 0.35) * 0.045 + smoothstep(scroll) * 0.16;
 
-      renderer.toneMappingExposure =
-        1.0 + smoothstep(scroll) * 0.10 + warp * 0.05;
+      renderer.toneMappingExposure = 1.0 + smoothstep(scroll) * 0.10;
 
       composer.render();
     };
@@ -1092,9 +1130,7 @@ const SpaceScene: React.FC<SpaceSceneProps> = ({ scrollProgress = 0 }) => {
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('pointercancel', handlePointerUp);
       window.removeEventListener('click', handleClick);
-      window.removeEventListener('dblclick', handleDoubleClick);
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('resize', handleResize);
 
       scene.traverse((object) => {
