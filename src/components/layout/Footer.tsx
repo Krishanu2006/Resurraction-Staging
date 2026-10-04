@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
+import { Separator } from '@/components/ui/separator';
 import { eventData } from '../../data/event';
 
 const links = [
@@ -16,162 +17,67 @@ const links = [
 
 export const Footer: React.FC = () => {
   return (
-    <footer
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        padding: '90px 0 25px',
-        background:
-          'linear-gradient(180deg, color-mix(in srgb, var(--theme-background) 85%, transparent), color-mix(in srgb, var(--theme-background) 96%, black))',
-        borderTop:
-          '1px solid var(--theme-border)',
-      }}
-    >
+    <footer className="relative overflow-hidden pt-24 pb-8 bg-gradient-to-b from-background/80 via-background/95 to-black border-t border-theme-border/40 backdrop-blur-md">
       {/* Atmospheric glow */}
-
       <div
         aria-hidden="true"
+        className="absolute -right-36 -bottom-36 w-[500px] h-[300px] rounded-full pointer-events-none opacity-40 blur-3xl"
         style={{
-          position: 'absolute',
-          width: 500,
-          height: 300,
-          right: -150,
-          bottom: -150,
-          borderRadius: '50%',
           background:
             'radial-gradient(circle, var(--theme-glow-color), transparent 70%)',
-          pointerEvents: 'none',
         }}
       />
 
-      <div className="container">
-        <div
-          className="footer-grid"
-          style={{
-            position: 'relative',
-            display: 'grid',
-            gridTemplateColumns:
-              '1.4fr .6fr .8fr',
-            gap: 60,
-            paddingBottom: 70,
-          }}
-        >
+      <div className="container mx-auto px-4 max-w-7xl relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-14 pb-16">
           {/* Brand */}
-
-          <div>
+          <div className="md:col-span-6 lg:col-span-5 space-y-4">
             <img
               src="/assets/brand/resurraction-logo.png"
               alt="RESURRACTION"
-              style={{
-                width: 190,
-                height: 'auto',
-              }}
+              className="w-48 h-auto object-contain"
             />
 
-            <p
-              style={{
-                maxWidth: 520,
-                marginTop: 22,
-                color: 'var(--muted)',
-                fontSize: 14,
-                lineHeight: 1.85,
-              }}
-            >
-              A student hackathon organised
-              by the Department of Computer
-              Science & Engineering at{' '}
-              {eventData.institution}.
+            <p className="max-w-md text-muted-foreground text-sm leading-relaxed">
+              A student hackathon organised by the Department of Computer
+              Science & Engineering at {eventData.institution}.
             </p>
 
             <a
               href="#hero"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                marginTop: 25,
-                color:
-                  'var(--theme-accent)',
-                fontSize: 11,
-                fontFamily:
-                  'var(--font-mono)',
-                letterSpacing: '.08em',
-                textTransform:
-                  'uppercase',
-              }}
+              className="inline-flex items-center gap-2 pt-2 text-xs font-mono uppercase tracking-widest text-theme-accent hover:opacity-80 transition-opacity"
             >
               Back to top
-              <ArrowUpRight size={14} />
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </a>
           </div>
 
           {/* Navigation */}
-
-          <div>
-            <h4
-              style={{
-                color: 'var(--text)',
-                fontSize: 11,
-                fontWeight: 650,
-                letterSpacing: '.1em',
-                textTransform:
-                  'uppercase',
-              }}
-            >
+          <div className="md:col-span-3 lg:col-span-3">
+            <h4 className="text-foreground text-xs font-bold uppercase tracking-wider mb-4">
               Explore
             </h4>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 11,
-                marginTop: 18,
-              }}
-            >
-              {links.map(
-                ([label, href]) => (
-                  <a
-                    key={href}
-                    href={href}
-                    style={{
-                      color:
-                        'var(--muted)',
-                      fontSize: 13,
-                      transition:
-                        'color 180ms ease',
-                    }}
-                  >
-                    {label}
-                  </a>
-                )
-              )}
+            <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
+              {links.map(([label, href]) => (
+                <a
+                  key={href}
+                  href={href}
+                  className="text-muted-foreground text-sm hover:text-theme-accent transition-colors"
+                >
+                  {label}
+                </a>
+              ))}
             </div>
           </div>
 
           {/* Event */}
-
-          <div>
-            <h4
-              style={{
-                color: 'var(--text)',
-                fontSize: 11,
-                fontWeight: 650,
-                letterSpacing: '.1em',
-                textTransform:
-                  'uppercase',
-              }}
-            >
+          <div className="md:col-span-3 lg:col-span-4 space-y-4">
+            <h4 className="text-foreground text-xs font-bold uppercase tracking-wider mb-4">
               Event
             </h4>
 
-            <p
-              style={{
-                marginTop: 18,
-                color: 'var(--muted)',
-                fontSize: 13,
-                lineHeight: 1.9,
-              }}
-            >
+            <p className="text-muted-foreground text-sm leading-relaxed">
               {eventData.edition}
               <br />
               {eventData.venue}
@@ -179,47 +85,18 @@ export const Footer: React.FC = () => {
               More details coming soon.
             </p>
 
-            <div
-              style={{
-                marginTop: 25,
-                color:
-                  'var(--muted-dark)',
-                fontFamily:
-                  'var(--font-mono)',
-                fontSize: 9,
-                lineHeight: 1.8,
-              }}
-            >
-              SECTOR 01
-              <br />
-              RESURRECTION
+            <div className="font-mono text-[10px] tracking-wider text-muted-foreground/60 uppercase">
+              SECTOR 01 • RESURRECTION
             </div>
           </div>
         </div>
 
         {/* Bottom */}
+        <Separator className="bg-theme-border/30 my-6" />
 
-        <div
-          style={{
-            borderTop:
-              '1px solid var(--hairline)',
-            paddingTop: 18,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent:
-              'space-between',
-            gap: 20,
-            color:
-              'var(--muted-dark)',
-            fontFamily:
-              'var(--font-mono)',
-            fontSize: 9,
-            letterSpacing: '.04em',
-          }}
-        >
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-muted-foreground font-mono text-[11px] tracking-wider">
           <span>
-            © {new Date().getFullYear()}{' '}
-            RESURRECTION
+            © {new Date().getFullYear()} RESURRECTION
           </span>
 
           <span>
@@ -227,40 +104,6 @@ export const Footer: React.FC = () => {
           </span>
         </div>
       </div>
-
-      <style>{`
-        footer a:hover {
-          color: var(--theme-accent) !important;
-        }
-
-        @media (max-width: 750px) {
-          .footer-grid {
-            grid-template-columns:
-              1fr 1fr !important;
-            gap: 35px !important;
-          }
-
-          .footer-grid > div:first-child {
-            grid-column: 1 / -1;
-          }
-        }
-
-        @media (max-width: 500px) {
-          .footer-grid {
-            grid-template-columns:
-              1fr !important;
-          }
-
-          .footer-grid > div:first-child {
-            grid-column: auto;
-          }
-
-          footer .container > div:last-child {
-            align-items: flex-start !important;
-            flex-direction: column !important;
-          }
-        }
-      `}</style>
     </footer>
   );
 };

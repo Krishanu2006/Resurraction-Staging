@@ -3,6 +3,8 @@ import { UsersRound } from 'lucide-react';
 
 import { SectionHeading } from '../ui/SectionHeading';
 import { Reveal } from '../ui/Reveal';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   juryMembersData,
   juryOverview,
@@ -10,8 +12,8 @@ import {
 
 export const JurySection: React.FC = () => {
   return (
-    <section id="organizers" className="section">
-      <div className="container">
+    <section id="organizers" className="section relative py-20">
+      <div className="container mx-auto px-4 max-w-7xl">
         <Reveal>
           <SectionHeading
             code="06 — Jury"
@@ -20,139 +22,48 @@ export const JurySection: React.FC = () => {
           />
         </Reveal>
 
-        <div
-          className="jury-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns:
-              'repeat(4, 1fr)',
-            gap: 1,
-            background: 'var(--theme-card-border, var(--hairline))',
-          }}
-        >
-          {juryMembersData.map(
-            (member, index) => (
-              <Reveal
-                key={member.id}
-                delay={index * 60}
-              >
-                <article
-                  className="jury-card"
-                  style={{
-                    minHeight: 300,
-                    padding: 28,
-                    background:
-                      'var(--theme-card-bg, var(--surface-1))',
-                    backdropFilter:
-                      'blur(12px)',
-                    transition:
-                      'background var(--transition-normal)',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent:
-                        'space-between',
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <UsersRound
-                      size={21}
-                      strokeWidth={1.3}
-                      color="var(--theme-accent)"
-                    />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+          {juryMembersData.map((member, index) => (
+            <Reveal key={member.id} delay={index * 60}>
+              <Card className="h-full min-h-[300px] flex flex-col justify-between p-6 sm:p-7 border border-theme-border/50 bg-theme-card-bg/60 backdrop-blur-md transition-all duration-300 hover:border-theme-primary/50 hover:shadow-lg hover:shadow-theme-primary/5">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-theme-primary/10 border border-theme-primary/20 text-theme-accent">
+                      <UsersRound className="w-5 h-5" strokeWidth={1.5} />
+                    </div>
 
-                    <span
-                      style={{
-                        color:
-                          'var(--muted-dark)',
-                        fontFamily:
-                          'var(--font-mono)',
-                        fontSize: 9,
-                      }}
-                    >
-                      {String(index + 1).padStart(
-                        2,
-                        '0'
-                      )}
+                    <span className="font-mono text-xs text-muted-foreground/70">
+                      {String(index + 1).padStart(2, '0')}
                     </span>
                   </div>
 
-                  <div
-                    style={{
-                      marginTop: 50,
-                      color:
-                        'var(--muted-dark)',
-                      fontFamily:
-                        'var(--font-mono)',
-                      fontSize: 9,
-                      letterSpacing: '.1em',
-                    }}
-                  >
-                    {member.seatCode}
+                  <div className="mt-8">
+                    <Badge
+                      variant="outline"
+                      className="font-mono text-[10px] tracking-wider px-2 py-0.5 text-theme-accent border-theme-accent/20 bg-theme-accent/5"
+                    >
+                      {member.seatCode}
+                    </Badge>
                   </div>
 
-                  <h3
-                    style={{
-                      marginTop: 14,
-                      color: 'var(--text)',
-                      fontFamily:
-                        'var(--font-display)',
-                      fontSize: 20,
-                      fontWeight: 550,
-                    }}
-                  >
+                  <h3 className="mt-3 font-display text-xl font-medium text-foreground tracking-tight">
                     {member.name}
                   </h3>
+                </div>
 
-                  <p
-                    style={{
-                      marginTop: 8,
-                      color: 'var(--muted)',
-                      fontSize: 12,
-                      lineHeight: 1.6,
-                    }}
-                  >
+                <div className="mt-6 pt-4 border-t border-white/5 space-y-1">
+                  <p className="text-muted-foreground text-xs font-medium leading-relaxed">
                     {member.role}
                   </p>
-
-                  <p
-                    style={{
-                      marginTop: 5,
-                      color:
-                        'var(--muted-dark)',
-                      fontSize: 11,
-                    }}
-                  >
+                  <p className="text-muted-foreground/70 text-[11px]">
                     {member.organization}
                   </p>
-                </article>
-              </Reveal>
-            )
-          )}
+                </div>
+              </Card>
+            </Reveal>
+          ))}
         </div>
       </div>
-
-      <style>{`
-        .jury-card:hover {
-          background: var(--surface-2) !important;
-        }
-
-        @media (max-width: 900px) {
-          .jury-grid {
-            grid-template-columns:
-              repeat(2, 1fr) !important;
-          }
-        }
-
-        @media (max-width: 520px) {
-          .jury-grid {
-            grid-template-columns:
-              1fr !important;
-          }
-        }
-      `}</style>
     </section>
   );
 };

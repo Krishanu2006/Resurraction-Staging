@@ -3,6 +3,8 @@ import { ChevronDown } from 'lucide-react';
 
 import { SectionHeading } from '../ui/SectionHeading';
 import { Reveal } from '../ui/Reveal';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   rulesData,
   rulesOverview,
@@ -10,8 +12,8 @@ import {
 
 export const RulesSection: React.FC = () => {
   return (
-    <section id="rules" className="section">
-      <div className="container">
+    <section id="rules" className="section relative py-20">
+      <div className="container mx-auto px-4 max-w-7xl">
         <Reveal>
           <SectionHeading
             code="07 — Rules"
@@ -20,137 +22,54 @@ export const RulesSection: React.FC = () => {
           />
         </Reveal>
 
-        <div
-          className="rules-panel"
-          style={{
-            maxWidth: 1050,
-            margin: '0 auto',
-            borderTop:
-              '1px solid var(--theme-border)',
-          }}
-        >
-          {rulesData.map(
-            (category, index) => (
-              <Reveal
-                key={category.id}
-                delay={index * 40}
-              >
-                <details
-                  className="rule-item"
-                  style={{
-                    borderBottom:
-                      '1px solid var(--theme-card-border, var(--hairline))',
-                  }}
-                >
-                  <summary
-                    style={{
-                      listStyle: 'none',
-                      cursor: 'pointer',
-                      display: 'grid',
-                      gridTemplateColumns:
-                        '70px 1fr 25px',
-                      gap: 16,
-                      alignItems: 'center',
-                      padding: '24px 0',
-                    }}
-                  >
-                    <span
-                      style={{
-                        color:
-                          'var(--theme-accent)',
-                        fontFamily:
-                          'var(--font-mono)',
-                        fontSize: 9,
-                        letterSpacing: '.08em',
-                      }}
-                    >
-                      {category.code}
-                    </span>
-
-                    <span>
-                      <strong
-                        style={{
-                          display: 'block',
-                          color:
-                            'var(--text)',
-                          fontFamily:
-                            'var(--font-display)',
-                          fontSize: 17,
-                          fontWeight: 550,
-                        }}
+        <div className="max-w-[1050px] mx-auto mt-10 space-y-4">
+          {rulesData.map((category, index) => (
+            <Reveal key={category.id} delay={index * 40}>
+              <Card className="group overflow-hidden border border-theme-border/50 bg-theme-card-bg/60 backdrop-blur-md transition-all duration-300 hover:border-theme-primary/40">
+                <details className="rule-item">
+                  <summary className="list-none cursor-pointer flex items-center justify-between gap-4 p-5 sm:p-6 select-none transition-colors">
+                    <div className="flex items-start sm:items-center gap-4 min-w-0">
+                      <Badge
+                        variant="outline"
+                        className="font-mono text-[10px] tracking-wider px-2 py-0.5 text-theme-accent border-theme-accent/30 shrink-0"
                       >
-                        {category.category}
-                      </strong>
+                        {category.code}
+                      </Badge>
 
-                      <small
-                        style={{
-                          display: 'block',
-                          marginTop: 5,
-                          color:
-                            'var(--muted)',
-                          fontSize: 12,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {category.summary}
-                      </small>
-                    </span>
+                      <div>
+                        <strong className="block text-foreground font-display text-base sm:text-lg font-medium group-hover:text-theme-accent transition-colors">
+                          {category.category}
+                        </strong>
+                        <small className="block mt-1 text-muted-foreground text-xs sm:text-sm leading-relaxed">
+                          {category.summary}
+                        </small>
+                      </div>
+                    </div>
 
-                    <ChevronDown
-                      className="rule-chevron"
-                      size={17}
-                      color="var(--muted)"
-                    />
+                    <ChevronDown className="rule-chevron w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-300" />
                   </summary>
 
-                  <div
-                    style={{
-                      padding:
-                        '0 0 22px 70px',
-                      maxWidth: 850,
-                    }}
-                  >
-                    {category.rules.map(
-                      (rule) => (
+                  <CardContent className="pt-2 pb-6 px-5 sm:px-8 border-t border-theme-border/30">
+                    <div className="space-y-4 pt-4">
+                      {category.rules.map((rule) => (
                         <div
                           key={rule.id}
-                          style={{
-                            padding:
-                              '15px 0',
-                            borderTop:
-                              '1px solid var(--hairline-soft)',
-                          }}
+                          className="pt-3 border-t border-white/5 first:border-0 first:pt-0"
                         >
-                          <strong
-                            style={{
-                              color:
-                                'var(--text)',
-                              fontSize: 13,
-                              fontWeight: 600,
-                            }}
-                          >
+                          <strong className="text-foreground text-sm font-semibold tracking-wide">
                             {rule.title}
                           </strong>
-
-                          <p
-                            style={{
-                              marginTop: 6,
-                              color:
-                                'var(--muted)',
-                              fontSize: 13,
-                              lineHeight: 1.75,
-                            }}
-                          >
+                          <p className="mt-1 text-muted-foreground text-xs sm:text-sm leading-relaxed">
                             {rule.description}
                           </p>
                         </div>
-                      )
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  </CardContent>
                 </details>
-              </Reveal>
-            )
-          )}
+              </Card>
+            </Reveal>
+          ))}
         </div>
       </div>
 
@@ -161,28 +80,7 @@ export const RulesSection: React.FC = () => {
 
         .rule-item[open] .rule-chevron {
           transform: rotate(180deg);
-          color: var(--stellar-cyan);
-        }
-
-        .rule-chevron {
-          transition:
-            transform 180ms ease,
-            color 180ms ease;
-        }
-
-        @media (max-width: 650px) {
-          .rule-item summary {
-            grid-template-columns:
-              45px 1fr 20px !important;
-          }
-
-          .rule-item summary > span:nth-child(2) {
-            padding-right: 5px;
-          }
-
-          .rule-item > div {
-            padding-left: 45px !important;
-          }
+          color: var(--theme-accent);
         }
       `}</style>
     </section>

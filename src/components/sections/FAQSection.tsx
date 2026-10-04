@@ -3,15 +3,17 @@ import { ChevronDown } from 'lucide-react';
 
 import { SectionHeading } from '../ui/SectionHeading';
 import { Reveal } from '../ui/Reveal';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { faqData } from '../../data/faq';
+import { cn } from '@/lib/utils';
 
 export const FAQSection: React.FC = () => {
-  const [open, setOpen] =
-    useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
 
   return (
-    <section id="faq" className="section">
-      <div className="container">
+    <section id="faq" className="section relative py-20">
+      <div className="container mx-auto px-4 max-w-7xl">
         <Reveal>
           <SectionHeading
             code="08 — FAQ"
@@ -20,151 +22,63 @@ export const FAQSection: React.FC = () => {
           />
         </Reveal>
 
-        <div
-          style={{
-            maxWidth: 950,
-            margin: '0 auto',
-            borderTop:
-              '1px solid var(--theme-border)',
-          }}
-        >
+        <div className="max-w-[950px] mx-auto mt-10 space-y-3">
           {faqData.map((item, index) => {
-            const active =
-              open === item.id;
+            const active = open === item.id;
 
             return (
-              <Reveal
-                key={item.id}
-                delay={index * 35}
-              >
-                <article
-                  style={{
-                    borderBottom:
-                      '1px solid var(--theme-card-border, var(--hairline))',
-                  }}
+              <Reveal key={item.id} delay={index * 35}>
+                <Card
+                  className={cn(
+                    'overflow-hidden transition-all duration-300 border border-theme-border/50 bg-theme-card-bg/60 backdrop-blur-md hover:border-theme-primary/40',
+                    active && 'border-theme-primary/60 shadow-lg shadow-theme-primary/10'
+                  )}
                 >
                   <button
                     type="button"
-                    onClick={() =>
-                      setOpen(
-                        active
-                          ? null
-                          : item.id
-                      )
-                    }
+                    onClick={() => setOpen(active ? null : item.id)}
                     aria-expanded={active}
-                    style={{
-                      width: '100%',
-                      display: 'grid',
-                      gridTemplateColumns:
-                        '50px 1fr 22px',
-                      gap: 18,
-                      alignItems: 'center',
-                      padding: '23px 0',
-                      textAlign: 'left',
-                      color: active
-                        ? 'var(--theme-accent)'
-                        : 'var(--text)',
-                      background:
-                        'transparent',
-                      border: 0,
-                    }}
+                    className="w-full flex items-center justify-between gap-4 p-5 sm:p-6 text-left transition-colors duration-200"
                   >
-                    <span
-                      style={{
-                        color: active
-                          ? 'var(--theme-accent)'
-                          : 'var(--muted-dark)',
-                        fontFamily:
-                          'var(--font-mono)',
-                        fontSize: 9,
-                      }}
-                    >
-                      {String(
-                        index + 1
-                      ).padStart(2, '0')}
-                    </span>
-
-                    <span
-                      style={{
-                        fontFamily:
-                          'var(--font-display)',
-                        fontSize:
-                          'clamp(1rem, 1.8vw, 1.2rem)',
-                        fontWeight: 550,
-                      }}
-                    >
-                      {item.question}
-                    </span>
+                    <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                      <Badge
+                        variant={active ? 'default' : 'outline'}
+                        className="font-mono text-[10px] tracking-wider px-2 py-0.5 shrink-0"
+                      >
+                        {String(index + 1).padStart(2, '0')}
+                      </Badge>
+                      <span
+                        className={cn(
+                          'font-display text-base sm:text-lg font-medium transition-colors',
+                          active ? 'text-theme-accent' : 'text-foreground'
+                        )}
+                      >
+                        {item.question}
+                      </span>
+                    </div>
 
                     <ChevronDown
-                      size={17}
-                      color={
-                        active
-                          ? 'var(--stellar-cyan)'
-                          : 'var(--muted)'
-                      }
-                      style={{
-                        transform: active
-                          ? 'rotate(180deg)'
-                          : 'none',
-                        transition:
-                          'transform 180ms ease',
-                      }}
+                      className={cn(
+                        'w-5 h-5 shrink-0 text-muted-foreground transition-transform duration-300',
+                        active && 'rotate-180 text-theme-accent'
+                      )}
                     />
                   </button>
 
                   {active && (
-                    <div
-                      style={{
-                        padding:
-                          '0 42px 25px 68px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 32,
-                          height: 1,
-                          marginBottom: 14,
-                          background:
-                            'var(--stellar-cyan)',
-                        }}
-                      />
-
-                      <p
-                        style={{
-                          maxWidth: 760,
-                          color:
-                            'var(--muted)',
-                          fontSize: 14,
-                          lineHeight: 1.85,
-                        }}
-                      >
+                    <CardContent className="pt-0 pb-6 px-5 sm:px-6">
+                      <div className="w-8 h-[2px] mb-4 bg-theme-accent rounded-full opacity-80" />
+                      <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-3xl">
                         {item.answer}
                       </p>
-                    </div>
+                    </CardContent>
                   )}
-                </article>
+                </Card>
               </Reveal>
             );
           })}
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 600px) {
-          #faq button {
-            grid-template-columns:
-              38px 1fr 20px !important;
-            gap: 12px !important;
-          }
-
-          #faq article > div {
-            padding-left: 50px !important;
-            padding-right: 0 !important;
-          }
-        }
-      `}</style>
     </section>
   );
 };

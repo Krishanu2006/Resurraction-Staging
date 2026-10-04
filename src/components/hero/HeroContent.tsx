@@ -1,5 +1,7 @@
 import React from 'react';
 import { eventData } from '../../data/event';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface HeroContentProps {
   scrollProgress: number;
@@ -658,70 +660,13 @@ export const HeroContent: React.FC<HeroContentProps> = ({
         }}
       >
 
-        <div
-          style={{
-            display:
-              'inline-flex',
-
-            alignItems:
-              'center',
-
-            gap:
-              '10px',
-
-            padding:
-              '9px 17px',
-
-            borderRadius:
-              '999px',
-
-            border:
-              '1px solid rgba(103, 232, 249, 0.32)',
-
-            background:
-              'rgba(5, 8, 22, 0.48)',
-
-            backdropFilter:
-              'blur(14px)',
-
-            color:
-              'var(--cyan-soft)',
-
-            fontFamily:
-              'var(--font-mono)',
-
-            fontSize:
-              '0.68rem',
-
-            letterSpacing:
-              '0.20em',
-
-            textTransform:
-              'uppercase',
-          }}
+        <Badge
+          variant="accent"
+          className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[var(--theme-card-border)] bg-[var(--theme-card-bg)] backdrop-blur-md text-[var(--theme-accent)] font-mono text-[11px] tracking-[0.20em] uppercase shadow-[var(--theme-glow)]"
         >
-
-          <span
-            style={{
-              width: 7,
-              height: 7,
-
-              flexShrink: 0,
-
-              borderRadius:
-                '50%',
-
-              background:
-                'var(--stellar-cyan)',
-
-              boxShadow:
-                '0 0 14px var(--stellar-cyan)',
-            }}
-          />
-
+          <span className="w-2 h-2 rounded-full bg-[var(--theme-accent)] shadow-[var(--theme-glow)] animate-pulse" />
           NEXT TRANSMISSION
-
-        </div>
+        </Badge>
 
 
         <div
@@ -869,93 +814,27 @@ export const HeroContent: React.FC<HeroContentProps> = ({
         }}
       >
 
-        <a
-          href="#about"
-          style={{
-            minWidth:
-              '210px',
-
-            padding:
-              '14px 24px',
-
-            display:
-              'inline-flex',
-
-            justifyContent:
-              'center',
-
-            alignItems:
-              'center',
-
-            borderRadius:
-              '12px',
-
-            background:
-              'white',
-
-            color:
-              '#03101c',
-
-            fontFamily:
-              'var(--font-display)',
-
-            fontWeight: 700,
-
-            textDecoration:
-              'none',
-
-            boxShadow:
-              '0 12px 45px rgba(34, 211, 238, 0.22)',
-          }}
+        <Button
+          asChild
+          size="lg"
+          variant="default"
+          className="min-w-[210px] h-12 font-nasalization text-sm tracking-wider uppercase font-bold shadow-[var(--theme-glow)] rounded-xl cursor-pointer"
         >
-          Explore RESURRECTION
-        </a>
+          <a href="#about">
+            Explore RESURRECTION
+          </a>
+        </Button>
 
-
-        <a
-          href="#tracks"
-          style={{
-            minWidth:
-              '160px',
-
-            padding:
-              '14px 24px',
-
-            display:
-              'inline-flex',
-
-            justifyContent:
-              'center',
-
-            alignItems:
-              'center',
-
-            borderRadius:
-              '12px',
-
-            border:
-              '1px solid rgba(103, 232, 249, 0.34)',
-
-            background:
-              'rgba(5, 8, 22, 0.50)',
-
-            backdropFilter:
-              'blur(14px)',
-
-            color:
-              '#ffffff',
-
-            fontFamily:
-              'var(--font-display)',
-
-            fontWeight: 600,
-
-            textDecoration:
-              'none',
-          }}
+        <Button
+          asChild
+          size="lg"
+          variant="outline"
+          className="min-w-[160px] h-12 font-nasalization text-sm tracking-wider uppercase font-semibold rounded-xl border-[var(--theme-card-border)] bg-[var(--theme-card-bg)] text-[var(--theme-text)] hover:border-[var(--theme-accent)] hover:bg-[var(--theme-surface)] backdrop-blur-md cursor-pointer"
         >
-          View tracks
-        </a>
+          <a href="#tracks">
+            View tracks
+          </a>
+        </Button>
 
       </div>
 

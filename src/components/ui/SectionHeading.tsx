@@ -1,4 +1,6 @@
 import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface SectionHeadingProps {
   code: string;
@@ -16,191 +18,54 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
   className = '',
 }) => {
   const isCentered = align === 'center';
-
-  /*
-   * Example:
-   *
-   * code = "01 — ABOUT"
-   *
-   * This is intentionally treated as editorial metadata rather
-   * than a futuristic HUD label.
-   */
-
   const parts = code.split('—');
-
   const number = parts[0]?.trim() || '';
   const label = parts.slice(1).join('—').trim();
 
   return (
     <header
-      className={`section-heading ${className}`}
-      style={{
-        width: '100%',
-        maxWidth: '1100px',
-        marginLeft: isCentered ? 'auto' : undefined,
-        marginRight: isCentered ? 'auto' : undefined,
-        marginBottom: '5rem',
-        textAlign: isCentered ? 'center' : 'left',
-      }}
+      className={cn(
+        'section-heading w-full max-w-[1100px] mb-16 md:mb-20',
+        isCentered ? 'mx-auto text-center' : 'text-left',
+        className
+      )}
     >
-      {/* =====================================================
-          SECTION META
-          ===================================================== */}
-
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: isCentered
-            ? 'center'
-            : 'flex-start',
-
-          gap: '0.75rem',
-
-          marginBottom: '1.5rem',
-
-          color: 'var(--muted)',
-
-          fontFamily: 'var(--font-mono)',
-
-          fontSize: '0.68rem',
-
-          fontWeight: 500,
-
-          letterSpacing: '0.12em',
-
-          textTransform: 'uppercase',
-        }}
+        className={cn(
+          'flex items-center gap-3 mb-5',
+          isCentered ? 'justify-center' : 'justify-start'
+        )}
       >
-        {/* Number */}
-
-        <span
-          style={{
-            color: 'var(--theme-accent)',
-          }}
-        >
+        <Badge variant="accent" className="px-3 py-1 font-mono tracking-widest text-[11px]">
           {number}
-        </span>
-
-        {/* Thin divider */}
-
-        <span
-          aria-hidden="true"
-          style={{
-            width: '36px',
-            height: '1px',
-
-            background:
-              'var(--theme-border)',
-          }}
-        />
-
-        {/* Section name */}
-
+        </Badge>
+        <span className="w-9 h-[1px] bg-[var(--theme-border)] opacity-60" aria-hidden="true" />
         {label && (
-          <span
-            style={{
-              color: 'var(--muted)',
-            }}
-          >
+          <span className="text-[var(--theme-muted)] font-mono text-xs tracking-widest uppercase">
             {label}
           </span>
         )}
       </div>
 
-
-      {/* =====================================================
-          MAIN TITLE
-          ===================================================== */}
-
       <h2
-        style={{
-          maxWidth: isCentered
-            ? '900px'
-            : '950px',
-
-          margin:
-            isCentered
-              ? '0 auto'
-              : '0',
-
-          color: 'var(--text)',
-
-          fontFamily:
-            'var(--font-display)',
-
-          fontSize:
-            'clamp(2.5rem, 5.5vw, 5.4rem)',
-
-          fontWeight: 600,
-
-          lineHeight: 0.98,
-
-          letterSpacing: '-0.055em',
-        }}
+        className={cn(
+          'font-nasalization text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[var(--theme-text)] leading-[1.12]',
+          isCentered ? 'mx-auto max-w-[900px]' : 'max-w-[950px]'
+        )}
       >
         {title}
       </h2>
 
-
-      {/* =====================================================
-          SUBTITLE
-          ===================================================== */}
-
       {subtitle && (
         <p
-          style={{
-            maxWidth: '680px',
-
-            marginTop: '1.5rem',
-
-            marginLeft:
-              isCentered
-                ? 'auto'
-                : undefined,
-
-            marginRight:
-              isCentered
-                ? 'auto'
-                : undefined,
-
-            color: 'var(--muted)',
-
-            fontFamily:
-              'var(--font-body)',
-
-            fontSize:
-              'clamp(0.95rem, 1.4vw, 1.05rem)',
-
-            lineHeight: 1.75,
-
-            fontWeight: 400,
-          }}
+          className={cn(
+            'mt-6 text-base sm:text-lg md:text-xl text-[var(--theme-muted)] leading-relaxed font-sans max-w-[760px]',
+            isCentered && 'mx-auto'
+          )}
         >
           {subtitle}
         </p>
       )}
-
-
-      {/* =====================================================
-          BOTTOM INFORMATION LINE
-          ===================================================== */}
-
-      <div
-        aria-hidden="true"
-        style={{
-          width: isCentered
-            ? '100%'
-            : '100%',
-
-          height: '1px',
-
-          marginTop: '2.5rem',
-
-          background:
-            'linear-gradient(90deg, rgba(96,165,250,0.28), rgba(96,165,250,0.08), transparent)',
-        }}
-      />
     </header>
   );
 };

@@ -16,6 +16,10 @@
 @import './tokens.css';
 @import './animations.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 /* =========================================================
    LOCAL COSMIC FONT SYSTEM

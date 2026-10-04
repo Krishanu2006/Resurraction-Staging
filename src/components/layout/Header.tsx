@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { useScrollSection } from '../../hooks/useScrollSection';
 
 const NAV = [
@@ -212,70 +213,32 @@ export const Header: React.FC = () => {
         </nav>
 
         {/* Desktop CTA */}
-
-        <a
-          href="#about"
-          className="header-launch"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            color:
-              'var(--theme-background)',
-            background:
-              'var(--theme-cta)',
-            border:
-              '1px solid var(--theme-cta)',
-            boxShadow:
-              '0 0 16px var(--theme-glow-color)',
-            padding: '9px 14px',
-            borderRadius:
-              'var(--radius-xs)',
-            fontSize: 10,
-            fontWeight: 750,
-            letterSpacing: '.08em',
-            textTransform:
-              'uppercase',
-          }}
-        >
-          Explore
-          <ArrowUpRight size={14} />
-        </a>
+        <div className="hidden md:flex items-center">
+          <Button
+            asChild
+            variant="default"
+            size="sm"
+            className="font-mono text-[11px] uppercase tracking-wider font-bold shadow-[var(--theme-glow)]"
+          >
+            <a href="#about" className="inline-flex items-center gap-1.5">
+              Explore
+              <ArrowUpRight size={14} />
+            </a>
+          </Button>
+        </div>
 
         {/* Mobile */}
-
-        <button
-          className="mobile-toggle"
+        <Button
+          variant="outline"
+          size="icon"
+          className="mobile-toggle flex md:hidden items-center justify-center border-[var(--theme-card-border)] bg-[var(--theme-surface)] text-[var(--theme-text)] hover:text-[var(--theme-accent)]"
           type="button"
-          aria-label={
-            open
-              ? 'Close menu'
-              : 'Open menu'
-          }
+          aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
-          onClick={() =>
-            setOpen(!open)
-          }
-          style={{
-            display: 'none',
-            color: 'var(--text)',
-            background:
-              'transparent',
-            border:
-              '1px solid var(--border-subtle)',
-            width: 38,
-            height: 38,
-            alignItems: 'center',
-            justifyContent:
-              'center',
-          }}
+          onClick={() => setOpen(!open)}
         >
-          {open ? (
-            <X size={20} />
-          ) : (
-            <Menu size={20} />
-          )}
-        </button>
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </Button>
       </div>
 
       {open && (

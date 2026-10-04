@@ -7,6 +7,13 @@ import {
 import { SectionHeading } from '../ui/SectionHeading';
 import { Reveal } from '../ui/Reveal';
 import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
   prizePoolOverview,
   prizesData,
 } from '../../data/prizes';
@@ -23,267 +30,70 @@ export const PrizesSection: React.FC = () => {
           />
         </Reveal>
 
-        {/* Featured prize panel */}
-
+        {/* Featured prize panel using shadcn Card & Tailwind */}
         <Reveal delay={80}>
-          <div
-            className="prize-feature"
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'grid',
-              gridTemplateColumns: '1.2fr .8fr',
-              minHeight: 390,
-              border:
-                '1px solid var(--theme-card-border, var(--theme-border))',
-              borderRadius:
-                'var(--radius-xl)',
-              background:
-                'linear-gradient(135deg, color-mix(in srgb, var(--theme-card-bg) 95%, black), color-mix(in srgb, var(--theme-surface) 80%, var(--theme-primary) 20%))',
-              boxShadow:
-                'var(--theme-glow)',
-            }}
-          >
-            <div
-              style={{
-                padding:
-                  'clamp(30px, 6vw, 65px)',
-                position: 'relative',
-                zIndex: 2,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 9,
-                  color: 'var(--theme-accent)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 10,
-                  letterSpacing: '.13em',
-                }}
-              >
-                <Trophy
-                  size={17}
-                  strokeWidth={1.4}
-                />
+          <Card className="prize-feature relative overflow-hidden grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] min-h-[390px] border-[var(--theme-card-border)] bg-gradient-to-br from-[color-mix(in_srgb,var(--theme-card-bg)_95%,black)] to-[color-mix(in_srgb,var(--theme-surface)_80%,var(--theme-primary)_20%)] shadow-[var(--theme-glow)] backdrop-blur-xl">
+            <div className="p-8 sm:p-12 lg:p-16 relative z-10 flex flex-col justify-center">
+              <Badge variant="accent" className="w-fit flex items-center gap-2 mb-6">
+                <Trophy size={15} strokeWidth={1.5} />
                 {prizePoolOverview.title}
-              </div>
+              </Badge>
 
-              <div
-                style={{
-                  marginTop: 28,
-                  color: 'var(--text)',
-                  fontFamily:
-                    'var(--font-display)',
-                  fontSize:
-                    'clamp(3.2rem, 8vw, 7rem)',
-                  fontWeight: 600,
-                  lineHeight: .88,
-                  letterSpacing: '-.065em',
-                }}
-              >
+              <div className="font-nasalization text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tighter text-[var(--theme-text)] leading-none">
                 {prizePoolOverview.highlight}
               </div>
 
-              <p
-                style={{
-                  maxWidth: 600,
-                  marginTop: 28,
-                  color: 'var(--muted)',
-                  fontSize: 14,
-                  lineHeight: 1.8,
-                }}
-              >
+              <p className="mt-6 max-w-[600px] text-sm sm:text-base text-[var(--theme-muted)] leading-relaxed font-sans">
                 {prizePoolOverview.description}
               </p>
             </div>
 
             {/* Orbital prize visual */}
-
             <div
               aria-hidden="true"
-              style={{
-                position: 'relative',
-                minHeight: 300,
-                overflow: 'hidden',
-                background:
-                  'radial-gradient(circle at 50% 50%, rgba(34,211,238,.14), transparent 23%), radial-gradient(circle at 50% 50%, rgba(59,130,246,.08), transparent 52%)',
-              }}
+              className="relative min-h-[260px] lg:min-h-[300px] overflow-hidden flex items-center justify-center bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,.14),transparent_35%)]"
             >
-              <div
-                style={{
-                  position: 'absolute',
-                  width: 270,
-                  height: 100,
-                  left: '50%',
-                  top: '50%',
-                  transform:
-                    'translate(-50%, -50%) rotate(-18deg)',
-                  border:
-                    '1px solid rgba(34,211,238,.24)',
-                  borderRadius: '50%',
-                }}
-              />
-
-              <div
-                style={{
-                  position: 'absolute',
-                  width: 220,
-                  height: 80,
-                  left: '50%',
-                  top: '50%',
-                  transform:
-                    'translate(-50%, -50%) rotate(25deg)',
-                  border:
-                    '1px solid rgba(139,92,246,.18)',
-                  borderRadius: '50%',
-                }}
-              />
-
-              <div
-                style={{
-                  position: 'absolute',
-                  width: 95,
-                  height: 95,
-                  left: '50%',
-                  top: '50%',
-                  transform:
-                    'translate(-50%, -50%)',
-                  borderRadius: '50%',
-                  background:
-                    'radial-gradient(circle at 35% 28%, var(--theme-accent), var(--theme-primary) 38%, var(--theme-background) 78%)',
-                  boxShadow:
-                    '0 0 45px var(--theme-glow-color)',
-                }}
-              />
+              <div className="absolute w-[270px] h-[100px] rounded-full border border-[var(--theme-accent)] opacity-40 -rotate-[18deg]" />
+              <div className="absolute w-[220px] h-[80px] rounded-full border border-[var(--theme-primary)] opacity-30 rotate-[25deg]" />
+              <div className="absolute w-24 h-24 rounded-full bg-[radial-gradient(circle_at_35%_28%,var(--theme-accent),var(--theme-primary)_38%,var(--theme-background)_78%)] shadow-[var(--theme-glow)]" />
             </div>
-          </div>
+          </Card>
         </Reveal>
 
-        {/* Prize cards */}
-
-        <div
-          className="prize-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns:
-              'repeat(2, 1fr)',
-            gap: 18,
-            marginTop: 18,
-          }}
-        >
+        {/* Prize cards using shadcn Card & Tailwind */}
+        <div className="prize-grid grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           {prizesData.map((prize, index) => (
             <Reveal
               key={prize.id}
               delay={130 + index * 60}
             >
-              <article
-                className="prize-card"
-                style={{
-                  minHeight: 250,
-                  padding: 28,
-                  border:
-                    '1px solid var(--theme-card-border, var(--theme-border))',
-                  borderRadius:
-                    'var(--radius-lg)',
-                  background:
-                    'var(--theme-card-bg, var(--surface-1))',
-                  backdropFilter:
-                    'blur(12px)',
-                  transition:
-                    'border-color var(--transition-normal), transform var(--transition-normal)',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent:
-                      'space-between',
-                  }}
-                >
-                  <span
-                    style={{
-                      color:
-                        'var(--theme-accent)',
-                      fontFamily:
-                        'var(--font-mono)',
-                      fontSize: 9,
-                      letterSpacing: '.12em',
-                    }}
-                  >
+              <Card className="prize-card group min-h-[240px] p-7 border-[var(--theme-card-border)] bg-[var(--theme-card-bg)] backdrop-blur-xl hover:border-[var(--theme-accent)] hover:-translate-y-1 transition-all duration-300">
+                <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
+                  <Badge variant="outline" className="font-mono text-[10px] tracking-wider text-[var(--theme-accent)] border-[var(--theme-card-border)]">
                     {prize.tier}
-                  </span>
-
+                  </Badge>
                   <ArrowUpRight
                     size={16}
-                    color="var(--muted-dark)"
+                    className="text-[var(--theme-muted)] group-hover:text-[var(--theme-accent)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
                   />
-                </div>
+                </CardHeader>
 
-                <h3
-                  style={{
-                    marginTop: 35,
-                    color: 'var(--text)',
-                    fontFamily:
-                      'var(--font-display)',
-                    fontSize: 22,
-                    fontWeight: 550,
-                  }}
-                >
-                  {prize.title}
-                </h3>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color:
-                      'var(--theme-accent)',
-                    fontFamily:
-                      'var(--font-display)',
-                    fontSize: 20,
-                    fontWeight: 600,
-                  }}
-                >
-                  {prize.amount}
-                </div>
-
-                <p
-                  style={{
-                    marginTop: 12,
-                    color: 'var(--muted)',
-                    fontSize: 13,
-                    lineHeight: 1.7,
-                  }}
-                >
-                  {prize.description}
-                </p>
-              </article>
+                <CardContent className="p-0 mt-6">
+                  <CardTitle className="font-nasalization text-xl font-bold tracking-tight text-[var(--theme-text)]">
+                    {prize.title}
+                  </CardTitle>
+                  <div className="mt-2 text-lg font-nasalization font-semibold text-[var(--theme-accent)]">
+                    {prize.amount}
+                  </div>
+                  <p className="mt-3 text-xs sm:text-sm text-[var(--theme-muted)] leading-relaxed font-sans">
+                    {prize.description}
+                  </p>
+                </CardContent>
+              </Card>
             </Reveal>
           ))}
         </div>
       </div>
-
-      <style>{`
-        .prize-card:hover {
-          transform: translateY(-3px);
-          border-color: var(--border-cyan) !important;
-        }
-
-        @media (max-width: 800px) {
-          .prize-feature {
-            grid-template-columns: 1fr !important;
-          }
-
-          .prize-feature > div:last-child {
-            min-height: 260px;
-          }
-
-          .prize-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </section>
   );
 };
