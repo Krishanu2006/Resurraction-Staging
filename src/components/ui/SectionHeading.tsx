@@ -127,7 +127,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
           color: 'var(--text)',
 
           fontFamily:
-            'var(--font-display)',
+            "'Nasalization', var(--font-display), sans-serif",
 
           fontSize:
             'clamp(2.5rem, 5.5vw, 5.4rem)',
