@@ -28,7 +28,11 @@ const themes: Theme[] = [
     subtitle: 'PRIMARY WORLD',
     image: tauCetiImage,
     available: true,
-    accent: '#e5a93c',
+
+    // CHANGED:
+    // Old: #e5a93c
+    // New vibrant orange
+    accent: '#ff6a00',
   },
   {
     id: 'miller',
@@ -71,6 +75,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
     setSelectedTheme(theme.id);
     onSelect(theme.id);
   };
+
   return (
     <div className="theme-selector">
       {/* Background */}
@@ -202,8 +207,15 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             onClick={() => onSelect(selectedTheme)}
           >
             <span>
-              ENTER {themes.find((theme) => theme.id === selectedTheme)?.name}
+              ENTER{' '}
+              {
+                themes.find(
+                  (theme) =>
+                    theme.id === selectedTheme
+                )?.name
+              }
             </span>
+
             <span className="theme-selector__enter-arrow">
               →
             </span>
@@ -358,63 +370,73 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             'Space Mono',
             monospace;
 
-          font-size: 9px;
+          font-size: 8px;
           font-weight: 700;
-          letter-spacing: 0.22em;
-          line-height: 1;
+          letter-spacing: 0.18em;
         }
 
         .theme-selector__eyebrow-line {
-          display: block;
-          width: 28px;
+          width: 30px;
           height: 1px;
 
           background:
             linear-gradient(
               90deg,
               transparent,
-              rgba(103,232,249,0.8)
+              #67e8f9
             );
         }
 
         .theme-selector__eyebrow-line:last-child {
-          transform: rotate(180deg);
+          background:
+            linear-gradient(
+              90deg,
+              #67e8f9,
+              transparent
+            );
         }
 
         .theme-selector__title {
-          margin: 8px 0 3px;
+          margin:
+            clamp(8px, 1.2vh, 12px)
+            0
+            5px;
 
           font-family:
             'Nasalization',
             sans-serif;
 
-          font-size: clamp(26px, 4.1vh, 42px);
-          font-weight: 400;
-          letter-spacing: 0.08em;
-          line-height: 0.94;
+          font-size:
+            clamp(27px, 4.2vh, 43px);
 
-          color: #f8fbff;
+          font-weight: 400;
+          letter-spacing: 0.045em;
+          line-height: 0.95;
         }
 
         .theme-selector__title span {
-          display: inline-block;
-          margin-left: 9px;
+          display: block;
 
           color: #67e8f9;
+
+          text-shadow:
+            0 0 22px
+            rgba(103,232,249,0.28);
         }
 
         .theme-selector__description {
-          margin: 5px 0 0;
+          margin: 0;
 
-          color: rgba(217,226,244,0.68);
+          color:
+            rgba(255,255,255,0.52);
 
           font-family:
-            'Neue Stance',
-            sans-serif;
+            'Space Mono',
+            monospace;
 
-          font-size: 11px;
-          line-height: 1.3;
-          letter-spacing: 0.025em;
+          font-size: 9px;
+          line-height: 1.5;
+          letter-spacing: 0.06em;
         }
 
         /* ---------------------------------------------------------
@@ -422,17 +444,17 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
            --------------------------------------------------------- */
 
         .theme-selector__grid {
-          width: 100%;
           min-height: 0;
 
           display: grid;
+
           grid-template-columns:
             repeat(2, minmax(0, 1fr));
 
           grid-template-rows:
             repeat(2, minmax(0, 1fr));
 
-          gap: clamp(9px, 1.4vh, 15px);
+          gap: clamp(10px, 1.4vh, 16px);
 
           align-self: stretch;
         }
@@ -444,51 +466,66 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         .theme-selector__card {
           position: relative;
 
-          min-width: 0;
           min-height: 0;
-          width: 100%;
-          height: 100%;
 
           padding: 0;
-          border: 1px solid rgba(120,160,220,0.18);
-          border-radius: 10px;
 
           overflow: hidden;
 
-          background: #071027;
+          border:
+            1px solid
+            rgba(255,255,255,0.12);
 
-          text-align: left;
+          border-radius: 5px;
+
+          color: #fff;
+
+          background:
+            #07101f;
 
           cursor: pointer;
+
+          text-align: left;
 
           isolation: isolate;
 
           transition:
-            transform 350ms cubic-bezier(0.22,1,0.36,1),
-            border-color 350ms ease,
-            box-shadow 350ms ease;
+            transform 280ms ease,
+            border-color 280ms ease,
+            box-shadow 280ms ease;
         }
 
-        .theme-selector__card--available:hover {
-          transform: translateY(-3px);
+        .theme-selector__card:hover {
+          transform:
+            translateY(-2px);
 
           border-color:
-            rgba(103,232,249,0.7);
+            var(--theme-accent);
 
           box-shadow:
-            0 16px 45px rgba(0,0,0,0.38),
-            0 0 28px rgba(34,211,238,0.12);
+            0 0 0 1px
+            rgba(255,255,255,0.04),
+            0 12px 32px
+            rgba(0,0,0,0.35),
+            0 0 28px
+            color-mix(
+              in srgb,
+              var(--theme-accent) 22%,
+              transparent
+            );
         }
 
-        .theme-selector__card--available:focus-visible {
-          outline: 2px solid #67e8f9;
+        .theme-selector__card:focus-visible {
+          outline:
+            2px solid
+            var(--theme-accent);
+
           outline-offset: 3px;
         }
 
         .theme-selector__card--disabled {
           cursor: not-allowed;
-          filter: saturate(0.72);
-          opacity: 0.72;
+          filter: saturate(0.45);
         }
 
         /* ---------------------------------------------------------
@@ -501,66 +538,72 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
           z-index: -3;
 
-          background-image: var(--theme-image);
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
+          background:
+            var(--theme-image)
+            center / cover
+            no-repeat;
 
-          transform: scale(1.015);
+          transform: scale(1.01);
 
           transition:
-            transform 700ms
-              cubic-bezier(0.22,1,0.36,1),
-            filter 500ms ease;
+            transform 500ms ease;
         }
 
-        .theme-selector__card--available:hover
+        .theme-selector__card:hover
         .theme-selector__image {
-          transform: scale(1.06);
+          transform:
+            scale(1.045);
         }
 
-        .theme-selector__card--disabled
-        .theme-selector__image {
-          filter: grayscale(0.22);
-        }
+        /* ---------------------------------------------------------
+           IMAGE OVERLAY
+           --------------------------------------------------------- */
 
         .theme-selector__image-overlay {
           position: absolute;
           inset: 0;
+
           z-index: -2;
 
           background:
             linear-gradient(
               180deg,
-              rgba(2,5,14,0.16) 0%,
-              rgba(2,5,14,0.08) 30%,
-              rgba(2,5,14,0.32) 58%,
-              rgba(2,5,14,0.91) 100%
+              rgba(2,5,14,0.18) 0%,
+              rgba(2,5,14,0.12) 34%,
+              rgba(2,5,14,0.82) 100%
             );
         }
+
+        /* ---------------------------------------------------------
+           GLOW
+           --------------------------------------------------------- */
 
         .theme-selector__glow {
           position: absolute;
           inset: 0;
+
           z-index: -1;
+
+          pointer-events: none;
 
           opacity: 0;
 
           background:
-            linear-gradient(
-              135deg,
+            radial-gradient(
+              circle at 50% 50%,
               color-mix(
                 in srgb,
-                var(--theme-accent) 12%,
+                var(--theme-accent) 16%,
                 transparent
               ),
-              transparent 45%
+              transparent 64%
             );
 
-          transition: opacity 350ms ease;
+          transition:
+            opacity 280ms ease;
         }
 
-        .theme-selector__card--available:hover
+        .theme-selector__card:hover
         .theme-selector__glow {
           opacity: 1;
         }
@@ -571,24 +614,29 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
         .theme-selector__card-top {
           position: absolute;
-          left: 13px;
-          right: 13px;
+
           top: 12px;
+          left: 12px;
+          right: 12px;
 
           display: flex;
           align-items: center;
           justify-content: space-between;
 
-          font-family:
-            'Space Mono',
-            monospace;
+          z-index: 3;
         }
 
         .theme-selector__number {
-          color: rgba(255,255,255,0.68);
+          color:
+            rgba(255,255,255,0.72);
 
-          font-size: 10px;
-          letter-spacing: 0.15em;
+          font-family:
+            'Space Mono',
+            monospace;
+
+          font-size: 8px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
         }
 
         .theme-selector__status {
@@ -596,29 +644,39 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           align-items: center;
           gap: 6px;
 
-          padding: 5px 8px;
+          padding:
+            4px 7px;
 
-          border: 1px solid
-            rgba(255,255,255,0.14);
+          border:
+            1px solid
+            rgba(255,255,255,0.12);
 
-          border-radius: 999px;
+          border-radius: 3px;
 
-          color: rgba(255,255,255,0.62);
+          color:
+            rgba(255,255,255,0.45);
 
           background:
-            rgba(2,5,14,0.44);
+            rgba(0,0,0,0.2);
 
-          backdrop-filter: blur(8px);
+          font-family:
+            'Space Mono',
+            monospace;
 
-          font-size: 8px;
+          font-size: 6px;
           letter-spacing: 0.12em;
         }
 
         .theme-selector__status--available {
-          color: #67e8f9;
+          color:
+            var(--theme-accent);
 
           border-color:
-            rgba(103,232,249,0.34);
+            color-mix(
+              in srgb,
+              var(--theme-accent) 40%,
+              transparent
+            );
         }
 
         .theme-selector__status-dot {
@@ -650,7 +708,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
           margin-bottom: 3px;
 
-          color: var(--theme-accent);
+          color:
+            var(--theme-accent);
 
           font-family:
             'Space Mono',
@@ -670,7 +729,9 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             'Nasalization',
             sans-serif;
 
-          font-size: clamp(17px, 2.5vh, 25px);
+          font-size:
+            clamp(17px, 2.5vh, 25px);
+
           font-weight: 400;
           letter-spacing: 0.035em;
           line-height: 1;
@@ -692,7 +753,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         }
 
         .theme-selector__action {
-          color: rgba(255,255,255,0.66);
+          color:
+            rgba(255,255,255,0.66);
 
           font-family:
             'Space Mono',
@@ -728,6 +790,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         .theme-selector__corner--tl {
           top: 7px;
           left: 7px;
+
           border-top: 1px solid;
           border-left: 1px solid;
         }
@@ -735,6 +798,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         .theme-selector__corner--tr {
           top: 7px;
           right: 7px;
+
           border-top: 1px solid;
           border-right: 1px solid;
         }
@@ -742,6 +806,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         .theme-selector__corner--bl {
           bottom: 7px;
           left: 7px;
+
           border-bottom: 1px solid;
           border-left: 1px solid;
         }
@@ -749,6 +814,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         .theme-selector__corner--br {
           bottom: 7px;
           right: 7px;
+
           border-bottom: 1px solid;
           border-right: 1px solid;
         }
@@ -771,12 +837,14 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         .theme-selector__locked-overlay span {
           padding: 6px 9px;
 
-          border: 1px solid
+          border:
+            1px solid
             rgba(255,255,255,0.13);
 
           border-radius: 3px;
 
-          color: rgba(255,255,255,0.55);
+          color:
+            rgba(255,255,255,0.55);
 
           background:
             rgba(2,5,14,0.48);
@@ -802,7 +870,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
           gap: 20px;
 
-          margin-top: clamp(9px, 1.5vh, 15px);
+          margin-top:
+            clamp(9px, 1.5vh, 15px);
         }
 
         .theme-selector__enter {
@@ -816,7 +885,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
           padding: 0 14px;
 
-          border: 1px solid
+          border:
+            1px solid
             rgba(103,232,249,0.42);
 
           border-radius: 4px;
@@ -853,11 +923,14 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           border-color:
             rgba(103,232,249,0.82);
 
-          transform: translateY(-1px);
+          transform:
+            translateY(-1px);
         }
 
         .theme-selector__enter:focus-visible {
-          outline: 2px solid #67e8f9;
+          outline:
+            2px solid #67e8f9;
+
           outline-offset: 3px;
         }
 
@@ -871,7 +944,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           align-items: center;
           gap: 9px;
 
-          color: rgba(255,255,255,0.4);
+          color:
+            rgba(255,255,255,0.4);
 
           font-family:
             'Space Mono',
@@ -957,7 +1031,9 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           }
 
           .theme-selector__title {
-            font-size: clamp(24px, 5.5vw, 31px);
+            font-size:
+              clamp(24px, 5.5vw, 31px);
+
             margin-top: 7px;
           }
 
@@ -995,7 +1071,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           }
 
           .theme-selector__card-title {
-            font-size: clamp(12px, 3.5vw, 18px);
+            font-size:
+              clamp(12px, 3.5vw, 18px);
           }
 
           .theme-selector__card-line {

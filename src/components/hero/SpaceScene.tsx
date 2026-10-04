@@ -102,6 +102,8 @@ const SpaceScene: React.FC<
       {
         background: number;
         fog: number;
+        fogGreen: number;
+        fogOrange: number;
         stars: number[];
         clusterA: number;
         clusterB: number;
@@ -111,7 +113,9 @@ const SpaceScene: React.FC<
     > = {
       'tau-ceti': {
         background: 0x010604,
-        fog: 0x06130b,
+        fog: 0x0d2410,
+        fogGreen: 0x4a9c2a,
+        fogOrange: 0xe06a1a,
         stars: [
           0x9bb0ff,
           0xcad7ff,
@@ -128,7 +132,9 @@ const SpaceScene: React.FC<
       },
       miller: {
         background: 0x02080b,
-        fog: 0x06171c,
+        fog: 0x081a20,
+        fogGreen: 0x35aac2,
+        fogOrange: 0xd9a24a,
         stars: [
           0x9ed9e5,
           0xb7e9ef,
@@ -145,7 +151,9 @@ const SpaceScene: React.FC<
       },
       pandora: {
         background: 0x02070b,
-        fog: 0x06151a,
+        fog: 0x061620,
+        fogGreen: 0x25d99b,
+        fogOrange: 0xd67a30,
         stars: [
           0x8defff,
           0x9faeff,
@@ -162,7 +170,9 @@ const SpaceScene: React.FC<
       },
       kepler: {
         background: 0x090403,
-        fog: 0x1b0b06,
+        fog: 0x1a0a05,
+        fogGreen: 0x8a6a2a,
+        fogOrange: 0xe05a20,
         stars: [
           0xffb36e,
           0xffc58e,
@@ -195,8 +205,8 @@ const SpaceScene: React.FC<
 
     scene.fog =
       new THREE.FogExp2(
-        profile.fog,
-        0.00045
+        profile.fogGreen,
+        0.00042
       );
 
     /* ============================================================
@@ -259,6 +269,162 @@ const SpaceScene: React.FC<
 
     container.appendChild(
       renderer.domElement
+    );
+
+    /* ============================================================
+     * GREEN BACKGROUND WITH BIG SCATTERED ORANGE PATCHES
+     * ============================================================ */
+
+    const backgroundSphereGeometry =
+      new THREE.SphereGeometry(
+        1400,
+        48,
+        32
+      );
+
+    const backgroundSphereMaterial =
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        uniforms: {
+          uTime: {
+            value: 0,
+          },
+          uGreenZenith: {
+            value: new THREE.Color(
+              profile.fogGreen
+            ).multiplyScalar(0.10),
+          },
+          uGreenMid: {
+            value: new THREE.Color(
+              profile.fogGreen
+            ).multiplyScalar(0.20),
+          },
+          uGreenLow: {
+            value: new THREE.Color(
+              profile.fogGreen
+            ).multiplyScalar(0.16),
+          },
+          uOrange: {
+            value: new THREE.Color(
+              profile.fogOrange
+            ),
+          },
+        },
+        vertexShader: /* glsl */ `
+          varying vec3 vWorldDir;
+
+          void main() {
+            vec4 world = modelMatrix * vec4(position, 1.0);
+            vWorldDir = normalize(world.xyz - cameraPosition);
+            gl_Position = projectionMatrix * viewMatrix * world;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          varying vec3 vWorldDir;
+
+          uniform float uTime;
+          uniform vec3 uGreenZenith;
+          uniform vec3 uGreenMid;
+          uniform vec3 uGreenLow;
+          uniform vec3 uOrange;
+
+          float hash(vec3 p) {
+            p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
+            p *= 17.0;
+            return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+          }
+
+          float noise(vec3 p) {
+            vec3 i = floor(p);
+            vec3 f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            return mix(
+              mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+                  mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+              mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+                  mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
+              f.z
+            );
+          }
+
+          float fbm(vec3 p, int oct) {
+            float v = 0.0;
+            float a = 0.5;
+            for (int i = 0; i < 8; i++) {
+              if (i >= oct) break;
+              v += a * noise(p);
+              p *= 2.03;
+              a *= 0.5;
+            }
+            return v;
+          }
+
+          void main() {
+            vec3 dir = normalize(vWorldDir);
+
+            // --- GREEN BASE ---
+            float h = dir.y;
+            float tUp = smoothstep(-0.5, 0.9, h);
+
+            vec3 skyBase;
+            if (tUp < 0.5) {
+              skyBase = mix(uGreenLow, uGreenMid, tUp * 2.0);
+            } else {
+              skyBase = mix(uGreenMid, uGreenZenith, (tUp - 0.5) * 2.0);
+            }
+
+            // --- BIG ORANGE PATCHES ---
+            // Low spatial frequency = big patches.
+            vec3 np = dir * 1.6 + vec3(uTime * 0.010, 0.0, uTime * 0.006);
+
+            float patchField = fbm(np, 4);
+
+            // Very low-frequency drift so groups of
+            // patches move slowly through the sky.
+            float drift = fbm(dir * 0.7 + vec3(uTime * 0.015, 0.0, 0.0), 3);
+
+            float combined = patchField * 0.75 + drift * 0.25;
+
+            // Lower thresholds + wider smoothing = big
+            // soft patches with gradual edges.
+            float smallPatch = smoothstep(0.58, 0.78, combined);
+            float largePatch = smoothstep(0.48, 0.68, combined) * 0.7;
+
+            float orangeAmount = max(smallPatch, largePatch);
+
+            // Slow breathing so each patch appears and
+            // disappears over several seconds.
+            float flicker = 0.5 + 0.5 * sin(
+              uTime * 0.28 +
+              combined * 10.0
+            );
+
+            orangeAmount *= flicker;
+
+            // Soft blend so patches fade in from green.
+            vec3 color = skyBase;
+            color = mix(color, color + uOrange * 0.85, orangeAmount);
+
+            color *= 1.0 - smoothstep(0.7, 1.0, h) * 0.25;
+
+            float vignette = smoothstep(1.0, 0.15, length(dir.xz));
+            color *= mix(0.85, 1.0, vignette);
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `,
+      });
+
+    const backgroundSphere =
+      new THREE.Mesh(
+        backgroundSphereGeometry,
+        backgroundSphereMaterial
+      );
+
+    scene.add(
+      backgroundSphere
     );
 
     /* ============================================================
@@ -500,6 +666,7 @@ const SpaceScene: React.FC<
           depthWrite: false,
           blending:
             THREE.AdditiveBlending,
+          fog: true,
 
           uniforms: {
             uTime: {
@@ -515,6 +682,16 @@ const SpaceScene: React.FC<
               value:
                 twinkle,
             },
+
+            fogColor: {
+              value: scene.fog.color,
+            },
+
+            fogDensity: {
+              value:
+                (scene.fog as THREE.FogExp2)
+                  .density,
+            },
           },
 
           vertexShader:
@@ -529,6 +706,7 @@ const SpaceScene: React.FC<
 
               varying vec3 vColor;
               varying float vTwinkle;
+              varying float vFogDepth;
 
               void main() {
                 vColor = color;
@@ -559,6 +737,8 @@ const SpaceScene: React.FC<
                     1.0
                   );
 
+                vFogDepth = -mv.z;
+
                 gl_Position =
                   projectionMatrix *
                   mv;
@@ -573,6 +753,10 @@ const SpaceScene: React.FC<
             /* glsl */ `
               varying vec3 vColor;
               varying float vTwinkle;
+              varying float vFogDepth;
+
+              uniform vec3 fogColor;
+              uniform float fogDensity;
 
               void main() {
                 vec2 c =
@@ -614,6 +798,22 @@ const SpaceScene: React.FC<
                 vec3 col =
                   vColor *
                   vTwinkle;
+
+                float fogFactor =
+                  1.0 -
+                  exp(
+                    -fogDensity *
+                    fogDensity *
+                    vFogDepth *
+                    vFogDepth
+                  );
+
+                col =
+                  mix(
+                    col,
+                    fogColor,
+                    clamp(fogFactor, 0.0, 1.0)
+                  );
 
                 gl_FragColor =
                   vec4(
@@ -760,6 +960,7 @@ const SpaceScene: React.FC<
           depthWrite: false,
           blending:
             THREE.AdditiveBlending,
+          fog: true,
 
           uniforms: {
             uColor: {
@@ -778,6 +979,16 @@ const SpaceScene: React.FC<
               value:
                 pixelRatio,
             },
+
+            fogColor: {
+              value: scene.fog.color,
+            },
+
+            fogDensity: {
+              value:
+                (scene.fog as THREE.FogExp2)
+                  .density,
+            },
           },
 
           vertexShader:
@@ -786,6 +997,8 @@ const SpaceScene: React.FC<
 
               uniform float uPixelRatio;
 
+              varying float vFogDepth;
+
               void main() {
                 vec4 mv =
                   modelViewMatrix *
@@ -793,6 +1006,8 @@ const SpaceScene: React.FC<
                     position,
                     1.0
                   );
+
+                vFogDepth = -mv.z;
 
                 gl_Position =
                   projectionMatrix *
@@ -809,6 +1024,10 @@ const SpaceScene: React.FC<
             /* glsl */ `
               uniform vec3 uColor;
               uniform float uOpacity;
+              uniform vec3 fogColor;
+              uniform float fogDensity;
+
+              varying float vFogDepth;
 
               void main() {
                 vec2 c =
@@ -834,9 +1053,27 @@ const SpaceScene: React.FC<
                   discard;
                 }
 
+                vec3 col = uColor;
+
+                float fogFactor =
+                  1.0 -
+                  exp(
+                    -fogDensity *
+                    fogDensity *
+                    vFogDepth *
+                    vFogDepth
+                  );
+
+                col =
+                  mix(
+                    col,
+                    fogColor,
+                    clamp(fogFactor, 0.0, 1.0)
+                  );
+
                 gl_FragColor =
                   vec4(
-                    uColor,
+                    col,
                     a *
                     uOpacity
                   );
@@ -865,7 +1102,7 @@ const SpaceScene: React.FC<
         700,
         120,
         profile.clusterA,
-        0.16
+        0.20
       );
 
     const yellowCluster =
@@ -873,7 +1110,7 @@ const SpaceScene: React.FC<
         450,
         100,
         profile.clusterB,
-        0.14
+        0.12
       );
 
     const orangeCluster =
@@ -881,11 +1118,12 @@ const SpaceScene: React.FC<
         300,
         80,
         profile.clusterC,
-        0.12
+        0.10
       );
 
     /* ============================================================
      * PROCEDURAL NEBULA
+     * Green base with big discrete orange patches drifting through.
      * ============================================================ */
 
     const createNebulaMaterial =
@@ -897,6 +1135,7 @@ const SpaceScene: React.FC<
           depthWrite: false,
           blending:
             THREE.AdditiveBlending,
+          fog: false,
 
           uniforms: {
             uTime: {
@@ -913,6 +1152,20 @@ const SpaceScene: React.FC<
                 new THREE.Vector2(
                   0,
                   0
+                ),
+            },
+
+            uGreen: {
+              value:
+                new THREE.Color(
+                  profile.fogGreen
+                ),
+            },
+
+            uOrange: {
+              value:
+                new THREE.Color(
+                  profile.fogOrange
                 ),
             },
           },
@@ -944,6 +1197,8 @@ const SpaceScene: React.FC<
               uniform float uTime;
               uniform float uOpacity;
               uniform vec2 uMouse;
+              uniform vec3 uGreen;
+              uniform vec3 uOrange;
 
               float hash(
                 vec2 p
@@ -1134,6 +1389,7 @@ const SpaceScene: React.FC<
                 stretched.y *=
                   1.35;
 
+                // --- GREEN BASE ---
                 float n =
                   warpedFbm(
                     stretched *
@@ -1155,65 +1411,87 @@ const SpaceScene: React.FC<
                     n
                   );
 
-                vec3 green =
-                  vec3(
-                    0.10,
-                    0.65,
-                    0.31
+                // --- BIG ORANGE PATCHES ---
+                // Low spatial frequency = big patches.
+                vec2 patchUV =
+                  stretched * 1.7 +
+                  vec2(
+                    uTime * 0.045,
+                    -uTime * 0.030
                   );
 
-                vec3 yellow =
-                  vec3(
-                    0.95,
-                    0.72,
-                    0.18
-                  );
+                float patchField =
+                  fbm(patchUV);
 
-                vec3 orange =
-                  vec3(
-                    0.95,
-                    0.28,
-                    0.08
-                  );
-
-                float greenMask =
+                // Lower thresholds + wider smoothing
+                // = large soft patches with gradual edges.
+                float smallPatch =
                   smoothstep(
-                    0.15,
-                    0.65,
-                    n
+                    0.55,
+                    0.75,
+                    patchField
                   );
 
-                float orangeMask =
+                float largePatch =
                   smoothstep(
-                    0.72,
-                    0.92,
-                    n
+                    0.45,
+                    0.65,
+                    patchField
+                  ) * 0.75;
+
+                float orangeAmount =
+                  max(
+                    smallPatch,
+                    largePatch
                   );
 
+                // Slow breathing so each patch is visible
+                // as it appears and fades.
+                float flicker =
+                  0.5 +
+                  0.5 *
+                  sin(
+                    uTime * 0.32 +
+                    patchField * 8.0
+                  );
+
+                orangeAmount *=
+                  flicker;
+
+                // --- COLOR ---
                 vec3 color =
-                  mix(
-                    green,
-                    yellow,
-                    greenMask
+                  uGreen *
+                  (
+                    0.85 +
+                    fbm(stretched * 5.0) *
+                    0.4
                   );
 
                 color =
                   mix(
                     color,
-                    orange,
-                    orangeMask
+                    color +
+                    uOrange *
+                    0.85,
+                    orangeAmount *
+                    0.9
                   );
 
-                color +=
-                  vec3(
-                    0.04,
-                    0.07,
-                    0.14
-                  ) *
+                float vein =
                   smoothstep(
-                    0.55,
-                    0.9,
-                    d
+                    0.72,
+                    0.86,
+                    n
+                  ) *
+                  (1.0 - orangeAmount);
+
+                color =
+                  mix(
+                    color,
+                    uGreen *
+                    1.5,
+                    vein *
+                    0.35
                   );
 
                 float edge =
@@ -1345,6 +1623,8 @@ const SpaceScene: React.FC<
 
         side:
           THREE.FrontSide,
+
+        fog: false,
 
         vertexShader:
           /* glsl */ `
@@ -1587,6 +1867,8 @@ const SpaceScene: React.FC<
         depthWrite:
           false,
 
+        fog: false,
+
         uniforms: {
           glowColor: {
             value:
@@ -1806,6 +2088,7 @@ const SpaceScene: React.FC<
         depthWrite: false,
         blending:
           THREE.AdditiveBlending,
+        fog: true,
 
         uniforms: {
           uPixelRatio: {
@@ -1817,6 +2100,16 @@ const SpaceScene: React.FC<
             value:
               0.20,
           },
+
+          fogColor: {
+            value: scene.fog.color,
+          },
+
+          fogDensity: {
+            value:
+              (scene.fog as THREE.FogExp2)
+                .density,
+          },
         },
 
         vertexShader:
@@ -1825,6 +2118,8 @@ const SpaceScene: React.FC<
 
             uniform float uPixelRatio;
 
+            varying float vFogDepth;
+
             void main() {
               vec4 mv =
                 modelViewMatrix *
@@ -1832,6 +2127,8 @@ const SpaceScene: React.FC<
                   position,
                   1.0
                 );
+
+              vFogDepth = -mv.z;
 
               gl_Position =
                 projectionMatrix *
@@ -1847,6 +2144,10 @@ const SpaceScene: React.FC<
         fragmentShader:
           /* glsl */ `
             uniform float uOpacity;
+            uniform vec3 fogColor;
+            uniform float fogDensity;
+
+            varying float vFogDepth;
 
             void main() {
               vec2 c =
@@ -1870,13 +2171,27 @@ const SpaceScene: React.FC<
                 discard;
               }
 
+              vec3 col = vec3(0.72, 0.78, 0.72);
+
+              float fogFactor =
+                1.0 -
+                exp(
+                  -fogDensity *
+                  fogDensity *
+                  vFogDepth *
+                  vFogDepth
+                );
+
+              col =
+                mix(
+                  col,
+                  fogColor,
+                  clamp(fogFactor, 0.0, 1.0)
+                );
+
               gl_FragColor =
                 vec4(
-                  vec3(
-                    0.72,
-                    0.78,
-                    0.72
-                  ),
+                  col,
                   a *
                   uOpacity
                 );
@@ -1997,6 +2312,8 @@ const SpaceScene: React.FC<
 
             depthWrite:
               false,
+
+            fog: true,
           });
 
         const line =
@@ -2520,6 +2837,18 @@ const SpaceScene: React.FC<
             0.04
           );
 
+        /* ---------------- Background sphere ---------------- */
+
+        backgroundSphere.position.copy(
+          camera.position
+        );
+
+        backgroundSphereMaterial
+          .uniforms
+          .uTime
+          .value =
+          elapsed;
+
         /* ---------------- Stars ---------------- */
 
         starLayers.forEach(
@@ -2669,9 +2998,7 @@ const SpaceScene: React.FC<
             0.015
           );
 
-        /* ========================================================
-         * TAU CETI / ADRIAN PLANET
-         * ======================================================== */
+        /* ---------------- Adrian planet ---------------- */
 
         planet.rotation.y =
           Math.sin(
