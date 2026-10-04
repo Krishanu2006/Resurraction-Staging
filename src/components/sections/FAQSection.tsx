@@ -30,8 +30,8 @@ export const FAQSection: React.FC = () => {
               <Reveal key={item.id} delay={index * 35}>
                 <Card
                   className={cn(
-                    'overflow-hidden transition-all duration-300 border border-theme-border/50 bg-theme-card-bg/60 backdrop-blur-md hover:border-theme-primary/40',
-                    active && 'border-theme-primary/60 shadow-lg shadow-theme-primary/10'
+                    'overflow-hidden transition-all duration-300 hover:border-theme-primary/50',
+                    active && 'border-theme-primary/70 shadow-lg shadow-theme-primary/15'
                   )}
                 >
                   <button
