@@ -37,14 +37,14 @@ export const JurySection: React.FC = () => {
                 delay={index * 60}
               >
                 <article
-                  className="jury-card interactive-card"
+                  className="jury-card"
                   style={{
                     minHeight: 300,
                     padding: 28,
                     background:
                       'var(--surface-1)',
                     transition:
-                      'all var(--transition-normal)',
+                      'background var(--transition-normal)',
                   }}
                 >
                   <div
@@ -58,7 +58,7 @@ export const JurySection: React.FC = () => {
                     <UsersRound
                       size={21}
                       strokeWidth={1.3}
-                      color="var(--theme-accent)"
+                      color="var(--stellar-cyan)"
                     />
 
                     <span
@@ -134,8 +134,7 @@ export const JurySection: React.FC = () => {
 
       <style>{`
         .jury-card:hover {
-          background: color-mix(in srgb, var(--theme-surface) 85%, var(--theme-accent) 12%) !important;
-          border-color: var(--theme-accent) !important;
+          background: var(--surface-2) !important;
         }
 
         @media (max-width: 900px) {

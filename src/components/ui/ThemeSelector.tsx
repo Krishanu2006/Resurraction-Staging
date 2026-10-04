@@ -15,7 +15,6 @@ type Theme = {
   number: string;
   name: string;
   subtitle: string;
-  badge: string;
   image: string;
   available: boolean;
   accent: string;
@@ -26,41 +25,37 @@ const themes: Theme[] = [
     id: 'tau-ceti',
     number: '01',
     name: 'TAU CETI e',
-    subtitle: 'Golden Dune World',
-    badge: '🟡 TAU CETI e',
+    subtitle: 'PRIMARY WORLD',
     image: tauCetiImage,
     available: true,
-    accent: '#E5A93C',
+    accent: '#22d3ee',
   },
   {
     id: 'miller',
     number: '02',
     name: "MILLER'S PLANET",
-    subtitle: 'Monochrome Tidal World',
-    badge: "⚪ MILLER'S PLANET",
+    subtitle: 'OCEAN WORLD',
     image: millerImage,
     available: true,
-    accent: '#E2E8F0',
+    accent: '#60a5fa',
   },
   {
     id: 'pandora',
     number: '03',
     name: 'PANDORA',
-    subtitle: 'Bioluminescent Ocean & Sky',
-    badge: '🔵 PANDORA',
+    subtitle: 'ALIEN FRONTIER',
     image: pandoraImage,
     available: true,
-    accent: '#00D2FF',
+    accent: '#8b5cf6',
   },
   {
     id: 'kepler',
     number: '04',
     name: 'KEPLER-186f',
-    subtitle: 'Red Grass World',
-    badge: '🔴 KEPLER-186f',
+    subtitle: 'DISTANT WORLD',
     image: keplerImage,
     available: true,
-    accent: '#FF3344',
+    accent: '#fbbf24',
   },
 ];
 
@@ -170,9 +165,9 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                   {theme.subtitle}
                 </span>
 
-                <h3 className="theme-selector__card-title">
+                <h2 className="theme-selector__card-title">
                   {theme.name}
-                </h3>
+                </h2>
 
                 <div className="theme-selector__card-line" />
 

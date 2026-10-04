@@ -1,161 +1,443 @@
-/* ============================================================
-   RESURRACTION — ADRIAN MOTION SYSTEM
-   ============================================================ */
+/* =========================================================
+   RESURRACTION
+   CINEMATIC ANIMATION SYSTEM
+   TYPOGRAPHY — COSMIC FONT SYSTEM
+   ========================================================= */
 
-@keyframes adrianAtmosphere {
-  0% {
-    transform:
-      translate3d(-2%, 0, 0)
-      scale(1);
-  }
-  50% {
-    transform:
-      translate3d(2%, -1%, 0)
-      scale(1.04);
-  }
-  100% {
-    transform:
-      translate3d(-2%, 0, 0)
-      scale(1);
-  }
-}
 
-@keyframes adrianPulse {
-  0%, 100% {
-    opacity: 0.45;
-    transform: scale(0.98);
-  }
-  50% {
-    opacity: 0.85;
-    transform: scale(1.03);
-  }
-}
+/* =========================================================
+   FONT SYSTEM
+   ========================================================= */
 
-@keyframes adrianOrbit {
-  from {
-    transform:
-      rotate(0deg)
-      translateX(8px)
-      rotate(0deg);
-  }
-  to {
-    transform:
-      rotate(360deg)
-      translateX(8px)
-      rotate(-360deg);
-  }
-}
+:root {
+  --font-cosmic-display:
+    'Nasalization',
+    sans-serif;
 
-@keyframes adrianDrift {
-  0% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(18px, -12px, 0); }
-  100% { transform: translate3d(0, 0, 0); }
-}
+  --font-cosmic-body:
+    'Neue Stance',
+    sans-serif;
 
-@keyframes adrianScan {
-  0% {
-    transform: translateY(-120%);
-    opacity: 0;
-  }
-  15% { opacity: 0.45; }
-  85% { opacity: 0.18; }
-  100% {
-    transform: translateY(120%);
-    opacity: 0;
-  }
-}
-
-@keyframes adrianGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 rgba(117, 184, 74, 0);
-  }
-  50% {
-    box-shadow: 0 0 32px rgba(117, 184, 74, 0.18);
-  }
-}
-
-@keyframes telemetryBlink {
-  0%, 45%, 100% { opacity: 0.35; }
-  50%, 70% { opacity: 1; }
-}
-
-@keyframes atmosphericFloat {
-  0% {
-    transform:
-      translate3d(0, 0, 0)
-      rotate(0deg);
-  }
-  50% {
-    transform:
-      translate3d(12px, -8px, 0)
-      rotate(1deg);
-  }
-  100% {
-    transform:
-      translate3d(0, 0, 0)
-      rotate(0deg);
-  }
+  --font-cosmic-mono:
+    'Space Mono',
+    monospace;
 }
 
 
-/* ============================================================
-   COMPATIBILITY ANIMATIONS
-   ============================================================ */
+/* =========================================================
+   COSMIC SLOW DRIFT
+   ========================================================= */
 
 @keyframes cosmicSlowDrift {
-  0% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(12px, -8px, 0); }
-  100% { transform: translate3d(0, 0, 0); }
+  0%, 100% {
+    transform:
+      scale(1.015)
+      translate3d(
+        0,
+        0,
+        0
+      );
+  }
+
+  50% {
+    transform:
+      scale(1.075)
+      translate3d(
+        -1.2%,
+        -0.6%,
+        0
+      );
+  }
 }
+
+
+/* =========================================================
+   BACKGROUND BREATHE
+   ========================================================= */
 
 @keyframes backgroundBreathe {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.9; }
+  0%, 100% {
+    opacity: .55;
+
+    transform:
+      scale(1);
+  }
+
+  50% {
+    opacity: .9;
+
+    transform:
+      scale(1.06);
+  }
 }
+
+
+/* =========================================================
+   ENERGY PULSE
+   ========================================================= */
 
 @keyframes energyPulse {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; }
+  0%, 100% {
+    opacity: .32;
+
+    transform:
+      scale(1);
+  }
+
+  50% {
+    opacity: .72;
+
+    transform:
+      scale(1.035);
+  }
 }
+
+
+/* =========================================================
+   ENERGY SWEEP
+   ========================================================= */
 
 @keyframes energySweep {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
+
+  0% {
+    transform:
+      translateX(-120%)
+      skewX(-20deg);
+
+    opacity: 0;
+  }
+
+  12% {
+    opacity: .15;
+  }
+
+  38% {
+    opacity: .72;
+  }
+
+  55% {
+    opacity: .48;
+  }
+
+  100% {
+    transform:
+      translateX(240%)
+      skewX(-20deg);
+
+    opacity: 0;
+  }
 }
+
+
+/* =========================================================
+   PLASMA FLOW
+   ========================================================= */
 
 @keyframes plasmaFlow {
-  from { transform: translate3d(-2%, 0, 0); }
-  to { transform: translate3d(2%, 0, 0); }
+
+  from {
+    stroke-dashoffset: 0;
+
+    opacity: .35;
+  }
+
+  to {
+    stroke-dashoffset: -260;
+
+    opacity: .95;
+  }
 }
+
+
+/* =========================================================
+   PARTICLE DRIFT
+   ========================================================= */
 
 @keyframes particleDrift {
-  from { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(10px, -15px, 0); }
-  to { transform: translate3d(0, 0, 0); }
+
+  0% {
+    transform:
+      translate3d(
+        0,
+        18px,
+        0
+      )
+      scale(.8);
+
+    opacity: .15;
+  }
+
+  50% {
+    transform:
+      translate3d(
+        12px,
+        -12px,
+        0
+      )
+      scale(1.15);
+
+    opacity: 1;
+  }
+
+  100% {
+    transform:
+      translate3d(
+        -8px,
+        -42px,
+        0
+      )
+      scale(.75);
+
+    opacity: .18;
+  }
 }
+
+
+/* =========================================================
+   STATUS BEACON
+   ========================================================= */
 
 @keyframes statusBeacon {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
+
+  0%, 100% {
+    opacity: 1;
+
+    transform:
+      scale(1);
+  }
+
+  50% {
+    opacity: .35;
+
+    transform:
+      scale(.88);
+  }
 }
+
+
+/* =========================================================
+   LOGO BREATH
+   ========================================================= */
 
 @keyframes logoBreath {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.015); }
+
+  0%, 100% {
+    filter:
+      drop-shadow(
+        0 0 8px
+        rgba(
+          34,
+          211,
+          238,
+          .18
+        )
+      );
+  }
+
+  50% {
+    filter:
+      drop-shadow(
+        0 0 24px
+        rgba(
+          34,
+          211,
+          238,
+          .52
+        )
+      );
+  }
 }
 
 
-/* ============================================================
-   REDUCED MOTION
-   ============================================================ */
+/* =========================================================
+   ANIMATION UTILITY CLASSES
+   ========================================================= */
 
-@media (prefers-reduced-motion: reduce) {
+.animate-cosmic-drift {
+  animation:
+    cosmicSlowDrift
+    22s
+    ease-in-out
+    infinite;
+}
+
+
+.animate-background-breathe {
+  animation:
+    backgroundBreathe
+    9s
+    ease-in-out
+    infinite;
+}
+
+
+.animate-energy-pulse {
+  animation:
+    energyPulse
+    6s
+    ease-in-out
+    infinite;
+}
+
+
+.animate-energy-sweep {
+  animation:
+    energySweep
+    8s
+    cubic-bezier(
+      .2,
+      .7,
+      .2,
+      1
+    )
+    infinite;
+}
+
+
+.animate-plasma-flow {
+  stroke-dasharray:
+    22 18;
+
+  animation:
+    plasmaFlow
+    5s
+    linear
+    infinite;
+}
+
+
+.plasma-flow-delay {
+  animation-duration:
+    7s;
+
+  animation-delay:
+    -2.5s;
+}
+
+
+.animate-status-beacon {
+  animation:
+    statusBeacon
+    2.4s
+    ease-in-out
+    infinite;
+}
+
+
+.animate-logo-breath {
+  animation:
+    logoBreath
+    4s
+    ease-in-out
+    infinite;
+}
+
+
+/* =========================================================
+   COSMIC TYPOGRAPHY UTILITIES
+   ========================================================= */
+
+/*
+ * Use this for large futuristic titles that accompany
+ * the animated cosmic elements.
+ */
+.font-cosmic-display {
+  font-family:
+    var(--font-cosmic-display);
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    -0.035em;
+
+  text-transform:
+    uppercase;
+}
+
+
+/*
+ * Use this for normal readable content.
+ */
+.font-cosmic-body {
+  font-family:
+    var(--font-cosmic-body);
+
+  font-weight:
+    400;
+}
+
+
+/*
+ * Use this for telemetry, coordinates, labels,
+ * percentages and technical interface elements.
+ */
+.font-cosmic-mono {
+  font-family:
+    var(--font-cosmic-mono);
+
+  font-weight:
+    400;
+
+  letter-spacing:
+    0.08em;
+}
+
+
+/*
+ * Small mission-control style labels.
+ */
+.font-cosmic-label {
+  font-family:
+    var(--font-cosmic-mono);
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.16em;
+
+  text-transform:
+    uppercase;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (
+  prefers-reduced-motion: reduce
+) {
+
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.001ms !important;
+    animation-duration:
+      .01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      .01ms !important;
+
+    scroll-behavior:
+      auto !important;
+  }
+
+
+  .animate-cosmic-drift,
+  .animate-background-breathe,
+  .animate-energy-pulse,
+  .animate-energy-sweep,
+  .animate-plasma-flow,
+  .animate-status-beacon,
+  .animate-logo-breath {
+    animation:
+      none !important;
   }
 }

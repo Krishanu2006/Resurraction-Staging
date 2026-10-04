@@ -395,11 +395,21 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
           filter:
             drop-shadow(
               0 0 16px
-              var(--theme-accent)
+              rgba(
+                34,
+                211,
+                238,
+                0.28
+              )
             )
             drop-shadow(
               0 0 38px
-              var(--theme-glow-color, rgba(255, 255, 255, 0.2))
+              rgba(
+                59,
+                130,
+                246,
+                0.16
+              )
             );
         }
 

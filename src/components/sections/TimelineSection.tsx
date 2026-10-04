@@ -27,18 +27,7 @@ export const TimelineSection: React.FC = () => {
           <div
             className="timeline-line"
             aria-hidden="true"
-          >
-            <div
-              style={{
-                position: 'absolute',
-                width: '100%',
-                height: '40px',
-                background: 'linear-gradient(180deg, transparent, var(--theme-accent), transparent)',
-                boxShadow: '0 0 15px var(--theme-accent)',
-                animation: 'beamMove 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              }}
-            />
-          </div>
+          />
 
           {timelineData.map((item, index) => (
             <Reveal
@@ -46,24 +35,21 @@ export const TimelineSection: React.FC = () => {
               delay={index * 55}
             >
               <article
-                className="timeline-item interactive-card"
+                className="timeline-item"
                 style={{
                   display: 'grid',
                   gridTemplateColumns:
                     '70px 30px 230px 1fr',
                   gap: 18,
                   alignItems: 'start',
-                  padding: '24px 20px',
-                  borderRadius: 'var(--radius-md)',
-                  marginBottom: 12,
+                  padding: '30px 0',
                   position: 'relative',
-                  border: '1px solid transparent',
                 }}
               >
                 <div
                   style={{
                     color:
-                      'var(--theme-accent)',
+                      'var(--stellar-cyan)',
                     fontFamily:
                       'var(--font-mono)',
                     fontSize: 10,
@@ -77,16 +63,15 @@ export const TimelineSection: React.FC = () => {
                 </div>
 
                 <div
-                  className="animate-status-beacon"
                   style={{
-                    width: 12,
-                    height: 12,
+                    width: 10,
+                    height: 10,
                     marginTop: 4,
                     borderRadius: '50%',
                     background:
-                      'var(--theme-accent)',
+                      'var(--stellar-cyan)',
                     boxShadow:
-                      '0 0 0 4px var(--theme-background), 0 0 18px var(--theme-accent)',
+                      '0 0 0 5px var(--void), 0 0 18px rgba(34,211,238,.3)',
                     position: 'relative',
                     zIndex: 2,
                   }}
@@ -110,7 +95,7 @@ export const TimelineSection: React.FC = () => {
                     style={{
                       marginTop: 8,
                       color:
-                        'var(--theme-accent)',
+                        'var(--cosmic-blue-bright)',
                       fontFamily:
                         'var(--font-mono)',
                       fontSize: 9,
@@ -142,26 +127,13 @@ export const TimelineSection: React.FC = () => {
           left: 84px;
           top: 25px;
           bottom: 25px;
-          width: 2px;
-          overflow: hidden;
+          width: 1px;
           background:
             linear-gradient(
               180deg,
-              var(--theme-accent),
-              color-mix(in srgb, var(--theme-primary) 30%, transparent)
+              rgba(34,211,238,.42),
+              rgba(96,165,250,.08)
             );
-          box-shadow: 0 0 10px var(--theme-glow-color, rgba(255,255,255,0.2));
-        }
-
-        .timeline-item {
-          transition: background 250ms ease, border-color 250ms ease, transform 250ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 250ms ease;
-        }
-
-        .timeline-item:hover {
-          background: var(--theme-card-bg, color-mix(in srgb, var(--theme-surface) 80%, transparent)) !important;
-          border-color: var(--theme-accent) !important;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
         }
 
         @media (max-width: 800px) {
@@ -177,17 +149,6 @@ export const TimelineSection: React.FC = () => {
 
           .timeline-line {
             left: 51px;
-          }
-        }
-
-        @media (max-width: 500px) {
-          .timeline-item {
-            padding: 16px 10px !important;
-            gap: 10px !important;
-          }
-
-          .timeline-line {
-            left: 45px;
           }
         }
       `}</style>

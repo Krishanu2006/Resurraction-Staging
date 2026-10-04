@@ -35,16 +35,15 @@ export const SponsorsSection: React.FC = () => {
               delay={index * 60}
             >
               <article
-                className="sponsor-panel interactive-card"
+                className="sponsor-panel"
                 style={{
                   padding: 30,
                   border:
-                    '1px solid var(--theme-border)',
+                    '1px solid var(--border-subtle)',
                   borderRadius:
                     'var(--radius-lg)',
                   background:
-                    'var(--theme-card-bg, color-mix(in srgb, var(--theme-surface) 85%, transparent))',
-                  boxShadow: 'var(--theme-shadow)',
+                    'linear-gradient(145deg, #0d1530, #090f22)',
                 }}
               >
                 <div
@@ -61,7 +60,7 @@ export const SponsorsSection: React.FC = () => {
                     <div
                       style={{
                         color:
-                          'var(--theme-accent)',
+                          'var(--stellar-cyan)',
                         fontFamily:
                           'var(--font-mono)',
                         fontSize: 9,
@@ -88,8 +87,7 @@ export const SponsorsSection: React.FC = () => {
                   <Handshake
                     size={23}
                     strokeWidth={1.3}
-                    color="var(--theme-accent)"
-                    className="animate-energy-pulse"
+                    color="var(--cosmic-blue-bright)"
                   />
                 </div>
 
@@ -108,7 +106,7 @@ export const SponsorsSection: React.FC = () => {
                   {tier.slots.map((slot) => (
                     <div
                       key={slot.id}
-                      className="sponsor-slot interactive-card"
+                      className="sponsor-slot"
                       style={{
                         minHeight: 110,
                         padding: 18,
@@ -118,18 +116,17 @@ export const SponsorsSection: React.FC = () => {
                         justifyContent:
                           'space-between',
                         border:
-                          '1px solid var(--theme-border)',
+                          '1px solid var(--hairline)',
                         background:
-                          'color-mix(in srgb, var(--theme-surface) 60%, transparent)',
-                        borderRadius: 'var(--radius-md)',
+                          'rgba(5,8,22,.55)',
                         transition:
-                          'border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast)',
+                          'border-color var(--transition-fast), background var(--transition-fast)',
                       }}
                     >
                       <span
                         style={{
                           color:
-                            'var(--text)',
+                            'var(--text-dim)',
                           fontSize: 13,
                           fontWeight: 500,
                         }}
@@ -146,7 +143,7 @@ export const SponsorsSection: React.FC = () => {
                           alignItems: 'center',
                           gap: 7,
                           color:
-                            'var(--theme-accent)',
+                            'var(--muted-dark)',
                           fontFamily:
                             'var(--font-mono)',
                           fontSize: 8,
@@ -154,15 +151,14 @@ export const SponsorsSection: React.FC = () => {
                         }}
                       >
                         <span
-                          className="animate-status-beacon"
                           style={{
-                            width: 6,
-                            height: 6,
+                            width: 5,
+                            height: 5,
                             borderRadius: '50%',
                             background:
-                              'var(--theme-accent)',
+                              'var(--stellar-cyan)',
                             boxShadow:
-                              '0 0 10px var(--theme-accent)',
+                              '0 0 8px rgba(34,211,238,.4)',
                           }}
                         />
 
@@ -187,7 +183,7 @@ export const SponsorsSection: React.FC = () => {
               alignItems: 'center',
               gap: 8,
               marginTop: 26,
-              color: 'var(--theme-accent)',
+              color: 'var(--stellar-cyan)',
               fontSize: 13,
             }}
           >
@@ -198,15 +194,9 @@ export const SponsorsSection: React.FC = () => {
       </div>
 
       <style>{`
-        .sponsor-slot {
-          transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 250ms ease, background 250ms ease, box-shadow 280ms ease !important;
-        }
-
         .sponsor-slot:hover {
-          transform: translateY(-3px) scale(1.01) !important;
-          border-color: var(--theme-accent) !important;
-          background: color-mix(in srgb, var(--theme-surface) 85%, var(--theme-accent) 12%) !important;
-          box-shadow: 0 0 20px var(--theme-glow-color, rgba(255, 255, 255, 0.15)) !important;
+          border-color: var(--border-cyan) !important;
+          background: rgba(17,25,54,.72) !important;
         }
 
         @media (max-width: 650px) {
