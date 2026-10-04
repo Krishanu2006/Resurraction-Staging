@@ -1223,7 +1223,7 @@ const SpaceScene: React.FC<
 
     const planetTexture =
       new THREE.TextureLoader().load(
-        'public/assets/hero/tau-ceti-adrian.jpg'
+        '/assets/hero/tau-ceti-adrian.jpg'
       );
 
     planetTexture.colorSpace =
