@@ -170,9 +170,9 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                   {theme.subtitle}
                 </span>
 
-                <h2 className="theme-selector__card-title">
+                <h3 className="theme-selector__card-title">
                   {theme.name}
-                </h2>
+                </h3>
 
                 <div className="theme-selector__card-line" />
 

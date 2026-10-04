@@ -5,6 +5,90 @@
 @import './tokens.css';
 @import './animations.css';
 
+/* =========================================================
+   RESURRACTION — GLOBAL COSMIC / ADRIAN ENVIRONMENT
+   ========================================================= */
+
+@import './tokens.css';
+@import './animations.css';
+
+
+/* =========================================================
+   FONTS
+   ========================================================= */
+
+@font-face {
+  font-family: 'Nasalization';
+  src: url('/assets/fonts/nasalization/Nasalization-Regular.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nasalization';
+  src: url('/assets/fonts/nasalization/Nasalization-Bold.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Stance';
+  src: url('/fonts/neue-stance/NeueStance-Regular.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Stance';
+  src: url('/fonts/neue-stance/NeueStance-Medium.woff2')
+    format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Stance';
+  src: url('/fonts/neue-stance/NeueStance-SemiBold.woff2')
+    format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Stance';
+  src: url('/fonts/neue-stance/NeueStance-Bold.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Regular.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/space-mono-nerd-font/SpaceMonoNerdFont-Bold.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 
 /* =========================================================
    FONTS
@@ -239,7 +323,6 @@ body::before {
    ========================================================= */
 
 h1,
-h2,
 h3,
 h4,
 h5,
@@ -940,4 +1023,32 @@ body:has(.rocky-custom-cursor) * {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* =========================================================
+   RESURRACTION — NASALIZATION HEADING SYSTEM
+   All semantic headings use the bundled Nasalization face.
+   ========================================================= */
+
+h1,
+h4,
+h5,
+h6,
+[role='heading'] {
+  font-family: 'Nasalization', sans-serif !important;
+}
+
+h2,
+[role='heading'] {
+  font-family: 'Nasalization', sans-serif !important;
+  letter-spacing: -0.55em !important;
+}
+
+
+.section-tracks-section h2 {
+  letter-spacing: -0.45em !important;
+}
+
+.tracks-empty-title {
+  letter-spacing: 0.45em !important;
 }
