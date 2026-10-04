@@ -985,8 +985,8 @@ html:has(.rocky-custom-cursor) * {
   left: 0 !important;
   top: 0 !important;
 
-  width: 56px !important;
-  height: 56px !important;
+  width: 80px !important;
+  height: 80px !important;
 
   min-width: 56px !important;
   min-height: 56px !important;
