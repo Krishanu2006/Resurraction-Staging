@@ -128,7 +128,7 @@ export const ScrollVideoBackground: React.FC<
         overflow: 'hidden',
         pointerEvents: 'none',
         zIndex: 1,
-        backgroundColor: '#000',
+        backgroundColor: 'var(--theme-background)',
       }}
     >
       <video

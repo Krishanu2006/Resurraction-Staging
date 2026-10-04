@@ -116,7 +116,7 @@
 
   height: 430vh;
 
-  background: #030510;
+  background: var(--theme-background);
 }
 
 
@@ -139,7 +139,7 @@
 
   isolation: isolate;
 
-  background: #030510;
+  background: var(--theme-background);
 
   opacity: 0;
 

@@ -4,13 +4,14 @@ import tauCetiImage from '../sections/track_images/taucetie.png';
 import millerImage from '../sections/track_images/miller.png';
 import pandoraImage from '../sections/track_images/pandora.png';
 import keplerImage from '../sections/track_images/kepler.png';
+import { ThemeId } from '../../config/theme';
 
 type ThemeSelectorProps = {
-  onSelect: () => void;
+  onSelect: (themeId: ThemeId) => void;
 };
 
 type Theme = {
-  id: string;
+  id: ThemeId;
   number: string;
   name: string;
   subtitle: string;
@@ -35,7 +36,7 @@ const themes: Theme[] = [
     name: "MILLER'S PLANET",
     subtitle: 'OCEAN WORLD',
     image: millerImage,
-    available: false,
+    available: true,
     accent: '#60a5fa',
   },
   {
@@ -44,7 +45,7 @@ const themes: Theme[] = [
     name: 'PANDORA',
     subtitle: 'ALIEN FRONTIER',
     image: pandoraImage,
-    available: false,
+    available: true,
     accent: '#8b5cf6',
   },
   {
@@ -53,7 +54,7 @@ const themes: Theme[] = [
     name: 'KEPLER-186f',
     subtitle: 'DISTANT WORLD',
     image: keplerImage,
-    available: false,
+    available: true,
     accent: '#fbbf24',
   },
 ];
@@ -61,12 +62,15 @@ const themes: Theme[] = [
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   onSelect,
 }) => {
+  const [selectedTheme, setSelectedTheme] =
+    React.useState<ThemeId>('tau-ceti');
+
   const handleThemeClick = (theme: Theme) => {
     if (!theme.available) return;
 
-    onSelect();
+    setSelectedTheme(theme.id);
+    onSelect(theme.id);
   };
-
   return (
     <div className="theme-selector">
       {/* Background */}
@@ -195,10 +199,11 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           <button
             type="button"
             className="theme-selector__enter"
-            onClick={onSelect}
+            onClick={() => onSelect(selectedTheme)}
           >
-            <span>ENTER TAU CETI e</span>
-
+            <span>
+              ENTER {themes.find((theme) => theme.id === selectedTheme)?.name}
+            </span>
             <span className="theme-selector__enter-arrow">
               →
             </span>

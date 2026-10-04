@@ -1,54 +1,130 @@
 /* =========================================================
-   RESURRACTION — COSMIC BLUE DESIGN SYSTEM
-   Non-hero theme tokens
+   RESURRACTION — DYNAMIC COSMIC DESIGN SYSTEM
+   Theme-aware tokens
    ========================================================= */
+html,
+body,
+#root {
+  background-color: var(--theme-background);
+  color: var(--theme-text);
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
 
 :root {
+  /* -------------------------------------------------------
+     ACTIVE THEME
+     
+     These values are overridden by App.tsx through
+     inline CSS variables when a world is selected.
+     ------------------------------------------------------- */
+
+  --theme-primary: #6B8E23;
+  --theme-secondary: #D97706;
+  --theme-accent: #E6E67A;
+
+  --theme-background: #10140A;
+  --theme-surface: #1A1F0E;
+
+  --theme-text: #F4F1D0;
+  --theme-muted: #A9A77A;
+  --theme-border: #66752A;
+
+
   /* -------------------------------------------------------
      Core canvas
      ------------------------------------------------------- */
 
-  --void: #050816;
-  --canvas: #050816;
-  --canvas-deep: #030510;
-  --canvas-blue: #071027;
+  --void: var(--theme-background);
+  --canvas: var(--theme-background);
+
+  --canvas-deep:
+    color-mix(
+      in srgb,
+      var(--theme-background) 82%,
+      #000000 18%
+    );
+
+  --canvas-blue:
+    color-mix(
+      in srgb,
+      var(--theme-background) 88%,
+      var(--theme-primary) 12%
+    );
 
 
   /* -------------------------------------------------------
      Surface hierarchy
      ------------------------------------------------------- */
 
-  --surface-1: #0b1022;
-  --surface-2: #111936;
-  --surface-3: #18234a;
+  --surface-1: var(--theme-surface);
+
+  --surface-2:
+    color-mix(
+      in srgb,
+      var(--theme-surface) 82%,
+      var(--theme-primary) 18%
+    );
+
+  --surface-3:
+    color-mix(
+      in srgb,
+      var(--theme-surface) 68%,
+      var(--theme-primary) 32%
+    );
 
 
   /* -------------------------------------------------------
-     Primary cosmic palette
+     Primary theme palette
      ------------------------------------------------------- */
 
-  --stellar-cyan: #22d3ee;
-  --cyan-soft: #67e8f9;
+  --stellar-cyan: var(--theme-primary);
 
-  --cosmic-blue: #3b82f6;
-  --cosmic-blue-bright: #60a5fa;
+  --cyan-soft: var(--theme-accent);
 
-  --nebula-purple: #8b5cf6;
-  --nebula-violet: #7c3aed;
+  --cosmic-blue: var(--theme-secondary);
 
-  --nebula-pink: #ec4899;
+  --cosmic-blue-bright: var(--theme-accent);
 
-  --solar-gold: #fbbf24;
+  /*
+     These are compatibility aliases.
+     They intentionally follow the selected world rather
+     than remaining permanently purple/pink/gold.
+  */
+
+  --nebula-purple: var(--theme-secondary);
+
+  --nebula-violet: var(--theme-primary);
+
+  --nebula-pink: var(--theme-accent);
+
+  --solar-gold: var(--theme-accent);
 
 
   /* -------------------------------------------------------
      Typography colors
      ------------------------------------------------------- */
 
-  --text: #f8fbff;
-  --text-dim: #d9e2f4;
-  --muted: #aab5d6;
-  --muted-dark: #68749a;
+  --text: var(--theme-text);
+
+  --text-dim:
+    color-mix(
+      in srgb,
+      var(--theme-text) 76%,
+      var(--theme-muted) 24%
+    );
+
+  --muted: var(--theme-muted);
+
+  --muted-dark:
+    color-mix(
+      in srgb,
+      var(--theme-muted) 65%,
+      var(--theme-background) 35%
+    );
 
 
   /* -------------------------------------------------------
@@ -56,42 +132,79 @@
      ------------------------------------------------------- */
 
   --ink: var(--text);
+
   --ink-muted: var(--muted);
+
   --ink-subtle: var(--muted-dark);
 
-  --inverse-ink: #03101a;
+  --inverse-ink: var(--theme-background);
 
 
   /* -------------------------------------------------------
      Borders / lines
      ------------------------------------------------------- */
 
-  --hairline: rgba(148, 163, 184, 0.14);
+  --hairline:
+    color-mix(
+      in srgb,
+      var(--theme-border) 32%,
+      transparent
+    );
 
-  --hairline-soft: rgba(96, 165, 250, 0.09);
+  --hairline-soft:
+    color-mix(
+      in srgb,
+      var(--theme-secondary) 18%,
+      transparent
+    );
 
-  --border-subtle: rgba(96, 165, 250, 0.16);
+  --border-subtle:
+    color-mix(
+      in srgb,
+      var(--theme-border) 42%,
+      transparent
+    );
 
-  --border-cosmic: rgba(96, 165, 250, 0.22);
+  --border-cosmic:
+    color-mix(
+      in srgb,
+      var(--theme-secondary) 48%,
+      transparent
+    );
 
-  --border-cyan: rgba(34, 211, 238, 0.38);
+  --border-cyan:
+    color-mix(
+      in srgb,
+      var(--theme-primary) 58%,
+      transparent
+    );
 
 
   /* -------------------------------------------------------
      Panels
      ------------------------------------------------------- */
 
-  --panel-bg: rgba(11, 16, 34, 0.78);
+  --panel-bg:
+    color-mix(
+      in srgb,
+      var(--theme-surface) 82%,
+      transparent
+    );
 
-  --panel-bg-solid: #0b1022;
+  --panel-bg-solid: var(--theme-surface);
 
-  --panel-bg-elevated: #111936;
+  --panel-bg-elevated:
+    color-mix(
+      in srgb,
+      var(--theme-surface) 72%,
+      var(--theme-primary) 28%
+    );
 
   --panel-backdrop: blur(18px);
 
 
   /* -------------------------------------------------------
-     COSMIC TYPOGRAPHY
+     Typography
      
      Display  → Nasalization
      Body     → Neue Stance
@@ -175,43 +288,72 @@
 
 
   /* -------------------------------------------------------
-     Controlled cosmic glows
+     Controlled theme-aware glows
      ------------------------------------------------------- */
 
   --glow-cyan:
-    0 0 32px rgba(34, 211, 238, 0.22);
+    0 0 32px
+    color-mix(
+      in srgb,
+      var(--theme-primary) 22%,
+      transparent
+    );
 
   --glow-blue:
-    0 0 32px rgba(59, 130, 246, 0.22);
+    0 0 32px
+    color-mix(
+      in srgb,
+      var(--theme-secondary) 22%,
+      transparent
+    );
 
   --glow-purple:
-    0 0 36px rgba(139, 92, 246, 0.20);
+    0 0 36px
+    color-mix(
+      in srgb,
+      var(--theme-secondary) 20%,
+      transparent
+    );
 
   --glow-gold:
-    0 0 30px rgba(251, 191, 36, 0.18);
+    0 0 30px
+    color-mix(
+      in srgb,
+      var(--theme-accent) 18%,
+      transparent
+    );
 
 
   /* -------------------------------------------------------
      Compatibility aliases
      
-     Some existing components still reference the old
-     variable names. These aliases allow us to redesign
-     the visual language without breaking those components.
+     Existing components can continue using the old names,
+     but those names now follow the selected world.
      ------------------------------------------------------- */
 
-  --brand-peach: var(--stellar-cyan);
+  --brand-peach: var(--theme-primary);
 
-  --brand-peach-light: var(--cyan-soft);
+  --brand-peach-light: var(--theme-accent);
 
-  --brand-peach-dark: #0891b2;
+  --brand-peach-dark:
+    color-mix(
+      in srgb,
+      var(--theme-primary) 72%,
+      var(--theme-background) 28%
+    );
 
-  --crimson-deep: #0b1c3d;
+  --crimson-deep:
+    color-mix(
+      in srgb,
+      var(--theme-background) 72%,
+      var(--theme-primary) 28%
+    );
 
-  --crimson: var(--cosmic-blue);
+  --crimson: var(--theme-secondary);
 
-  --red-hot: #ef4444;
+  --red-hot: var(--theme-secondary);
 
-  --white-hot: #f8fbff;
+  --white-hot: var(--theme-text);
 
   --surface-glass: var(--panel-bg);
 
@@ -220,5 +362,9 @@
   --border-peach: var(--border-cyan);
 
   --hairline-crimson:
-    rgba(59, 130, 246, 0.16);
+    color-mix(
+      in srgb,
+      var(--theme-secondary) 22%,
+      transparent
+    );
 }

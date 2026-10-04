@@ -163,7 +163,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           '100%',
 
         background:
-          '#030510',
+          'var(--theme-background)',
       }}
     >
 
