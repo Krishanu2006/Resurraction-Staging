@@ -10,9 +10,11 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
+import { themePalettes, type ThemeId } from '../../config/theme';
 
 interface SpaceSceneProps {
   scrollProgress?: number;
+  themeId?: ThemeId;
 }
 
 const clamp = (
@@ -43,6 +45,7 @@ const SpaceScene: React.FC<
   SpaceSceneProps
 > = ({
   scrollProgress = 0,
+  themeId,
 }) => {
   const containerRef =
     useRef<HTMLDivElement | null>(
@@ -90,6 +93,13 @@ const SpaceScene: React.FC<
     const isMobile =
       window.innerWidth < 768;
 
+    const activeThemeKey = (themeId || document.documentElement.getAttribute('data-theme') || 'tau-ceti') as ThemeId;
+    const activePalette = themePalettes[activeThemeKey] || themePalettes['tau-ceti'];
+    const bgHex = new THREE.Color(activePalette.background).getHex();
+    const primaryHex = new THREE.Color(activePalette.primary).getHex();
+    const secondaryHex = new THREE.Color(activePalette.secondary).getHex();
+    const accentHex = new THREE.Color(activePalette.accent).getHex();
+
     /* ============================================================
      * SCENE
      * ============================================================ */
@@ -99,12 +109,12 @@ const SpaceScene: React.FC<
 
     scene.background =
       new THREE.Color(
-        0x010207
+        bgHex
       );
 
     scene.fog =
       new THREE.FogExp2(
-        0x010207,
+        bgHex,
         0.00045
       );
 
@@ -213,13 +223,13 @@ const SpaceScene: React.FC<
      * ============================================================ */
 
     const STELLAR_COLORS = [
-      0x9bb0ff,
-      0xaabfff,
-      0xcad7ff,
-      0xf8f7ff,
-      0xfff4ea,
-      0xffd2a1,
-      0xffb56c,
+      primaryHex,
+      accentHex,
+      secondaryHex,
+      0xffffff,
+      accentHex,
+      primaryHex,
+      secondaryHex,
     ];
 
     const pickStarColor =
