@@ -1,536 +1,555 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 interface KeplerHeroSceneProps {
   scrollProgress?: number;
 }
 
-/* ============================================================
-   PROCEDURAL TEXTURE GENERATION FOR KEPLER-186F
-   - Recreates the exact exoplanet visuals:
-     * Deep magenta, crimson, violet, and dark plum alien crust
-     * Massive branching dark tectonic rift valleys & fractures
-     * Prominent impact crater with frosty rim on upper-left
-     * Swirling white & icy-cyan polar ice caps and cloud vortexes
-     * Corresponding high-depth bump/normal map
-     * Dynamic atmospheric cloud layer
-   ============================================================ */
+const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = clamp01((x - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
 
-function createKeplerProceduralTextures(): {
-  albedo: THREE.CanvasTexture;
-  bump: THREE.CanvasTexture;
-  clouds: THREE.CanvasTexture;
-} {
-  const W = 2048;
-  const H = 1024;
+/* ================================================================
+   KEPLER-186f hero.
+   Composition: dark red/burgundy land, cold navy-teal oceans, a thin
+   atmospheric limb, a warm red host star upper-left, three small moons,
+   restrained purple nebula. No text is drawn in the scene.
 
-  // 1. Albedo Canvas
-  const canvasA = document.createElement('canvas');
-  canvasA.width = W;
-  canvasA.height = H;
-  const ctxA = canvasA.getContext('2d')!;
+   Shared by every shader: tone mapping + colour space chunks, so the
+   ShaderMaterials match the rest of the renderer instead of writing raw
+   linear values to an sRGB framebuffer.
+   ================================================================ */
 
-  // 2. Bump Canvas
-  const canvasB = document.createElement('canvas');
-  canvasB.width = W;
-  canvasB.height = H;
-  const ctxB = canvasB.getContext('2d')!;
+const NOISE = /* glsl */ `
+  vec3 hash33(vec3 p) {
+    p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
+             dot(p, vec3(269.5, 183.3, 246.1)),
+             dot(p, vec3(113.5, 271.9, 124.6)));
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453);
+  }
+  float noise3(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    vec3 u = f * f * (3.0 - 2.0 * f);
+    float a = dot(hash33(i), f);
+    float b = dot(hash33(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0));
+    float c = dot(hash33(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0));
+    float d = dot(hash33(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0));
+    float e = dot(hash33(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0));
+    float g = dot(hash33(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0));
+    float h = dot(hash33(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0));
+    float k = dot(hash33(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0));
+    return mix(mix(mix(a, b, u.x), mix(c, d, u.x), u.y),
+               mix(mix(e, g, u.x), mix(h, k, u.x), u.y), u.z) * 0.5 + 0.5;
+  }
+`;
 
-  // 3. Clouds Canvas
-  const canvasC = document.createElement('canvas');
-  canvasC.width = W;
-  canvasC.height = H;
-  const ctxC = canvasC.getContext('2d')!;
+const sphereVertex = /* glsl */ `
+  varying vec3 vLocal;
+  varying vec3 vWorldPos;
+  varying vec3 vWorldNormal;
+  void main() {
+    vLocal = position;
+    vec4 w = modelMatrix * vec4(position, 1.0);
+    vWorldPos = w.xyz;
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    gl_Position = projectionMatrix * viewMatrix * w;
+  }
+`;
 
-  /* --- STEP 1: BASE TERRAIN PALETTE (WARM ALIEN RED / DEEP CRIMSON / RUST) --- */
-  // Base cosmic red gradients
-  const baseGrad = ctxA.createLinearGradient(0, 0, 0, H);
-  baseGrad.addColorStop(0.0, '#32060b'); // North polar deep ruby
-  baseGrad.addColorStop(0.16, '#7e0e18'); // Sub-polar crimson
-  baseGrad.addColorStop(0.38, '#b81c26'); // Northern vibrant red highlands
-  baseGrad.addColorStop(0.55, '#9a1622'); // Continental warm red plateau
-  baseGrad.addColorStop(0.74, '#6e0d16'); // Southern deep ruby-rust
-  baseGrad.addColorStop(1.0, '#260408'); // South polar basin
-  ctxA.fillStyle = baseGrad;
-  ctxA.fillRect(0, 0, W, H);
+const FINISH = /* glsl */ `
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+`;
 
-  // Bump neutral gray
-  ctxB.fillStyle = '#828282';
-  ctxB.fillRect(0, 0, W, H);
+const planetFragment = /* glsl */ `
+  uniform vec3 uStarPosition;
+  uniform mat3 uRot;
+  uniform float uFade;
+  varying vec3 vLocal;
+  varying vec3 vWorldPos;
+  varying vec3 vWorldNormal;
+  ${NOISE}
 
-  // Clouds transparent base
-  ctxC.clearRect(0, 0, W, H);
+  float heightAt(vec3 n) {
+    return noise3(n * 3.8) * 0.55 + noise3(n * 10.0 + vec3(2.0, -4.0, 5.0)) * 0.30
+         + noise3(n * 26.0) * 0.15;
+  }
 
-  // Pseudo-random deterministic noise generator
-  let seed = 42;
+  void main() {
+    vec3 sn = normalize(vLocal);
+
+    float broad = noise3(sn * 1.45);
+    float regional = noise3(sn * 3.1 + vec3(7.0, -2.0, 4.0));
+    float detail = noise3(sn * 7.5 - vec3(3.0, 5.0, 1.0));
+    float landValue = broad * 0.62 + regional * 0.26 + detail * 0.12;
+    float landMask = smoothstep(0.525, 0.555, landValue);
+    float coastBand = smoothstep(0.525, 0.54, landValue) * (1.0 - smoothstep(0.54, 0.575, landValue));
+
+    // Relief: perturb the normal from the height field gradient (land only).
+    vec3 up = abs(sn.y) > 0.95 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
+    vec3 t1 = normalize(cross(up, sn));
+    vec3 t2 = cross(sn, t1);
+    float e = 0.012;
+    float h0 = heightAt(sn);
+    float h1 = heightAt(normalize(sn + t1 * e));
+    float h2 = heightAt(normalize(sn + t2 * e));
+    vec3 grad = (t1 * (h1 - h0) + t2 * (h2 - h0)) / e;
+    vec3 N = normalize(vWorldNormal - uRot * grad * 0.05 * landMask);
+
+    vec3 L = normalize(uStarPosition - vWorldPos);
+    vec3 V = normalize(cameraPosition - vWorldPos);
+    vec3 H = normalize(L + V);
+    float ndl = dot(N, L);
+    float diff = smoothstep(-0.30, 0.65, ndl);
+
+    // Land: burgundy lowlands to rust highs, pale mineral crust on ridges.
+    float mineral = noise3(sn * 8.0 + vec3(9.0, 1.0, -4.0));
+    vec3 land = mix(vec3(0.065, 0.017, 0.019), vec3(0.205, 0.048, 0.043), smoothstep(0.25, 0.60, h0));
+    land = mix(land, vec3(0.39, 0.105, 0.075), smoothstep(0.62, 0.90, h0));
+    land *= mix(vec3(0.88, 0.92, 0.90), vec3(1.05, 0.86, 0.79), mineral);
+    land = mix(land, vec3(0.50, 0.30, 0.27), smoothstep(0.72, 0.90, h0) * 0.45);
+    land = mix(land, vec3(0.42, 0.24, 0.21), coastBand * 0.55);
+
+    // Ocean: near-black deep water, teal shelf along coasts.
+    float shelf = 1.0 - smoothstep(0.43, 0.53, landValue);
+    float oceanVar = regional * 0.75 + detail * 0.25;
+    vec3 ocean = mix(vec3(0.004, 0.013, 0.021), vec3(0.028, 0.13, 0.16), smoothstep(0.28, 0.72, oceanVar));
+    ocean = mix(ocean, vec3(0.03, 0.17, 0.20), shelf * 0.55);
+
+    vec3 albedo = mix(ocean, land, landMask);
+    vec3 starCol = vec3(1.0, 0.82, 0.76) * 2.4;
+    vec3 col = albedo * (starCol * diff + vec3(0.05, 0.07, 0.11) * 0.9);
+
+    float spec = pow(max(dot(N, H), 0.0), 140.0) * smoothstep(0.0, 0.3, ndl) * (1.0 - landMask);
+    col += vec3(0.20, 0.46, 0.52) * spec * 0.9;
+
+    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 4.0);
+    col += vec3(0.24, 0.72, 0.82) * fresnel * smoothstep(-0.08, 0.72, ndl) * 0.35;
+    float twilight = (1.0 - smoothstep(-0.12, 0.38, ndl)) * smoothstep(-0.42, 0.18, ndl);
+    col += vec3(0.52, 0.055, 0.032) * twilight * fresnel * 0.34;
+
+    gl_FragColor = vec4(col, uFade);
+    ${FINISH}
+  }
+`;
+
+const cloudFragment = /* glsl */ `
+  uniform sampler2D uMap;
+  uniform vec3 uStarPosition;
+  uniform float uFade;
+  varying vec3 vLocal;
+  varying vec3 vWorldPos;
+  varying vec3 vWorldNormal;
+  void main() {
+    vec3 n = normalize(vLocal);
+    vec2 uv = vec2(atan(n.z, n.x) / 6.2831853 + 0.5, asin(clamp(n.y, -1.0, 1.0)) / 3.14159265 + 0.5);
+    float d = texture2D(uMap, uv).r;
+    vec3 N = normalize(vWorldNormal);
+    vec3 L = normalize(uStarPosition - vWorldPos);
+    vec3 V = normalize(cameraPosition - vWorldPos);
+    float diff = smoothstep(-0.30, 0.65, dot(N, L));
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 2.0);
+    vec3 col = mix(vec3(0.40, 0.25, 0.27), vec3(1.0, 0.90, 0.88), diff) * (0.08 + 0.92 * diff) * 1.6;
+    float a = d * (0.10 + 0.90 * diff) * 0.78 * (0.75 + 0.5 * rim) * uFade;
+    gl_FragColor = vec4(col, a);
+    ${FINISH}
+  }
+`;
+
+// Thin atmosphere computed from each view ray's closest approach to the
+// planet, so the limb has a physical falloff instead of a flat shell colour.
+const atmosphereFragment = /* glsl */ `
+  uniform vec3 uStarPosition;
+  uniform vec3 uCenter;
+  uniform float uRadius;
+  uniform float uOuter;
+  uniform float uFade;
+  varying vec3 vWorldPos;
+  void main() {
+    vec3 ro = cameraPosition;
+    vec3 rd = normalize(vWorldPos - ro);
+    float t = dot(uCenter - ro, rd);
+    vec3 p = ro + rd * t;
+    vec3 r = p - uCenter;
+    float d = length(r);
+    float x = d / uRadius;
+    vec3 n = r / max(d, 1e-4);
+    vec3 L = normalize(uStarPosition - p);
+    float s = dot(n, L);
+
+    float solar = smoothstep(-0.25, 0.70, s);
+    float inner = pow(smoothstep(0.90, 1.0, x), 2.0);
+    float outer = exp(-(x - 1.0) * 58.0) * (1.0 - smoothstep(0.55, 1.0, (x - 1.0) / (uOuter - 1.0)));
+    float g = x < 1.0 ? inner : outer;
+
+    float tw = smoothstep(-0.35, 0.05, s) * (1.0 - smoothstep(0.05, 0.50, s));
+    vec3 col = mix(vec3(0.22, 0.70, 0.86), vec3(0.95, 0.16, 0.07), tw * 0.8);
+    float a = (0.05 + 0.95 * solar) * g * 0.9 * uFade;
+    gl_FragColor = vec4(col, a);
+    ${FINISH}
+  }
+`;
+
+/* Starfield shader.
+   aBright: per-star intrinsic brightness (faint to bright).
+   aPhase:  per-star random phase for very slight atmospheric-free scintillation.
+   Stars smaller than one pixel are drawn as a 1px point and dimmed by their
+   pixel coverage, which is how a real sub-pixel point source integrates. */
+const starfieldVertex = /* glsl */ `
+  attribute float aSize;
+  attribute float aBright;
+  attribute float aPhase;
+
+  uniform float uTime;
+  uniform float uTwinkle;
+
+  varying vec3 vColor;
+  varying float vAlpha;
+
+  void main() {
+    vColor = color;
+
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+
+        // aSize is now directly interpreted as screen pixels.
+    gl_PointSize = aSize;
+
+    float tw = 1.0 +
+      uTwinkle * 0.08 *
+      sin(uTime * (0.5 + aPhase * 1.3) + aPhase * 43.98);
+
+    vAlpha = aBright * tw;
+
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const starfieldFragment = /* glsl */ `
+  varying vec3 vColor;
+  varying float vAlpha;
+
+  void main() {
+    vec2 uv = gl_PointCoord - 0.5;
+    float d = length(uv);
+
+    if (d > 0.5) discard;
+
+    // Small bright core with a very subtle glow.
+    float core = 1.0 - smoothstep(0.0, 0.16, d);
+    float glow = 1.0 - smoothstep(0.08, 0.5, d);
+
+    float alpha = (core * 0.9 + glow * 0.32) * vAlpha;
+
+    gl_FragColor = vec4(vColor, alpha);
+  }
+`;
+
+function createStarfield(count: number, cameraZ: number, fovDeg: number) {
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const brightness = new Float32Array(count);
+  const phases = new Float32Array(count);
+
+  let seed = 186186;
+
   const random = () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
 
-  /* --- STEP 2: CONTINENTAL LANDMASSES, VOLCANIC PROVINCES & MOUNTAINS --- */
-  for (let i = 0; i < 110; i++) {
-    const cx = random() * W;
-    const cy = random() * H;
-    const radX = 70 + random() * 280;
-    const radY = 40 + random() * 180;
-    const rot = random() * Math.PI;
+  // Mostly white and blue-white, with a few warmer stars, like a real field.
+  const palette = [
+    new THREE.Color(0xffffff),
+    new THREE.Color(0xffffff),
+    new THREE.Color(0xdce7ff),
+    new THREE.Color(0xdce7ff),
+    new THREE.Color(0xbfd8ff),
+    new THREE.Color(0xaec6ff),
+    new THREE.Color(0xfff4ea),
+    new THREE.Color(0xffe5dc),
+    new THREE.Color(0xffd9bf),
+  ];
 
-    const shades = [
-      'rgba(225, 38, 48, 0.50)',  // Vibrant alien red
-      'rgba(185, 22, 32, 0.55)',  // Deep crimson
-      'rgba(140, 14, 22, 0.60)',  // Volcanic iron red
-      'rgba(175, 52, 28, 0.45)',  // Rust red & terracotta mineral patch
-      'rgba(245, 68, 75, 0.35)',  // Bright scarlet highland peaks
-      'rgba(95, 10, 16, 0.65)',   // Basalt lowlands
-    ];
+  const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(fovDeg / 2));
 
-    ctxA.save();
-    ctxA.translate(cx, cy);
-    ctxA.rotate(rot);
-    const grad = ctxA.createRadialGradient(0, 0, 0, 0, 0, radX);
-    grad.addColorStop(0.0, shades[Math.floor(random() * shades.length)]);
-    grad.addColorStop(0.65, shades[Math.floor(random() * shades.length)]);
-    grad.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
-    ctxA.fillStyle = grad;
-    ctxA.beginPath();
-    ctxA.ellipse(0, 0, radX, radY, 0, 0, Math.PI * 2);
-    ctxA.fill();
-    ctxA.restore();
+  for (let i = 0; i < count; i++) {
+    // Depth first, so the lateral spread can follow the view frustum at that
+    // depth. This keeps star density even across the screen near and far.
+    const z = -24 - random() * 180;
+    const dist = cameraZ - z;
+    const halfH = tanHalfFov * dist * 1.35; // margin for camera push + parallax
+    const halfW = halfH * 2.35;
 
-    // High-contrast elevation in bump map for crisp tactile relief
-    ctxB.save();
-    ctxB.translate(cx, cy);
-    ctxB.rotate(rot);
-    const bumpG = ctxB.createRadialGradient(0, 0, 0, 0, 0, radX);
-    const bumpVal = random() > 0.45 ? 'rgba(185, 185, 185, 0.35)' : 'rgba(75, 75, 75, 0.35)';
-    bumpG.addColorStop(0.0, bumpVal);
-    bumpG.addColorStop(1.0, 'rgba(130, 130, 130, 0)');
-    ctxB.fillStyle = bumpG;
-    ctxB.beginPath();
-    ctxB.ellipse(0, 0, radX, radY, 0, 0, Math.PI * 2);
-    ctxB.fill();
-    ctxB.restore();
+    positions[i * 3] = (random() * 2 - 1) * halfW;
+    positions[i * 3 + 1] = (random() * 2 - 1) * halfH;
+    positions[i * 3 + 2] = z;
+
+    const c = palette[Math.floor(random() * palette.length)];
+
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+
+    // Mostly tiny stars.
+    // A very small percentage are slightly brighter/larger.
+    const rareBrightStar = random() > 0.985;
+
+    sizes[i] = rareBrightStar
+      ? 7.0
+      : 5.0;
+
+    // Brightness loosely follows size but with its own scatter,
+    // so some small stars are bright and some larger ones are dim.
+    if (rareBrightStar) {
+      brightness[i] = 0.92 + random() * 0.08;
+    } else {
+      const sizeT = clamp01((sizes[i] - 0.30) / 0.55);
+
+      brightness[i] = clamp01(
+        0.42 +
+        sizeT * 0.28 +
+        Math.pow(random(), 2.0) * 0.38
+      );
+    }
+
+    phases[i] = random();
   }
 
-  // Draw Mountain Ridges (highland spine features)
-  for (let m = 0; m < 12; m++) {
-    const startX = random() * W;
-    const startY = H * 0.2 + random() * (H * 0.6);
-    const angle = random() * Math.PI * 2;
-    const len = 120 + random() * 260;
+  const geometry = new THREE.BufferGeometry();
 
-    ctxA.save();
-    ctxA.strokeStyle = 'rgba(255, 110, 120, 0.45)';
-    ctxA.lineWidth = 4 + random() * 6;
-    ctxA.beginPath();
-    ctxA.moveTo(startX, startY);
-    for (let s = 1; s <= 8; s++) {
-      const px = startX + Math.cos(angle) * (len * (s / 8)) + (random() - 0.5) * 20;
-      const py = startY + Math.sin(angle) * (len * (s / 8)) + (random() - 0.5) * 20;
-      ctxA.lineTo(px, py);
-    }
-    ctxA.stroke();
-    ctxA.restore();
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(positions, 3)
+  );
 
-    // Bump map mountain ridge
-    ctxB.save();
-    ctxB.strokeStyle = 'rgba(235, 235, 235, 0.7)';
-    ctxB.lineWidth = 6 + random() * 8;
-    ctxB.beginPath();
-    ctxB.moveTo(startX, startY);
-    for (let s = 1; s <= 8; s++) {
-      const px = startX + Math.cos(angle) * (len * (s / 8)) + (random() - 0.5) * 20;
-      const py = startY + Math.sin(angle) * (len * (s / 8)) + (random() - 0.5) * 20;
-      ctxB.lineTo(px, py);
+  geometry.setAttribute(
+    'color',
+    new THREE.BufferAttribute(colors, 3)
+  );
+
+  geometry.setAttribute(
+    'aSize',
+    new THREE.BufferAttribute(sizes, 1)
+  );
+
+  geometry.setAttribute(
+    'aBright',
+    new THREE.BufferAttribute(brightness, 1)
+  );
+
+  geometry.setAttribute(
+    'aPhase',
+    new THREE.BufferAttribute(phases, 1)
+  );
+
+  return geometry;
+}
+/* Cloud density baked once from 3D noise sampled on the sphere, so there is
+   no seam at the texture edge and no per-frame cost beyond one texture read. */
+function createCloudTexture(width = 512, height = 256) {
+  const hash = (x: number, y: number, z: number) => {
+    let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(z, 1274126177);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  };
+  const vnoise = (x: number, y: number, z: number) => {
+    const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+    const fx = x - xi, fy = y - yi, fz = z - zi;
+    const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = fz * fz * (3 - 2 * fz);
+    const m = (a: number, b: number, t: number) => a + (b - a) * t;
+    return m(
+      m(m(hash(xi, yi, zi), hash(xi + 1, yi, zi), u), m(hash(xi, yi + 1, zi), hash(xi + 1, yi + 1, zi), u), v),
+      m(m(hash(xi, yi, zi + 1), hash(xi + 1, yi, zi + 1), u), m(hash(xi, yi + 1, zi + 1), hash(xi + 1, yi + 1, zi + 1), u), v),
+      w
+    );
+  };
+  const fbm = (x: number, y: number, z: number) => {
+    let sum = 0, amp = 0.5, f = 1;
+    for (let o = 0; o < 4; o++) {
+      sum += vnoise(x * f, y * f, z * f) * amp;
+      amp *= 0.5;
+      f *= 2.03;
     }
-    ctxB.stroke();
-    ctxB.restore();
+    return sum;
+  };
+
+  const data = new Uint8Array(width * height * 4);
+  for (let j = 0; j < height; j++) {
+    const lat = (j / (height - 1) - 0.5) * Math.PI;
+    for (let i = 0; i < width; i++) {
+      const lon = (i / width - 0.5) * Math.PI * 2;
+      const x = Math.cos(lat) * Math.cos(lon);
+      const y = Math.sin(lat);
+      const z = Math.cos(lat) * Math.sin(lon);
+      // Light domain warp gives the soft sheared look of real cloud decks.
+      const wx = fbm(x * 2 + 11, y * 2, z * 2) - 0.5;
+      const wz = fbm(x * 2, y * 2 + 5, z * 2 + 3) - 0.5;
+      let c = fbm(x * 3.2 + wx * 1.1, y * 5.5, z * 3.2 + wz * 1.1);
+      c *= 1 - smoothstep(0.75, 1.0, Math.abs(y)) * 0.4;
+      const a = Math.round(smoothstep(0.50, 0.68, c) * 255);
+      const k = (j * width + i) * 4;
+      data[k] = data[k + 1] = data[k + 2] = data[k + 3] = a;
+    }
   }
-
-  /* --- STEP 3: THE SIGNATURE TECTONIC RIFT VALLEYS & FRACTURES --- */
-  // Function to draw jagged tectonic rifts with deep shadow and rim highlights
-  const drawTectonicChasm = (
-    points: Array<[number, number]>,
-    baseWidth: number,
-    isMajorRift = true
-  ) => {
-    // Generate jagged subdivided path
-    const jagged: Array<[number, number]> = [];
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i];
-      const p1 = points[i + 1];
-      const segs = 14;
-      for (let s = 0; s < segs; s++) {
-        const t = s / segs;
-        const x = p0[0] + (p1[0] - p0[0]) * t;
-        const y = p0[1] + (p1[1] - p0[1]) * t;
-        // Perpendicular displacement for tectonic fracturing
-        const dx = p1[0] - p0[0];
-        const dy = p1[1] - p0[1];
-        const len = Math.hypot(dx, dy) || 1;
-        const nx = -dy / len;
-        const ny = dx / len;
-        const jitter = (random() - 0.5) * (baseWidth * 0.95);
-        jagged.push([x + nx * jitter, y + ny * jitter]);
-      }
-    }
-    jagged.push(points[points.length - 1]);
-
-    const buildPath = () => {
-      const path = new Path2D();
-      path.moveTo(jagged[0][0], jagged[0][1]);
-      for (let j = 1; j < jagged.length; j++) {
-        path.lineTo(jagged[j][0], jagged[j][1]);
-      }
-      return path;
-    };
-
-    const path = buildPath();
-
-    // 1. Canyon outer drop-shadow / gorge walls
-    ctxA.save();
-    ctxA.lineCap = 'round';
-    ctxA.lineJoin = 'bevel';
-    ctxA.strokeStyle = 'rgba(18, 3, 8, 0.96)';
-    ctxA.lineWidth = baseWidth * 1.8;
-    ctxA.stroke(path);
-
-    // 2. Chasm abyssal floor (pure deep darkness)
-    ctxA.strokeStyle = 'rgba(4, 0, 2, 1.0)';
-    ctxA.lineWidth = baseWidth * 0.95;
-    ctxA.stroke(path);
-
-    // 3. Sunlit tectonic cliff rim (crimson/ochre highlight)
-    if (isMajorRift) {
-      ctxA.save();
-      ctxA.strokeStyle = 'rgba(235, 120, 140, 0.65)';
-      ctxA.lineWidth = Math.max(1.8, baseWidth * 0.28);
-      ctxA.translate(-baseWidth * 0.45, -baseWidth * 0.35);
-      ctxA.stroke(path);
-      ctxA.restore();
-    }
-    ctxA.restore();
-
-    // 4. Bump Map: Abyss is pitch black, rim is raised white
-    ctxB.save();
-    ctxB.lineCap = 'round';
-    ctxB.lineJoin = 'bevel';
-    // Sunken abyss
-    ctxB.strokeStyle = 'rgba(0, 0, 0, 1.0)';
-    ctxB.lineWidth = baseWidth * 1.5;
-    ctxB.stroke(path);
-    // Raised cliff rim
-    if (isMajorRift) {
-      ctxB.strokeStyle = 'rgba(245, 245, 245, 0.85)';
-      ctxB.lineWidth = Math.max(2.0, baseWidth * 0.35);
-      ctxB.translate(-baseWidth * 0.5, -baseWidth * 0.4);
-      ctxB.stroke(path);
-    }
-    ctxB.restore();
-
-    // 5. Generate tributary hairline cracks branching out organically
-    if (isMajorRift) {
-      const branches = 18;
-      for (let b = 0; b < branches; b++) {
-        const idx = Math.floor(random() * (jagged.length - 1));
-        const root = jagged[idx];
-        const angle = random() * Math.PI * 2;
-        const bLen = 25 + random() * 95;
-        const branchPts: Array<[number, number]> = [root];
-        const subSteps = 6;
-        let curX = root[0];
-        let curY = root[1];
-        for (let k = 1; k <= subSteps; k++) {
-          const stepDist = bLen / subSteps;
-          curX += Math.cos(angle + (random() - 0.5) * 0.8) * stepDist;
-          curY += Math.sin(angle + (random() - 0.5) * 0.8) * stepDist;
-          branchPts.push([curX, curY]);
-        }
-        drawTectonicChasm(branchPts, Math.max(1.2, baseWidth * 0.25), false);
-      }
-    }
-  };
-
-  /* --- DEFINING THE EXACT RIFT SYSTEM FROM THE REFERENCE IMAGE --- */
-  // Rift 1: Upper-Northern Fracture curving from polar edge to central node
-  drawTectonicChasm(
-    [
-      [W * 0.34, H * 0.24],
-      [W * 0.42, H * 0.27],
-      [W * 0.48, H * 0.34],
-      [W * 0.52, H * 0.40],
-    ],
-    16
-  );
-
-  // Rift 2: Major Central Abyssal Chasm (the huge central canyon cutting down the planet face)
-  drawTectonicChasm(
-    [
-      [W * 0.52, H * 0.40],
-      [W * 0.49, H * 0.48],
-      [W * 0.47, H * 0.58],
-      [W * 0.46, H * 0.70],
-      [W * 0.49, H * 0.82],
-      [W * 0.47, H * 0.94],
-    ],
-    22
-  );
-
-  // Rift 3: Great Eastern Rift Valley (branching diagonally across the eastern continent)
-  drawTectonicChasm(
-    [
-      [W * 0.52, H * 0.40],
-      [W * 0.60, H * 0.45],
-      [W * 0.72, H * 0.52],
-      [W * 0.84, H * 0.59],
-      [W * 0.94, H * 0.66],
-    ],
-    20
-  );
-
-  // Rift 4: Secondary Western Fault line
-  drawTectonicChasm(
-    [
-      [W * 0.48, H * 0.54],
-      [W * 0.41, H * 0.58],
-      [W * 0.35, H * 0.65],
-      [W * 0.30, H * 0.74],
-    ],
-    12
-  );
-
-  // Rift 5: North-Eastern Ridge Fracture
-  drawTectonicChasm(
-    [
-      [W * 0.62, H * 0.28],
-      [W * 0.70, H * 0.34],
-      [W * 0.80, H * 0.38],
-    ],
-    10
-  );
-
-  /* --- STEP 4: PROMINENT IMPACT CRATERS --- */
-  // The iconic crater seen on the upper-left of Kepler-186f
-  const drawImpactCrater = (
-    cx: number,
-    cy: number,
-    rad: number,
-    hasWhiteFrost = true
-  ) => {
-    // Albedo crater
-    ctxA.save();
-    // Inner floor
-    const floorG = ctxA.createRadialGradient(cx, cy, 0, cx, cy, rad);
-    floorG.addColorStop(0.0, 'rgba(42, 8, 20, 0.9)');
-    floorG.addColorStop(0.72, 'rgba(25, 4, 12, 0.95)');
-    floorG.addColorStop(1.0, 'rgba(80, 16, 36, 0.8)');
-    ctxA.fillStyle = floorG;
-    ctxA.beginPath();
-    ctxA.arc(cx, cy, rad, 0, Math.PI * 2);
-    ctxA.fill();
-
-    // Raised white/ice frost rim
-    ctxA.lineWidth = Math.max(2.5, rad * 0.22);
-    ctxA.strokeStyle = hasWhiteFrost
-      ? 'rgba(240, 248, 255, 0.88)'
-      : 'rgba(215, 120, 145, 0.75)';
-    ctxA.beginPath();
-    ctxA.arc(cx, cy, rad, 0, Math.PI * 2);
-    ctxA.stroke();
-
-    // Central rebound peak
-    ctxA.fillStyle = 'rgba(245, 235, 245, 0.95)';
-    ctxA.beginPath();
-    ctxA.arc(cx, cy, rad * 0.18, 0, Math.PI * 2);
-    ctxA.fill();
-    ctxA.restore();
-
-    // Bump crater
-    ctxB.save();
-    // Sunken bowl
-    const bumpBowl = ctxB.createRadialGradient(cx, cy, 0, cx, cy, rad);
-    bumpBowl.addColorStop(0.0, 'rgba(50, 50, 50, 0.8)');
-    bumpBowl.addColorStop(0.85, 'rgba(10, 10, 10, 0.9)');
-    bumpBowl.addColorStop(1.0, 'rgba(128, 128, 128, 0.0)');
-    ctxB.fillStyle = bumpBowl;
-    ctxB.beginPath();
-    ctxB.arc(cx, cy, rad, 0, Math.PI * 2);
-    ctxB.fill();
-
-    // Raised rim
-    ctxB.lineWidth = Math.max(3.0, rad * 0.24);
-    ctxB.strokeStyle = 'rgba(255, 255, 255, 0.92)';
-    ctxB.beginPath();
-    ctxB.arc(cx, cy, rad, 0, Math.PI * 2);
-    ctxB.stroke();
-
-    // Peak
-    ctxB.fillStyle = 'rgba(230, 230, 230, 0.9)';
-    ctxB.beginPath();
-    ctxB.arc(cx, cy, rad * 0.2, 0, Math.PI * 2);
-    ctxB.fill();
-    ctxB.restore();
-  };
-
-  // Great Volcanic Shield Caldera (prominent Martian/Keplerian volcanic province)
-  const drawShieldCaldera = (cx: number, cy: number, rad: number) => {
-    // Albedo: Volcanic shield flanks, dark basalt caldera floor & glowing vent
-    ctxA.save();
-    const flankG = ctxA.createRadialGradient(cx, cy, rad * 0.25, cx, cy, rad * 1.7);
-    flankG.addColorStop(0.0, 'rgba(75, 10, 18, 0.95)');
-    flankG.addColorStop(0.35, 'rgba(165, 24, 34, 0.85)');
-    flankG.addColorStop(0.75, 'rgba(225, 48, 58, 0.45)');
-    flankG.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
-    ctxA.fillStyle = flankG;
-    ctxA.beginPath();
-    ctxA.arc(cx, cy, rad * 1.7, 0, Math.PI * 2);
-    ctxA.fill();
-
-    // Sunken caldera floor
-    ctxA.fillStyle = '#1c0308';
-    ctxA.beginPath();
-    ctxA.arc(cx, cy, rad, 0, Math.PI * 2);
-    ctxA.fill();
-
-    // Raised caldera rim fault scarp
-    ctxA.strokeStyle = 'rgba(255, 140, 150, 0.85)';
-    ctxA.lineWidth = 4;
-    ctxA.stroke();
-
-    // Inner fault ring
-    ctxA.strokeStyle = 'rgba(220, 90, 105, 0.7)';
-    ctxA.lineWidth = 2;
-    ctxA.beginPath();
-    ctxA.arc(cx, cy, rad * 0.55, 0, Math.PI * 2);
-    ctxA.stroke();
-
-    // Glowing volcanic magma throat
-    ctxA.fillStyle = 'rgba(255, 125, 45, 0.9)';
-    ctxA.beginPath();
-    ctxA.arc(cx, cy, rad * 0.18, 0, Math.PI * 2);
-    ctxA.fill();
-    ctxA.restore();
-
-    // Bump map: High volcanic cone with deeply sunken central caldera
-    ctxB.save();
-    const bumpFlank = ctxB.createRadialGradient(cx, cy, rad, cx, cy, rad * 1.7);
-    bumpFlank.addColorStop(0.0, 'rgba(240, 240, 240, 0.92)');
-    bumpFlank.addColorStop(1.0, 'rgba(128, 128, 128, 0.0)');
-    ctxB.fillStyle = bumpFlank;
-    ctxB.beginPath();
-    ctxB.arc(cx, cy, rad * 1.7, 0, Math.PI * 2);
-    ctxB.fill();
-
-    // High caldera rim
-    ctxB.strokeStyle = '#ffffff';
-    ctxB.lineWidth = 5;
-    ctxB.beginPath();
-    ctxB.arc(cx, cy, rad, 0, Math.PI * 2);
-    ctxB.stroke();
-
-    // Sunken caldera pit
-    ctxB.fillStyle = '#141414';
-    ctxB.beginPath();
-    ctxB.arc(cx, cy, rad * 0.9, 0, Math.PI * 2);
-    ctxB.fill();
-    ctxB.restore();
-  };
-
-  // Primary iconic crater on upper-left continent
-  drawImpactCrater(W * 0.38, H * 0.37, 36, true);
-  // Great Shield Caldera near the central tectonic rift
-  drawShieldCaldera(W * 0.55, H * 0.44, 42);
-  // Secondary Shield Volcano in southern highlands
-  drawShieldCaldera(W * 0.72, H * 0.62, 30);
-
-  // Secondary impact crater fields
-  drawImpactCrater(W * 0.32, H * 0.44, 18, true);
-  drawImpactCrater(W * 0.43, H * 0.52, 14, false);
-  drawImpactCrater(W * 0.65, H * 0.36, 22, false);
-  drawImpactCrater(W * 0.58, H * 0.68, 16, false);
-  drawImpactCrater(W * 0.78, H * 0.32, 20, false);
-  drawImpactCrater(W * 0.84, H * 0.54, 25, false);
-  drawImpactCrater(W * 0.48, H * 0.82, 19, false);
-
-  /* --- STEP 5: POLAR FROST & SWIRLING CLOUD VORTEXES --- */
-  // White & icy-cyan polar ice sheet along upper latitudes
-  const polarGrad = ctxA.createLinearGradient(0, 0, 0, H * 0.25);
-  polarGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0.92)');
-  polarGrad.addColorStop(0.45, 'rgba(205, 242, 255, 0.75)');
-  polarGrad.addColorStop(0.85, 'rgba(160, 225, 250, 0.35)');
-  polarGrad.addColorStop(1.0, 'rgba(120, 200, 240, 0.0)');
-
-  ctxA.fillStyle = polarGrad;
-  ctxA.fillRect(0, 0, W, H * 0.28);
-
-  // Swirling polar ice storm filament details on Albedo & Clouds
-  for (let c = 0; c < 45; c++) {
-    const cx = random() * W;
-    const cy = random() * (H * 0.32);
-    const radius = 35 + random() * 140;
-
-    const cloudG = ctxC.createRadialGradient(cx, cy, 0, cx, cy, radius);
-    cloudG.addColorStop(0.0, 'rgba(255, 255, 255, 0.75)');
-    cloudG.addColorStop(0.5, 'rgba(215, 245, 255, 0.45)');
-    cloudG.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
-
-    ctxC.fillStyle = cloudG;
-    ctxC.beginPath();
-    ctxC.ellipse(cx, cy, radius * (0.8 + random() * 0.6), radius * 0.5, random() * Math.PI, 0, Math.PI * 2);
-    ctxC.fill();
-  }
-
-  // Atmospheric cloud ribbons across the temperate zones
-  for (let c = 0; c < 35; c++) {
-    const cx = random() * W;
-    const cy = H * 0.25 + random() * (H * 0.65);
-    const radius = 60 + random() * 220;
-
-    const cloudG = ctxC.createRadialGradient(cx, cy, 0, cx, cy, radius);
-    cloudG.addColorStop(0.0, 'rgba(255, 255, 255, 0.35)');
-    cloudG.addColorStop(0.6, 'rgba(220, 245, 255, 0.15)');
-    cloudG.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
-
-    ctxC.fillStyle = cloudG;
-    ctxC.beginPath();
-    ctxC.ellipse(cx, cy, radius, radius * 0.3, (random() - 0.5) * 0.4, 0, Math.PI * 2);
-    ctxC.fill();
-  }
-
-  /* --- CONVERT CANVASES TO THREE.JS TEXTURES --- */
-  const albedoTexture = new THREE.CanvasTexture(canvasA);
-  albedoTexture.colorSpace = THREE.SRGBColorSpace;
-  albedoTexture.wrapS = THREE.RepeatWrapping;
-  albedoTexture.wrapT = THREE.ClampToEdgeWrapping;
-
-  const bumpTexture = new THREE.CanvasTexture(canvasB);
-  bumpTexture.wrapS = THREE.RepeatWrapping;
-  bumpTexture.wrapT = THREE.ClampToEdgeWrapping;
-
-  const cloudsTexture = new THREE.CanvasTexture(canvasC);
-  cloudsTexture.colorSpace = THREE.SRGBColorSpace;
-  cloudsTexture.wrapS = THREE.RepeatWrapping;
-  cloudsTexture.wrapT = THREE.ClampToEdgeWrapping;
-
-  return {
-    albedo: albedoTexture,
-    bump: bumpTexture,
-    clouds: cloudsTexture,
-  };
+  const tex = new THREE.DataTexture(data, width, height, THREE.RGBAFormat);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.needsUpdate = true;
+  return tex;
 }
 
-/* ============================================================
-   KEPLER HERO SCENE COMPONENT
-   ============================================================ */
+/* Host star: a glowing disc with a faint granulated surface and a red halo. */
+function createStarTexture() {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const c = size / 2;
 
-export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
-  scrollProgress = 0,
-}) => {
+  const halo = ctx.createRadialGradient(c, c, 0, c, c, c);
+  halo.addColorStop(0, 'rgba(255,90,95,0.70)');
+  halo.addColorStop(0.31, 'rgba(255,80,90,0.50)');
+  halo.addColorStop(0.45, 'rgba(255,60,80,0.16)');
+  halo.addColorStop(1, 'rgba(255,40,70,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(0, 0, size, size);
+
+  const R = 40;
+  const disc = ctx.createRadialGradient(c, c, 0, c, c, R);
+  disc.addColorStop(0, '#ffffff');
+  disc.addColorStop(0.78, '#ffeef0');
+  disc.addColorStop(1, '#ffb7c0');
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(c, c, R, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = disc;
+  ctx.fillRect(c - R, c - R, R * 2, R * 2);
+
+  let s = 7;
+  const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+  for (let i = 0; i < 420; i++) {
+    const a = rnd() * Math.PI * 2;
+    const r = Math.sqrt(rnd()) * R;
+    ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,150,160,0.16)' : 'rgba(255,255,255,0.22)';
+    ctx.beginPath();
+    ctx.arc(c + Math.cos(a) * r, c + Math.sin(a) * r, 0.8 + rnd() * 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* Subtle atmospheric smoke / dust around the planet.
+   Generated once on a canvas, so it has almost no per-frame GPU cost. */
+function createSmokeTexture() {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+
+  const ctx = canvas.getContext('2d')!;
+  const center = size / 2;
+
+  // Very soft volumetric-looking radial cloud.
+  const gradient = ctx.createRadialGradient(
+    center,
+    center,
+    size * 0.08,
+    center,
+    center,
+    size * 0.48
+  );
+
+  gradient.addColorStop(0, 'rgba(120, 150, 170, 0.10)');
+  gradient.addColorStop(0.28, 'rgba(90, 120, 145, 0.075)');
+  gradient.addColorStop(0.55, 'rgba(55, 75, 100, 0.045)');
+  gradient.addColorStop(0.78, 'rgba(30, 40, 65, 0.02)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+
+  // Large irregular smoke patches.
+  let seed = 91823;
+
+  const random = () => {
+    seed = (seed * 16807) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+
+  for (let i = 0; i < 65; i++) {
+    const x = center + (random() - 0.5) * size * 0.72;
+    const y = center + (random() - 0.5) * size * 0.55;
+
+    const radius =
+      size * (0.025 + Math.pow(random(), 1.7) * 0.08);
+
+    const alpha = 0.012 + random() * 0.025;
+
+    const smoke = ctx.createRadialGradient(
+      x,
+      y,
+      0,
+      x,
+      y,
+      radius
+    );
+
+    smoke.addColorStop(
+      0,
+      `rgba(130, 145, 165, ${alpha})`
+    );
+
+    smoke.addColorStop(
+      0.55,
+      `rgba(75, 90, 115, ${alpha * 0.45})`
+    );
+
+    smoke.addColorStop(
+      1,
+      'rgba(0, 0, 0, 0)'
+    );
+
+    ctx.fillStyle = smoke;
+    ctx.fillRect(
+      x - radius,
+      y - radius,
+      radius * 2,
+      radius * 2
+    );
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  return texture;
+}
+
+function createMoon(radius: number, position: THREE.Vector3, color: number, segments: number) {
+  const group = new THREE.Group();
+  group.position.copy(position);
+  const geometry = new THREE.SphereGeometry(radius, segments, segments);
+  const material = new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0 });
+  const mesh = new THREE.Mesh(geometry, material);
+  group.add(mesh);
+  return { group, mesh, geometry, material };
+}
+
+export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({ scrollProgress = 0 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef(scrollProgress);
 
@@ -542,739 +561,392 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const reducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
-
     const isMobile = window.innerWidth < 768;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ============================================================
-       SCENE & ENVIRONMENT
-       - Deep cosmic void with rich atmospheric red fog
-       ============================================================ */
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0c0205);
-    scene.fog = new THREE.FogExp2(0x180307, 0.014);
+    scene.background = new THREE.Color(0x02040a);
 
-    /* ============================================================
-       CAMERA
-       ============================================================ */
+    const CAMERA_FOV = isMobile ? 43 : 38;
     const camera = new THREE.PerspectiveCamera(
-      42,
+      CAMERA_FOV,
       window.innerWidth / window.innerHeight,
       0.1,
-      2000
+      800
     );
-    // Initial camera position gives the exact composition of the reference photo
-    camera.position.set(0, 0.4, 13.8);
-    camera.lookAt(0.3, -0.4, 0);
+    camera.position.set(0, 0.75, 16.8);
 
-    /* ============================================================
-       RENDERER
-       ============================================================ */
     const renderer = new THREE.WebGLRenderer({
       antialias: !isMobile,
-      alpha: false,
       powerPreference: 'high-performance',
     });
-
-    const pixelRatio = Math.min(
-      window.devicePixelRatio || 1,
-      isMobile ? 1.25 : 1.75
-    );
-
-    renderer.setPixelRatio(pixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.0 : 1.25));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
-
-    renderer.domElement.style.position = 'absolute';
-    renderer.domElement.style.inset = '0';
-    renderer.domElement.style.width = '100%';
-    renderer.domElement.style.height = '100%';
-    renderer.domElement.style.display = 'block';
-    renderer.domElement.style.pointerEvents = 'none';
-
+    renderer.toneMappingExposure = 0.95;
+    Object.assign(renderer.domElement.style, {
+      position: 'absolute',
+      inset: '0',
+      width: '100%',
+      height: '100%',
+      display: 'block',
+      pointerEvents: 'none',
+    });
     container.appendChild(renderer.domElement);
 
-    /* ============================================================
-       POST-PROCESSING (BLOOM)
-       - Decreased strength & higher threshold for sleek, refined glow
-       ============================================================ */
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      isMobile ? 0.45 : 0.65, // decreased glow strength
-      0.32,                   // tighter bloom radius
-      0.82                    // higher threshold so only hottest star core blooms
+    /* ---------------- Host star ---------------- */
+    const starPosition = new THREE.Vector3(-8.8, 6.4, -12);
+    const starTexture = createStarTexture();
+    const star = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: starTexture,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      })
     );
-    composer.addPass(bloomPass);
-    composer.addPass(new OutputPass());
+    const STAR_SIZE = isMobile ? 3.4 : 4.2;
+    star.scale.set(STAR_SIZE, STAR_SIZE, 1);
+    star.position.copy(starPosition);
+    scene.add(star);
 
-    /* ============================================================
-       DISPOSABLES TRACKER
-       ============================================================ */
-    const disposables: Array<{ dispose: () => void }> = [];
-    const track = <T extends { dispose: () => void }>(item: T): T => {
-      disposables.push(item);
-      return item;
-    };
+    const starLight = new THREE.PointLight(0xffc5b8, isMobile ? 75 : 105, 100, 2);
+    starLight.position.copy(starPosition);
+    scene.add(starLight);
 
-    /* ============================================================
-       PROCEDURAL TEXTURES FOR KEPLER-186F
-       ============================================================ */
-    const { albedo, bump, clouds } = createKeplerProceduralTextures();
-    track(albedo);
-    track(bump);
-    track(clouds);
+    /* ---------------- Nebula ---------------- */
+    const nebulaCanvas = document.createElement('canvas');
+    nebulaCanvas.width = 1024;
+    nebulaCanvas.height = 512;
+    const nctx = nebulaCanvas.getContext('2d')!;
+    nctx.fillStyle = '#02040a';
+    nctx.fillRect(0, 0, 1024, 512);
+    const bands = [
+      { x: 180, y: 135, r: 190, a: 0.2, c: '106,45,121' },
+      { x: 475, y: 100, r: 230, a: 0.17, c: '34,74,119' },
+      { x: 790, y: 180, r: 200, a: 0.14, c: '121,38,99' },
+      { x: 900, y: 70, r: 170, a: 0.2, c: '112,62,150' },
+      { x: 650, y: 385, r: 170, a: 0.1, c: '37,59,108' },
+    ];
+    for (const b of bands) {
+      const g = nctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+      g.addColorStop(0, `rgba(${b.c},${b.a})`);
+      g.addColorStop(0.65, `rgba(${b.c},0.035)`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      nctx.fillStyle = g;
+      nctx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+    }
+    const nebulaTexture = new THREE.CanvasTexture(nebulaCanvas);
+    nebulaTexture.colorSpace = THREE.SRGBColorSpace;
+    const nebula = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: nebulaTexture, transparent: true, opacity: 0.42, depthWrite: false })
+    );
+    nebula.scale.set(58, 29, 1);
+    nebula.position.set(2, 4, -48);
+    scene.add(nebula);
 
-    /* ============================================================
-       STAR & SUNLIGHT POSITION (TOP-LEFT CORNER AS IN REFERENCE)
-       ============================================================ */
-    // Top-left corner of space
-    const STAR_POSITION = new THREE.Vector3(-8.8, 6.2, -6.0);
-    const sunLightDir = new THREE.Vector3().subVectors(STAR_POSITION, new THREE.Vector3(0.5, -2.2, 0)).normalize();
+    /* ---------------- Planet ---------------- */
+    const PLANET_RADIUS = 8.35;
+    const ATMOS_OUTER = 1.06;
+    const seg = isMobile ? 48 : 72;
 
-    /* ============================================================
-       1. KEPLER-186F PLANET ROOT & SPHERE
-       ============================================================ */
-    const PLANET_RADIUS = 5.8;
     const planetRoot = new THREE.Group();
-    // Positioned so that Kepler-186f dominates the center and lower view
-    planetRoot.position.set(0.5, -2.4, 0);
-    planetRoot.rotation.z = THREE.MathUtils.degToRad(-24.0); // Axial tilt
+    planetRoot.position.set(0.25, -6.75, -0.75);
+    planetRoot.rotation.z = THREE.MathUtils.degToRad(-6);
     scene.add(planetRoot);
 
-    // Planet Core Mesh with Custom GLSL Shader
-    const planetGeo = track(
-      new THREE.SphereGeometry(PLANET_RADIUS, isMobile ? 64 : 128, isMobile ? 64 : 128)
+    const planetGeometry = new THREE.SphereGeometry(PLANET_RADIUS, seg, seg);
+    const planetMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        uStarPosition: { value: starPosition },
+        uRot: { value: new THREE.Matrix3() },
+        uFade: { value: 1 },
+      },
+      vertexShader: sphereVertex,
+      fragmentShader: planetFragment,
+    });
+    const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+    planet.renderOrder = 0;
+    planetRoot.add(planet);
+
+    const cloudTexture = createCloudTexture();
+    const cloudGeometry = new THREE.SphereGeometry(PLANET_RADIUS * 1.012, seg, seg);
+    const cloudMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uMap: { value: cloudTexture },
+        uStarPosition: { value: starPosition },
+        uFade: { value: 1 },
+      },
+      vertexShader: sphereVertex,
+      fragmentShader: cloudFragment,
+    });
+    const cloudShell = new THREE.Mesh(cloudGeometry, cloudMaterial);
+    cloudShell.renderOrder = 1;
+    planetRoot.add(cloudShell);
+
+    const atmosphereGeometry = new THREE.SphereGeometry(PLANET_RADIUS * ATMOS_OUTER, seg, seg);
+    const atmosphereMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uStarPosition: { value: starPosition },
+        uCenter: { value: planetRoot.position },
+        uRadius: { value: PLANET_RADIUS },
+        uOuter: { value: ATMOS_OUTER },
+        uFade: { value: 1 },
+      },
+      vertexShader: sphereVertex,
+      fragmentShader: atmosphereFragment,
+    });
+    const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+    atmosphere.renderOrder = 2;
+    planetRoot.add(atmosphere);
+
+    /* ---------------- Atmospheric smoke ---------------- */
+
+    const smokeTexture = createSmokeTexture();
+
+    const smokeMaterial = new THREE.SpriteMaterial({
+      map: smokeTexture,
+      transparent: true,
+      opacity: isMobile ? 0.20 : 0.27,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.NormalBlending,
+      toneMapped: false,
+    });
+
+    const smoke = new THREE.Sprite(smokeMaterial);
+
+    // Slightly larger than the planet.
+    // The planet remains the dominant object.
+    const smokeSize = PLANET_RADIUS * 2.28;
+    smoke.scale.set(smokeSize, smokeSize, 1);
+
+    smoke.position.set(
+      0.15,
+      0.15,
+      0.22
     );
 
-    const planetMat = track(
-      new THREE.ShaderMaterial({
-        transparent: false,
-        uniforms: {
-          uMap: { value: albedo },
-          uBumpMap: { value: bump },
-          uSunDir: { value: sunLightDir },
-          uCyanRimColor: { value: new THREE.Color(0x3ae7ff) },
-          uBumpScale: { value: 0.085 },
-          uTime: { value: 0 },
-          uAlpha: { value: 1.0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-          varying vec3 vViewDir;
+    smoke.renderOrder = 3;
+    planetRoot.add(smoke);
 
-          void main() {
-            vUv = uv;
-            vec4 worldPos = modelMatrix * vec4(position, 1.0);
-            vWorldPos = worldPos.xyz;
-            vNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
-            vViewDir = normalize(cameraPosition - worldPos.xyz);
-            gl_Position = projectionMatrix * viewMatrix * worldPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform sampler2D uMap;
-          uniform sampler2D uBumpMap;
-          uniform vec3 uSunDir;
-          uniform vec3 uCyanRimColor;
-          uniform float uBumpScale;
-          uniform float uTime;
-          uniform float uAlpha;
+    /* ---------------- Moons ---------------- */
+    const moonFar = createMoon(0.26, new THREE.Vector3(-4.2, 4.25, -17), 0x1b1d24, isMobile ? 20 : 32);
+    const moonMid = createMoon(0.48, new THREE.Vector3(-5.5, 2.1, -13), 0x171a20, isMobile ? 24 : 36);
+    const moonRight = createMoon(0.2, new THREE.Vector3(3.7, 4.2, -15), 0x202027, isMobile ? 20 : 28);
+    scene.add(moonFar.group, moonMid.group, moonRight.group);
+    scene.add(new THREE.HemisphereLight(0x8bb8d0, 0x08070a, 0.11));
 
-          varying vec2 vUv;
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-          // Robust normal perturbation for tectonic rift cliffs without extension dependencies
-          vec3 perturbNormal(vec3 surf_norm, vec2 uv) {
-            float epsX = 1.0 / 2048.0;
-            float epsY = 1.0 / 1024.0;
-            float h = texture2D(uBumpMap, uv).r;
-            float hR = texture2D(uBumpMap, uv + vec2(epsX, 0.0)).r;
-            float hU = texture2D(uBumpMap, uv + vec2(0.0, epsY)).r;
+    /* ---------------- Starfield ---------------- */
+    const starGeometry = createStarfield(isMobile ? 2000 : 7000, camera.position.z, CAMERA_FOV);
+    const starMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uTwinkle: { value: reducedMotion ? 0 : 1 },
+      },
+      vertexShader: starfieldVertex,
+      fragmentShader: starfieldFragment,
+    });
+    const starfield = new THREE.Points(starGeometry, starMaterial);
+    scene.add(starfield);
 
-            float dX = (h - hR) * uBumpScale * 45.0;
-            float dY = (h - hU) * uBumpScale * 45.0;
-
-            vec3 up = abs(surf_norm.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-            vec3 T = normalize(cross(up, surf_norm));
-            vec3 B = cross(surf_norm, T);
-
-            return normalize(surf_norm + T * dX + B * dY);
-          }
-
-          void main() {
-            vec4 albedoCol = texture2D(uMap, vUv);
-            vec3 N = perturbNormal(normalize(vNormal), vUv);
-            vec3 V = normalize(vViewDir);
-            vec3 L = normalize(uSunDir);
-
-            // Grazing sunlight diffuse with rich red-orange balance
-            float NdotL = dot(N, L);
-            float directLight = clamp(NdotL * 0.75 + 0.25, 0.0, 1.0);
-
-            // Deep canyon & crater shadowing
-            float bumpHeight = texture2D(uBumpMap, vUv).r;
-            float chasmDepth = smoothstep(0.18, 0.48, bumpHeight);
-            float shadowMultiplier = mix(0.10, 1.0, chasmDepth);
-
-            // Geothermal volcanic fissure glow inside the deepest tectonic chasms
-            float fissureMask = (1.0 - smoothstep(0.12, 0.36, bumpHeight)) * (1.0 - albedoCol.r * 0.35);
-            vec3 thermalFissure = vec3(1.0, 0.28, 0.08) * fissureMask * 0.85;
-
-            // Warm twilight scattering along the day-night terminator line
-            float terminator = smoothstep(-0.25, 0.25, NdotL) * (1.0 - smoothstep(0.02, 0.60, NdotL));
-            vec3 twilightColor = vec3(1.0, 0.22, 0.12) * terminator * 1.6;
-
-            // Day surface: rich alien red coloration
-            vec3 redBalancedAlbedo = albedoCol.rgb * vec3(1.28, 0.88, 0.82);
-            vec3 dayColor = (redBalancedAlbedo * (directLight * 1.35 + 0.12) + thermalFissure) * shadowMultiplier;
-            vec3 nightColor = albedoCol.rgb * 0.025 * shadowMultiplier;
-            vec3 surface = mix(nightColor, dayColor, smoothstep(-0.15, 0.35, NdotL)) + twilightColor;
-
-            // --- REFINED CYAN ATMOSPHERIC RIM (Decreased glow) ---
-            float fresnel = 1.0 - max(dot(V, normalize(vNormal)), 0.0);
-            float rimFactor = pow(fresnel, 3.4);
-            // Lit side has crisp electric-cyan rim glow
-            float sunFacing = clamp(dot(normalize(vNormal), L) * 0.6 + 0.4, 0.0, 1.0);
-            vec3 cyanRimGlow = uCyanRimColor * rimFactor * sunFacing * 1.45;
-
-            // Subtle specular reflection on ice caps and smooth mineral basins
-            vec3 H = normalize(L + V);
-            float spec = pow(max(dot(N, H), 0.0), 32.0) * clamp(NdotL, 0.0, 1.0) * (1.0 - albedoCol.r * 0.35);
-            vec3 specHighlight = vec3(1.0, 0.75, 0.85) * spec * 0.55;
-
-            vec3 finalColor = surface + cyanRimGlow + specHighlight;
-
-            // Red cosmic fog atmospheric blend
-            float camDist = length(cameraPosition - vWorldPos);
-            float fogFactor = clamp((camDist - 8.0) / 48.0, 0.0, 0.45);
-            vec3 redFogColor = vec3(0.10, 0.015, 0.03);
-            finalColor = mix(finalColor, redFogColor, fogFactor);
-
-            gl_FragColor = vec4(finalColor, uAlpha);
-          }
-        `,
-      })
-    );
-
-    const planetMesh = new THREE.Mesh(planetGeo, planetMat);
-    planetRoot.add(planetMesh);
-
-    // Dynamic Clouds Mesh (drifting slightly above the surface)
-    const cloudsGeo = track(
-      new THREE.SphereGeometry(PLANET_RADIUS * 1.014, isMobile ? 48 : 96, isMobile ? 48 : 96)
-    );
-    const cloudsMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.NormalBlending,
-        uniforms: {
-          uCloudMap: { value: clouds },
-          uSunDir: { value: sunLightDir },
-          uTime: { value: 0 },
-          uAlpha: { value: 0.85 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-          void main() {
-            vUv = uv;
-            vec4 worldPos = modelMatrix * vec4(position, 1.0);
-            vWorldPos = worldPos.xyz;
-            vNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
-            gl_Position = projectionMatrix * viewMatrix * worldPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform sampler2D uCloudMap;
-          uniform vec3 uSunDir;
-          uniform float uAlpha;
-          varying vec2 vUv;
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-
-          void main() {
-            vec4 cTex = texture2D(uCloudMap, vUv);
-            if (cTex.a < 0.02) discard;
-
-            vec3 N = normalize(vNormal);
-            vec3 L = normalize(uSunDir);
-            float NdotL = clamp(dot(N, L) * 0.7 + 0.3, 0.0, 1.0);
-
-            vec3 dayCloud = cTex.rgb * vec3(1.18, 0.98, 1.02) * NdotL;
-            vec3 nightCloud = cTex.rgb * vec3(0.04, 0.015, 0.025);
-
-            vec3 finalCloud = mix(nightCloud, dayCloud, smoothstep(-0.1, 0.25, dot(N, L)));
-            gl_FragColor = vec4(finalCloud, cTex.a * uAlpha);
-          }
-        `,
-      })
-    );
-    const cloudsMesh = new THREE.Mesh(cloudsGeo, cloudsMat);
-    planetRoot.add(cloudsMesh);
-
-    // Glowing Atmospheric Outer Shell (BackSide Additive Rayleigh Scattering)
-    const atmosGeo = track(
-      new THREE.SphereGeometry(PLANET_RADIUS * 1.036, isMobile ? 48 : 64, isMobile ? 48 : 64)
-    );
-    const atmosMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uSunDir: { value: sunLightDir },
-          uAlpha: { value: 1.0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            vec4 worldPos = modelMatrix * vec4(position, 1.0);
-            vWorldPos = worldPos.xyz;
-            gl_Position = projectionMatrix * viewMatrix * worldPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform vec3 uSunDir;
-          uniform float uAlpha;
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-
-          void main() {
-            vec3 V = normalize(cameraPosition - vWorldPos);
-            vec3 N = normalize(vNormal);
-            float rim = pow(1.0 - max(dot(V, N), 0.0), 3.2);
-
-            vec3 L = normalize(uSunDir);
-            float sunAlign = max(dot(N, L), 0.0);
-            float flare = pow(sunAlign, 1.4) * 1.3 + 0.25;
-
-            // Electric cyan on lit horizon, blending into warm red atmospheric haze
-            vec3 cyanColor = vec3(0.18, 0.85, 1.0);
-            vec3 redAtmos = vec3(0.85, 0.12, 0.22);
-            vec3 atmosColor = mix(redAtmos, cyanColor, pow(sunAlign, 1.3));
-
-            float a = rim * flare * 0.75 * uAlpha;
-            gl_FragColor = vec4(atmosColor * a, a);
-          }
-        `,
-      })
-    );
-    const atmosMesh = new THREE.Mesh(atmosGeo, atmosMat);
-    planetRoot.add(atmosMesh);
-
-    /* ============================================================
-       2. THE HOST STAR (KEPLER-186) IN THE TOP-LEFT CORNER
-       - White-hot core sphere
-       - Sleek Anamorphic Lens Flare Beam (at -28° angle as in photo)
-       - Soft optical glow halo
-       ============================================================ */
-    const starGroup = new THREE.Group();
-    starGroup.position.copy(STAR_POSITION);
-    scene.add(starGroup);
-
-    // 2.1 Star Core Sphere
-    const starCoreGeo = track(new THREE.SphereGeometry(0.72, 32, 32));
-    const starCoreMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        uniforms: {
-          uTime: { value: 0 },
-          uAlpha: { value: 1.0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec3 vNormal;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform float uTime;
-          uniform float uAlpha;
-          varying vec3 vNormal;
-
-          void main() {
-            float pulse = sin(uTime * 2.2) * 0.05 + 0.95;
-            vec3 core = vec3(1.05, 0.98, 1.0) * pulse;
-            gl_FragColor = vec4(core, uAlpha);
-          }
-        `,
-      })
-    );
-    const starCoreMesh = new THREE.Mesh(starCoreGeo, starCoreMat);
-    starGroup.add(starCoreMesh);
-
-    // 2.2 Sleek Anamorphic Lens Flare Beam (Decreased glow for refined aesthetic)
-    const flareBeamGeo = track(new THREE.PlaneGeometry(36.0, 2.6));
-    const flareBeamMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uTime: { value: 0 },
-          uAlpha: { value: 1.0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform float uTime;
-          uniform float uAlpha;
-          varying vec2 vUv;
-
-          void main() {
-            vec2 p = vUv - 0.5;
-
-            // Horizontal streak along X: crisp laser core along Y
-            float core = exp(-abs(p.y) * 44.0) * exp(-abs(p.x) * 1.6);
-            float softHalo = exp(-abs(p.y) * 10.0) * exp(-abs(p.x) * 2.4);
-            float centerGlow = exp(-length(p * vec2(1.0, 3.5)) * 14.0);
-
-            // Shimmering micro-scintillation
-            float shimmer = sin(uTime * 3.5 + p.x * 20.0) * 0.05 + 0.95;
-
-            vec3 coreCol = vec3(1.0, 0.95, 0.98) * core * 1.6;
-            vec3 magentaFlare = vec3(1.0, 0.16, 0.40) * (core * 1.1 + softHalo * 0.7 + centerGlow * 1.3);
-
-            vec3 finalFlare = (coreCol + magentaFlare) * shimmer;
-            float a = clamp((core * 1.6 + softHalo * 0.6 + centerGlow * 1.2) * uAlpha, 0.0, 1.0);
-
-            gl_FragColor = vec4(finalFlare * a, a);
-          }
-        `,
-      })
-    );
-    const flareBeamMesh = new THREE.Mesh(flareBeamGeo, flareBeamMat);
-    flareBeamMesh.rotation.z = THREE.MathUtils.degToRad(-28.0);
-    starGroup.add(flareBeamMesh);
-
-    // 2.3 Secondary Radial Glow Halo around Star Core
-    const starHaloGeo = track(new THREE.PlaneGeometry(7.5, 7.5));
-    const starHaloMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uTime: { value: 0 },
-          uAlpha: { value: 1.0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform float uTime;
-          uniform float uAlpha;
-          varying vec2 vUv;
-
-          void main() {
-            vec2 p = vUv - 0.5;
-            float dist = length(p) * 2.0;
-            float glow = exp(-dist * 3.4);
-
-            // Subtle optical diffraction rays
-            float angle = atan(p.y, p.x);
-            float rays = sin(angle * 8.0 + uTime * 0.5) * 0.06 + 0.94;
-            glow *= rays;
-
-            vec3 col = mix(vec3(1.0, 0.18, 0.45), vec3(1.0, 0.85, 0.92), glow * 0.7);
-            float a = glow * 0.75 * uAlpha;
-            gl_FragColor = vec4(col * a, a);
-          }
-        `,
-      })
-    );
-    const starHaloMesh = new THREE.Mesh(starHaloGeo, starHaloMat);
-    starGroup.add(starHaloMesh);
-
-    /* ============================================================
-       3. DEEP COSMIC STARFIELD
-       ============================================================ */
-    const starCount = isMobile ? 600 : 1300;
-    const starPositions = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
-    const starSizes = new Float32Array(starCount);
-
-    const starPalettes = [
-      new THREE.Color(0xffffff),
-      new THREE.Color(0xff859c),
-      new THREE.Color(0xffc2d1),
-      new THREE.Color(0x9ee8ff),
-    ];
-
-    for (let i = 0; i < starCount; i++) {
-      const i3 = i * 3;
-      const radius = 200 + Math.random() * 500;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
-
-      starPositions[i3] = radius * Math.sin(phi) * Math.cos(theta);
-      starPositions[i3 + 1] = radius * Math.cos(phi);
-      starPositions[i3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
-
-      const col = starPalettes[Math.floor(Math.random() * starPalettes.length)];
-      starColors[i3] = col.r;
-      starColors[i3 + 1] = col.g;
-      starColors[i3 + 2] = col.b;
-
-      starSizes[i] = 1.0 + Math.random() * 2.2;
-    }
-
-    const starGeo = track(new THREE.BufferGeometry());
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-    starGeo.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
-
-    const starMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uTime: { value: 0 },
-          uAlpha: { value: 1.0 },
-          uPixelRatio: { value: pixelRatio },
-        },
-        vertexShader: /* glsl */ `
-          attribute float size;
-          attribute vec3 color;
-          varying vec3 vColor;
-          varying float vTwinkle;
-          uniform float uTime;
-          uniform float uPixelRatio;
-
-          void main() {
-            vColor = color;
-            float seed = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453);
-            vTwinkle = 0.55 + 0.45 * sin(uTime * 2.0 + seed * 6.28);
-            vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = size * vTwinkle * uPixelRatio * (160.0 / -mv.z);
-            gl_Position = projectionMatrix * mv;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          varying vec3 vColor;
-          varying float vTwinkle;
-          uniform float uAlpha;
-
-          void main() {
-            vec2 uv = gl_PointCoord - 0.5;
-            float dist = length(uv);
-            if (dist > 0.5) discard;
-            float a = smoothstep(0.5, 0.05, dist) * 0.9 * uAlpha;
-            gl_FragColor = vec4(vColor * vTwinkle, a);
-          }
-        `,
-      })
-    );
-    const starMesh = new THREE.Points(starGeo, starMat);
-    scene.add(starMesh);
-
-    /* ============================================================
-       4. INTERACTION STATE & MOUSE PARALLAX
-       ============================================================ */
-    const mouse = {
-      x: 0,
-      y: 0,
-      targetX: 0,
-      targetY: 0,
-      dragX: 0,
-      dragY: 0,
-      isDown: false,
-      lastX: 0,
-      lastY: 0,
-    };
-
+    /* ---------------- Input / resize / visibility ---------------- */
+    const pointer = { targetX: 0, targetY: 0 };
     const onPointerMove = (e: PointerEvent) => {
-      mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.targetY = -((e.clientY / window.innerHeight) * 2 - 1);
+      pointer.targetX = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.targetY = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
 
-      if (mouse.isDown) {
-        const dx = (e.clientX - mouse.lastX) / window.innerWidth;
-        const dy = (e.clientY - mouse.lastY) / window.innerHeight;
-        mouse.dragX += dx * 2.2;
-        mouse.dragY += dy * 2.2;
-        mouse.lastX = e.clientX;
-        mouse.lastY = e.clientY;
+    // When the cursor leaves the window, ease back to the neutral pose.
+    const onPointerLeave = (e: MouseEvent) => {
+      if (e.relatedTarget === null) {
+        pointer.targetX = 0;
+        pointer.targetY = 0;
       }
     };
+    document.addEventListener('mouseout', onPointerLeave);
 
-    const onPointerDown = (e: PointerEvent) => {
-      mouse.isDown = true;
-      mouse.lastX = e.clientX;
-      mouse.lastY = e.clientY;
-    };
-
-    const onPointerUp = () => {
-      mouse.isDown = false;
-    };
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    window.addEventListener('pointerdown', onPointerDown, { passive: true });
-    window.addEventListener('pointerup', onPointerUp, { passive: true });
-
-    /* ============================================================
-       RESIZE LISTENER
-       ============================================================ */
-    const handleResize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-
-      camera.aspect = width / height;
+    const onResize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-
-      const newRatio = Math.min(
-        window.devicePixelRatio || 1,
-        width < 768 ? 1.25 : 1.75
-      );
-
-      renderer.setPixelRatio(newRatio);
-      renderer.setSize(width, height);
-      composer.setSize(width, height);
-
-      starMat.uniforms.uPixelRatio.value = newRatio;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, w < 768 ? 1.0 : 1.25));
+      renderer.setSize(w, h);
     };
+    window.addEventListener('resize', onResize);
 
-    window.addEventListener('resize', handleResize);
-
-    /* ============================================================
-       VISIBILITY OBSERVER
-       ============================================================ */
-    let isVisible = true;
+    let visible = true;
     const observer = new IntersectionObserver(
       (entries) => {
-        isVisible = entries[0]?.isIntersecting ?? true;
+        visible = entries[0]?.isIntersecting ?? true;
       },
       { threshold: 0 }
     );
     observer.observe(container);
 
-    /* ============================================================
-       ANIMATION LOOP & CINEMATIC SCROLL CHOREOGRAPHY
-       ============================================================ */
+    /* ---------------- Animation ---------------- */
     const clock = new THREE.Clock();
-    let animationFrame = 0;
-    let smoothScroll = scrollRef.current;
-    let camSmoothX = 0;
-    let camSmoothY = 0;
-
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    let raf = 0;
+    let smoothScroll = clamp01(scrollRef.current);
+    let pointerX = 0;
+    let pointerY = 0;
+    let planetPointerX = 0;
+    let planetPointerY = 0;
+    // Cursor-driven spin: a second easing stage on top of the smoothed pointer,
+    // so the planet has weight and lags the cursor like a massive body.
+    let spinX = 0;
+    let spinY = 0;
 
     const animate = () => {
-      animationFrame = requestAnimationFrame(animate);
+      raf = requestAnimationFrame(animate);
+      if (!visible) return;
 
-      if (!isVisible) return;
-
-      const elapsed = clock.getElapsedTime();
-      const targetScroll = Math.min(Math.max(scrollRef.current, 0), 1);
-
-      // Smooth scroll damping
-      smoothScroll = lerp(smoothScroll, targetScroll, reducedMotion ? 1 : 0.065);
+      const time = clock.getElapsedTime();
+      smoothScroll = lerp(smoothScroll, clamp01(scrollRef.current), reducedMotion ? 1 : 0.065);
       const s = smoothScroll;
+      pointerX = lerp(pointerX, pointer.targetX, reducedMotion ? 1 : 0.035);
+      pointerY = lerp(pointerY, pointer.targetY, reducedMotion ? 1 : 0.035);
 
-      // Mouse Parallax & Drag Damping
-      mouse.x = lerp(mouse.x, mouse.targetX, 0.06);
-      mouse.y = lerp(mouse.y, mouse.targetY, 0.06);
-      mouse.dragX *= 0.94;
-      mouse.dragY *= 0.94;
+      // Cursor right/up turns the visible surface toward the cursor.
+      // Amplitude is small (about 9 degrees horizontally, 5 vertically).
+      const targetSpinY = pointerX * (isMobile ? 0.10 : 0.16);
+      const targetSpinX = -pointerY * (isMobile ? 0.05 : 0.09);
+      spinY = lerp(spinY, targetSpinY, reducedMotion ? 1 : 0.03);
+      spinX = lerp(spinX, targetSpinX, reducedMotion ? 1 : 0.03);
 
-      camSmoothX = lerp(camSmoothX, mouse.x * 0.9 + mouse.dragX * 2.8, 0.06);
-      camSmoothY = lerp(camSmoothY, mouse.y * 0.6 + mouse.dragY * 1.8, 0.06);
+      // Planet turns slowly under a fixed sun; clouds drift a little faster.
+      planet.rotation.y = time * 0.004 + s * 0.1 + spinY;
+      planet.rotation.x = spinX;
+      // Clouds sit higher above the surface, so they shift slightly more.
+      cloudShell.rotation.y = time * 0.006 + s * 0.14 + spinY * 1.12;
+      cloudShell.rotation.x = spinX * 1.12;
+      // Atmospheric dust drifts independently from the surface.
+      smoke.position.x =
+        0.15 +
+        Math.sin(time * 0.045) * 0.045 +
+        pointerX * 0.035;
 
-      // Slow stately axial rotation of Kepler-186f
-      planetMesh.rotation.y = elapsed * 0.028 + mouse.dragX * 0.8 + s * 1.1;
-      // Independent cloud drift across the surface
-      cloudsMesh.rotation.y = elapsed * 0.035 + mouse.dragX * 0.8 + s * 1.15;
+      smoke.position.y =
+        0.15 +
+        Math.cos(time * 0.038) * 0.028 +
+        pointerY * 0.025;
 
-      // Star & Flare Billboarding towards camera
-      flareBeamMesh.lookAt(camera.position);
-      flareBeamMesh.rotation.z = THREE.MathUtils.degToRad(-28.0) + (mouse.x * 0.04);
-      starHaloMesh.lookAt(camera.position);
+      smoke.material.opacity =
+        (isMobile ? 0.20 : 0.27) +
+        Math.sin(time * 0.32) * 0.012;
+      planet.updateMatrixWorld(true);
+      planetMaterial.uniforms.uRot.value.setFromMatrix4(planet.matrixWorld);
 
-      // Update shader uniforms
-      planetMat.uniforms.uTime.value = elapsed;
-      cloudsMat.uniforms.uTime.value = elapsed;
-      starCoreMat.uniforms.uTime.value = elapsed;
-      flareBeamMat.uniforms.uTime.value = elapsed;
-      starHaloMat.uniforms.uTime.value = elapsed;
-      starMat.uniforms.uTime.value = elapsed;
+      // ------------------------------------------------------------
+      // Subtle cursor-driven planetary parallax.
+      // The planet follows the cursor independently from the camera,
+      // creating a slow, massive-object feeling rather than a UI effect.
+      // ------------------------------------------------------------
 
-      /* ============================================================
-         CINEMATIC CAMERA CHOREOGRAPHY ACROSS SCROLL
-         - At scroll = 0: Perfect framing matching reference image
-         - As scroll -> 1: Dramatic push-in towards the grand tectonic
-           chasm and glowing cyan limb of Kepler-186f!
-         ============================================================ */
-      const camZ = lerp(13.8, 7.2, s);
-      const camX = lerp(0.0, 1.4, s) + camSmoothX;
-      const camY = lerp(0.4, -0.6, s) + camSmoothY;
+      const targetPlanetX = pointerX * (isMobile ? 0.12 : 0.30);
+      const targetPlanetY = pointerY * (isMobile ? 0.08 : 0.20);
 
-      camera.position.set(camX, camY, camZ);
+      planetPointerX = lerp(
+        planetPointerX,
+        targetPlanetX,
+        reducedMotion ? 1 : 0.025
+      );
 
-      // Camera look target tracks the grand tectonic rift valley
-      const targetLookX = lerp(0.3, 0.8, s) + (camSmoothX * 0.3);
-      const targetLookY = lerp(-0.4, -1.2, s) + (camSmoothY * 0.3);
-      camera.lookAt(targetLookX, targetLookY, 0);
+      planetPointerY = lerp(
+        planetPointerY,
+        targetPlanetY,
+        reducedMotion ? 1 : 0.025
+      );
 
-      // Subtle roll banking on horizontal parallax
-      camera.rotation.z = -mouse.x * 0.025;
+      planetRoot.position.x =
+        0.25 +
+        planetPointerX;
 
-      // Soft overall scene fade at very bottom of hero for seamless handoff
-      const sceneAlpha = 1.0 - Math.pow(Math.max(0, (s - 0.88) / 0.12), 2.0);
-      planetMat.uniforms.uAlpha.value = sceneAlpha;
-      cloudsMat.uniforms.uAlpha.value = sceneAlpha * 0.85;
-      atmosMat.uniforms.uAlpha.value = sceneAlpha;
-      starCoreMat.uniforms.uAlpha.value = sceneAlpha;
-      flareBeamMat.uniforms.uAlpha.value = sceneAlpha;
-      starHaloMat.uniforms.uAlpha.value = sceneAlpha;
-      starMat.uniforms.uAlpha.value = sceneAlpha;
+      planetRoot.position.y =
+        -6.75 +
+        planetPointerY;
+      // Slow camera push, no game-style camera moves.
+      const approach = smoothstep(0, 0.72, s);
+      camera.position.set(
+        lerp(0, 0.22, approach) + pointerX * 0.12,
+        lerp(0.72, -0.05, approach) + pointerY * 0.06,
+        lerp(16.8, 13.2, approach)
+      );
+      camera.lookAt(lerp(0, 0.12, approach), lerp(-1.2, -1.85, approach), -1.0);
 
-      composer.render();
+      moonFar.group.position.set(-4.2 + Math.sin(time * 0.01) * 0.22, 4.25 + Math.cos(time * 0.01) * 0.08, -17);
+      moonMid.group.position.set(-5.5 + Math.sin(time * 0.006) * 0.34, 2.1 + Math.cos(time * 0.006) * 0.12, -13);
+      moonRight.group.position.set(3.7 + Math.cos(time * 0.009) * 0.2, 4.2 + Math.sin(time * 0.009) * 0.07, -15);
+      moonFar.mesh.rotation.y = time * 0.006;
+      moonMid.mesh.rotation.y = time * 0.004;
+      moonRight.mesh.rotation.y = time * 0.008;
+
+      // Star: faint granulation drift and a barely perceptible flicker.
+      star.material.rotation = time * 0.004;
+      const flicker = 1 + Math.sin(time * 0.7) * 0.004 + Math.sin(time * 1.9) * 0.002;
+      star.scale.set(STAR_SIZE * flicker, STAR_SIZE * flicker, 1);
+
+      starMaterial.uniforms.uTime.value = time;
+      starfield.rotation.y = time * 0.00045;
+      starfield.position.set(pointerX * 0.1, pointerY * 0.05, 0);
+      nebula.position.x = 2 + pointerX * 0.12;
+
+      // Fade only at the very end of the hero.
+      const fade = 1 - smoothstep(0.91, 1.0, s);
+      planetMaterial.uniforms.uFade.value = fade;
+      cloudMaterial.uniforms.uFade.value = fade;
+      atmosphereMaterial.uniforms.uFade.value = fade;
+      star.material.opacity = fade;
+      smoke.material.opacity =
+        ((isMobile ? 0.20 : 0.27) +
+          Math.sin(time * 0.32) * 0.012) * fade;
+
+      renderer.render(scene, camera);
     };
-
     animate();
 
-    /* ============================================================
-       CLEANUP ON UNMOUNT
-       ============================================================ */
     return () => {
-      cancelAnimationFrame(animationFrame);
+      cancelAnimationFrame(raf);
       observer.disconnect();
-      window.removeEventListener('resize', handleResize);
       window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('pointerup', onPointerUp);
+      document.removeEventListener('mouseout', onPointerLeave);
+      window.removeEventListener('resize', onResize);
 
-      disposables.forEach((d) => d.dispose());
-      composer.dispose();
-      renderer.dispose();
-
-      if (renderer.domElement.parentElement) {
-        renderer.domElement.parentElement.removeChild(renderer.domElement);
+      planetGeometry.dispose();
+      planetMaterial.dispose();
+      cloudGeometry.dispose();
+      cloudMaterial.dispose();
+      cloudTexture.dispose();
+      atmosphereGeometry.dispose();
+      atmosphereMaterial.dispose();
+      smokeTexture.dispose();
+      smokeMaterial.dispose();
+      for (const m of [moonFar, moonMid, moonRight]) {
+        m.geometry.dispose();
+        m.material.dispose();
       }
+      starTexture.dispose();
+      star.material.dispose();
+      starGeometry.dispose();
+      starMaterial.dispose();
+      nebulaTexture.dispose();
+      nebula.material.dispose();
+      renderer.dispose();
+      renderer.domElement.parentElement?.removeChild(renderer.domElement);
     };
   }, []);
 
@@ -1287,7 +959,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         width: '100%',
         height: '100%',
         overflow: 'hidden',
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
       }}
     />
   );
