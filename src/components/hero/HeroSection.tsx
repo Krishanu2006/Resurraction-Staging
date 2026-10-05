@@ -6,6 +6,7 @@ import React, {
 import { HeroContent } from './HeroContent';
 import SpaceScene from './SpaceScene';
 import ThemeHeroScene from './ThemeHeroScene';
+import KeplerHeroScene from './KeplerHeroScene';
 
 import {
   type ThemeId,
@@ -222,7 +223,28 @@ export const HeroSection: React.FC<
 
     /*
      * =======================================================
-     * MILLER / PANDORA / KEPLER
+     * KEPLER-186F
+     * =======================================================
+     *
+     * Custom Three.js exoplanet scene with Red Dwarf star,
+     * glowing twilight terminator, atmospheric rim, and debris ring.
+     */
+
+    if (
+      themeId === 'kepler'
+    ) {
+      return (
+        <KeplerHeroScene
+          scrollProgress={
+            scrollProgress
+          }
+        />
+      );
+    }
+
+    /*
+     * =======================================================
+     * MILLER / PANDORA
      * =======================================================
      *
      * These worlds use their own dedicated Three.js scene.
@@ -233,7 +255,7 @@ export const HeroSection: React.FC<
         themeId={
           themeId as Exclude<
             ThemeId,
-            'tau-ceti'
+            'tau-ceti' | 'kepler'
           >
         }
         scrollProgress={
