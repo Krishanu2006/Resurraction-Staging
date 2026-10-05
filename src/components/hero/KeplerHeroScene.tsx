@@ -32,17 +32,18 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const isMobile = window.innerWidth < 768;
 
     /* ============================================================
-       SCENE & FOG
+       SCENE & ENVIRONMENT
        ============================================================ */
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090204);
-    scene.fog = new THREE.FogExp2(0x140407, 0.0075);
+    scene.background = new THREE.Color(0x0a0305);
+    const sceneFog = new THREE.FogExp2(0x1a060a, 0.008);
+    scene.fog = sceneFog;
 
     /* ============================================================
        CAMERA
        ============================================================ */
     const camera = new THREE.PerspectiveCamera(
-      44,
+      46,
       window.innerWidth / window.innerHeight,
       0.1,
       2500
@@ -61,14 +62,14 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
 
     const pixelRatio = Math.min(
       window.devicePixelRatio || 1,
-      isMobile ? 1.25 : 1.85
+      isMobile ? 1.25 : 1.75
     );
 
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.08;
 
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.inset = '0';
@@ -87,9 +88,9 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      isMobile ? 0.85 : 1.15, // strength
-      0.45,                   // radius
-      0.68                    // threshold (blooms red dwarf core & rim highlights)
+      isMobile ? 0.8 : 1.15, // strength
+      0.45,                  // radius
+      0.68                   // threshold
     );
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
@@ -104,7 +105,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     };
 
     /* ============================================================
-       INTERACTION / PARALLAX STATE
+       MOUSE & PARALLAX STATE
        ============================================================ */
     const mouse = {
       x: 0,
@@ -114,30 +115,28 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       dragX: 0,
       dragY: 0,
       isDown: false,
-      lastDownX: 0,
-      lastDownY: 0,
+      lastX: 0,
+      lastY: 0,
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      const nx = (e.clientX / window.innerWidth) * 2 - 1;
-      const ny = -((e.clientY / window.innerHeight) * 2 - 1);
-      mouse.targetX = nx;
-      mouse.targetY = ny;
+      mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.targetY = -((e.clientY / window.innerHeight) * 2 - 1);
 
       if (mouse.isDown) {
-        const deltaX = (e.clientX - mouse.lastDownX) / window.innerWidth;
-        const deltaY = (e.clientY - mouse.lastDownY) / window.innerHeight;
-        mouse.dragX += deltaX * 1.5;
-        mouse.dragY += deltaY * 1.5;
-        mouse.lastDownX = e.clientX;
-        mouse.lastDownY = e.clientY;
+        const dx = (e.clientX - mouse.lastX) / window.innerWidth;
+        const dy = (e.clientY - mouse.lastY) / window.innerHeight;
+        mouse.dragX += dx * 1.6;
+        mouse.dragY += dy * 1.6;
+        mouse.lastX = e.clientX;
+        mouse.lastY = e.clientY;
       }
     };
 
     const onPointerDown = (e: PointerEvent) => {
       mouse.isDown = true;
-      mouse.lastDownX = e.clientX;
-      mouse.lastDownY = e.clientY;
+      mouse.lastX = e.clientX;
+      mouse.lastY = e.clientY;
     };
 
     const onPointerUp = () => {
@@ -149,42 +148,109 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     window.addEventListener('pointerup', onPointerUp, { passive: true });
 
     /* ============================================================
-       TEXTURE LOADER & KEPLER PLANET TEXTURE
+       TEXTURE LOADER
        ============================================================ */
     const textureLoader = new THREE.TextureLoader();
     const keplerTexture = track(textureLoader.load(keplerImage));
     keplerTexture.colorSpace = THREE.SRGBColorSpace;
     keplerTexture.wrapS = THREE.RepeatWrapping;
     keplerTexture.wrapT = THREE.ClampToEdgeWrapping;
-    keplerTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
     /* ============================================================
-       PLANETARY SYSTEM (KEPLER-186F)
+       SCENE ROOT GROUPS
+       - spaceGroup: High orbit view of Kepler-186f & space
+       - reentryGroup: Burning atmospheric entry plasma & cloud sheets
+       - landscapeGroup: Surface view of Kepler-186f crimson terrain
        ============================================================ */
+    const spaceGroup = new THREE.Group();
+    const reentryGroup = new THREE.Group();
+    const landscapeGroup = new THREE.Group();
+
+    scene.add(spaceGroup);
+    scene.add(reentryGroup);
+    scene.add(landscapeGroup);
+
+    landscapeGroup.position.set(0, -60, -80); // Placed at surface origin
+    reentryGroup.position.set(0, 0, 0);
+
+    /* ============================================================
+       SHARED GLSL CHUNKS (NOISE)
+       ============================================================ */
+    const glslNoise = /* glsl */ `
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+      vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+      float snoise(vec3 v) {
+        const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+        const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+        vec3 i  = floor(v + dot(v, C.yyy));
+        vec3 x0 = v - i + dot(i, C.xxx);
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min(g.xyz, l.zxy);
+        vec3 i2 = max(g.xyz, l.zxy);
+        vec3 x1 = x0 - i1 + C.xxx;
+        vec3 x2 = x0 - i2 + C.yyy;
+        vec3 x3 = x0 - D.yyy;
+        i = mod289(i);
+        vec4 p = permute(permute(permute(
+                  i.z + vec4(0.0, i1.z, i2.z, 1.0))
+                + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+                + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+        float n_ = 0.142857142857;
+        vec3 ns = n_ * D.wyz - D.xzx;
+        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+        vec4 x_ = floor(j * ns.z);
+        vec4 y_ = floor(j - 7.0 * x_);
+        vec4 x = x_ *ns.x + ns.yyyy;
+        vec4 y = y_ *ns.x + ns.yyyy;
+        vec4 h = 1.0 - abs(x) - abs(y);
+        vec4 b0 = vec4(x.xy, y.xy);
+        vec4 b1 = vec4(x.zw, y.zw);
+        vec4 s0 = floor(b0)*2.0 + 1.0;
+        vec4 s1 = floor(b1)*2.0 + 1.0;
+        vec4 sh = -step(h, vec4(0.0));
+        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+        vec3 p0 = vec3(a0.xy, h.x);
+        vec3 p1 = vec3(a0.zw, h.y);
+        vec3 p2 = vec3(a1.xy, h.z);
+        vec3 p3 = vec3(a1.zw, h.w);
+        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+        p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+        m = m * m;
+        return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+      }
+    `;
+
+    /* ============================================================
+       1. SPACE GROUP: ORBITAL KEPLER-186F
+       ============================================================ */
+    const PLANET_RADIUS = 5.0;
     const planetRoot = new THREE.Group();
     planetRoot.position.set(3.4, -0.6, 0);
-    scene.add(planetRoot);
+    spaceGroup.add(planetRoot);
 
-    const PLANET_RADIUS = 5.0;
+    const sunLightDir = new THREE.Vector3(-28, 16, 12).normalize();
 
-    // Red Dwarf Sun directional vector for lighting shaders
-    const sunLightPos = new THREE.Vector3(-28, 16, 12).normalize();
-
-    // 1. Kepler-186f Surface Shader
+    // Planet Core Mesh
     const planetGeo = track(new THREE.SphereGeometry(PLANET_RADIUS, isMobile ? 64 : 96, isMobile ? 64 : 96));
     const planetMat = track(
       new THREE.ShaderMaterial({
+        transparent: true,
         uniforms: {
           uTexture: { value: keplerTexture },
-          uSunDir: { value: sunLightPos },
+          uSunDir: { value: sunLightDir },
           uTime: { value: 0 },
-          uScroll: { value: 0 },
+          uAlpha: { value: 1.0 },
         },
         vertexShader: /* glsl */ `
           varying vec2 vUv;
           varying vec3 vNormal;
           varying vec3 vWorldPos;
-
           void main() {
             vUv = uv;
             vNormal = normalize(normalMatrix * normal);
@@ -197,74 +263,34 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
           uniform sampler2D uTexture;
           uniform vec3 uSunDir;
           uniform float uTime;
-          uniform float uScroll;
-
+          uniform float uAlpha;
           varying vec2 vUv;
           varying vec3 vNormal;
           varying vec3 vWorldPos;
 
-          // 2D simplex noise helper for terrain detail
-          vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
-          float snoise(vec2 v){
-            const vec4 C = vec4(0.211324865405187, 0.366025403784439,
-                     -0.577350269189626, 0.024390243902439);
-            vec2 i  = floor(v + dot(v, C.yy) );
-            vec2 x0 = v -   i + dot(i, C.xx);
-            vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-            vec4 x12 = x0.xyxy + C.xxzz;
-            x12.xy -= i1;
-            i = mod(i, 289.0);
-            vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-              + i.x + vec3(0.0, i1.x, 1.0 ));
-            vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-            m = m*m ;
-            m = m*m ;
-            vec3 x = 2.0 * fract(p * C.www) - 1.0;
-            vec3 h = abs(x) - 0.5;
-            vec3 ox = floor(x + 0.5);
-            vec3 a0 = x - ox;
-            m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-            vec3 g;
-            g.x  = a0.x  * x0.x  + h.x  * x0.y;
-            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-            return 130.0 * dot(m, g);
-          }
-
           void main() {
-            // Subtle slow texture drift for planetary rotation
-            vec2 uv = vUv;
-            vec4 texColor = texture2D(uTexture, uv);
-
-            // Red Dwarf Light Calculations
+            vec4 tex = texture2D(uTexture, vUv);
             vec3 N = normalize(vNormal);
             vec3 L = normalize(uSunDir);
             vec3 V = normalize(cameraPosition - vWorldPos);
 
             float NdotL = dot(N, L);
-            float diff = clamp(NdotL * 0.5 + 0.5, 0.0, 1.0); // wrapped diffuse for soft atmospheric penumbra
+            float diff = clamp(NdotL * 0.5 + 0.5, 0.0, 1.0);
 
-            // Twilight terminator scattering (glowing crimson/vermilion at the day/night boundary)
+            // Twilight terminator scattering
             float terminator = smoothstep(-0.25, 0.25, NdotL) * (1.0 - smoothstep(0.05, 0.65, NdotL));
             vec3 twilightColor = vec3(1.0, 0.38, 0.18) * terminator * 1.8;
 
-            // Specular ocean glint from the Red Dwarf star
+            // Specular ocean glint
             vec3 H = normalize(L + V);
-            float NdotH = max(dot(N, H), 0.0);
-            float spec = pow(NdotH, 28.0) * (1.0 - texColor.r * 0.45) * smoothstep(0.0, 0.3, NdotL);
-            vec3 specColor = vec3(1.0, 0.65, 0.45) * spec * 1.5;
+            float spec = pow(max(dot(N, H), 0.0), 32.0) * (1.0 - tex.r * 0.5) * smoothstep(0.0, 0.25, NdotL);
+            vec3 specColor = vec3(1.0, 0.68, 0.5) * spec * 1.6;
 
-            // Night side geothermal veins / bioluminescent crimson vegetation
-            float noiseDetail = snoise(uv * 18.0 + vec2(uTime * 0.01, 0.0));
-            float nightVein = smoothstep(0.55, 0.85, noiseDetail) * (1.0 - smoothstep(-0.35, 0.1, NdotL));
-            vec3 nightEmission = vec3(0.9, 0.15, 0.25) * nightVein * 0.85;
+            vec3 dayColor = tex.rgb * vec3(1.2, 0.76, 0.72);
+            vec3 nightColor = tex.rgb * vec3(0.08, 0.02, 0.04);
+            vec3 finalColor = mix(nightColor, dayColor, diff * diff) + twilightColor + specColor;
 
-            // Day side illumination by Red Dwarf Star (warm crimson & amber hues)
-            vec3 dayColor = texColor.rgb * vec3(1.15, 0.75, 0.70);
-            vec3 ambientNight = texColor.rgb * vec3(0.08, 0.02, 0.04);
-
-            vec3 finalColor = mix(ambientNight, dayColor, diff * diff) + twilightColor + specColor + nightEmission;
-
-            gl_FragColor = vec4(finalColor, 1.0);
+            gl_FragColor = vec4(finalColor, uAlpha);
           }
         `,
       })
@@ -272,83 +298,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const planetMesh = new THREE.Mesh(planetGeo, planetMat);
     planetRoot.add(planetMesh);
 
-    // 2. Swirling Crimson Atmospheric Cloud Shell
-    const cloudGeo = track(new THREE.SphereGeometry(PLANET_RADIUS * 1.018, isMobile ? 48 : 64, isMobile ? 48 : 64));
-    const cloudMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uSunDir: { value: sunLightPos },
-          uTime: { value: 0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-
-          void main() {
-            vUv = uv;
-            vNormal = normalize(normalMatrix * normal);
-            vec4 worldPos = modelMatrix * vec4(position, 1.0);
-            vWorldPos = worldPos.xyz;
-            gl_Position = projectionMatrix * viewMatrix * worldPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform vec3 uSunDir;
-          uniform float uTime;
-          varying vec2 vUv;
-          varying vec3 vNormal;
-          varying vec3 vWorldPos;
-
-          float hash(vec2 p) {
-            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-          }
-
-          float noise(vec2 p) {
-            vec2 i = floor(p);
-            vec2 f = fract(p);
-            f = f * f * (3.0 - 2.0 * f);
-            return mix(
-              mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-              mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-              f.y
-            );
-          }
-
-          float fbm(vec2 p) {
-            float v = 0.0;
-            float a = 0.5;
-            for(int i = 0; i < 4; i++) {
-              v += a * noise(p);
-              p *= 2.04;
-              a *= 0.5;
-            }
-            return v;
-          }
-
-          void main() {
-            vec2 p = vUv * 9.0 + vec2(uTime * 0.02, uTime * 0.008);
-            float density = fbm(p);
-            density = smoothstep(0.38, 0.72, density);
-
-            float NdotL = dot(normalize(vNormal), normalize(uSunDir));
-            float light = smoothstep(-0.2, 0.5, NdotL);
-
-            vec3 cloudTint = mix(vec3(0.5, 0.12, 0.18), vec3(1.0, 0.55, 0.40), light);
-            float alpha = density * (0.12 + light * 0.38);
-
-            gl_FragColor = vec4(cloudTint * alpha, alpha);
-          }
-        `,
-      })
-    );
-    const cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
-    planetRoot.add(cloudMesh);
-
-    // 3. Atmospheric Rim & Rayleigh Sunset Glow Shell
+    // Planet Atmosphere Shell
     const atmosGeo = track(new THREE.SphereGeometry(PLANET_RADIUS * 1.085, isMobile ? 48 : 64, isMobile ? 48 : 64));
     const atmosMat = track(
       new THREE.ShaderMaterial({
@@ -357,13 +307,12 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending,
         uniforms: {
-          uSunDir: { value: sunLightPos },
-          uTime: { value: 0 },
+          uSunDir: { value: sunLightDir },
+          uAlpha: { value: 1.0 },
         },
         vertexShader: /* glsl */ `
           varying vec3 vNormal;
           varying vec3 vWorldPos;
-
           void main() {
             vNormal = normalize(normalMatrix * normal);
             vec4 worldPos = modelMatrix * vec4(position, 1.0);
@@ -373,28 +322,19 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         `,
         fragmentShader: /* glsl */ `
           uniform vec3 uSunDir;
+          uniform float uAlpha;
           varying vec3 vNormal;
           varying vec3 vWorldPos;
-
           void main() {
             vec3 V = normalize(cameraPosition - vWorldPos);
             vec3 N = normalize(vNormal);
-            float rim = 1.0 - max(dot(V, N), 0.0);
-            rim = pow(rim, 3.2);
-
-            // Sunlight crescent bias
+            float rim = pow(1.0 - max(dot(V, N), 0.0), 3.2);
             float sunAlign = max(dot(N, normalize(uSunDir)), 0.0);
-            float flare = pow(sunAlign, 1.8) * 1.6 + 0.3;
+            float flare = pow(sunAlign, 1.8) * 1.5 + 0.35;
 
-            // Kepler-186f sunset colors: deep ruby crimson to glowing vermilion/orange
-            vec3 coreColor = vec3(1.0, 0.28, 0.35); // #ff3344
-            vec3 rimColor  = vec3(1.0, 0.52, 0.22); // #ff7a59
-            vec3 outerColor = vec3(0.55, 0.08, 0.15); // #8a1825
-
-            vec3 atmosColor = mix(outerColor, mix(coreColor, rimColor, sunAlign), rim);
-            float alpha = rim * flare * 0.92;
-
-            gl_FragColor = vec4(atmosColor * alpha, alpha);
+            vec3 atmosColor = mix(vec3(0.55, 0.08, 0.15), vec3(1.0, 0.52, 0.22), sunAlign);
+            float a = rim * flare * 0.95 * uAlpha;
+            gl_FragColor = vec4(atmosColor * a, a);
           }
         `,
       })
@@ -402,7 +342,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const atmosMesh = new THREE.Mesh(atmosGeo, atmosMat);
     planetRoot.add(atmosMesh);
 
-    // 4. Kepler-186f Orbital Crystalline Debris Ring
+    // Orbital Crystalline Ring
     const ringGeo = track(new THREE.RingGeometry(PLANET_RADIUS * 1.32, PLANET_RADIUS * 1.95, isMobile ? 64 : 128, 4));
     const ringMat = track(
       new THREE.ShaderMaterial({
@@ -411,13 +351,12 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending,
         uniforms: {
-          uSunDir: { value: sunLightPos },
-          uTime: { value: 0 },
+          uSunDir: { value: sunLightDir },
+          uAlpha: { value: 1.0 },
         },
         vertexShader: /* glsl */ `
           varying vec2 vUv;
           varying vec3 vWorldPos;
-
           void main() {
             vUv = uv;
             vec4 worldPos = modelMatrix * vec4(position, 1.0);
@@ -427,32 +366,17 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         `,
         fragmentShader: /* glsl */ `
           uniform vec3 uSunDir;
-          uniform float uTime;
+          uniform float uAlpha;
           varying vec2 vUv;
           varying vec3 vWorldPos;
-
           void main() {
             vec2 p = vUv - 0.5;
             float dist = length(p) * 2.0;
-
-            // Concentric bands in the ring
             float band = sin(dist * 62.0) * 0.5 + 0.5;
-            float gaps = sin(dist * 18.0) * 0.5 + 0.5;
-            float density = band * gaps;
-
-            // Fade inner & outer edges
             float edgeFade = smoothstep(0.02, 0.15, dist) * (1.0 - smoothstep(0.85, 1.0, dist));
-            density *= edgeFade;
-
-            // Planetary shadow on the ring
-            vec3 toRing = normalize(vWorldPos);
-            float shadow = smoothstep(-0.25, 0.1, dot(toRing, -uSunDir));
-            density *= mix(1.0, 0.08, shadow);
-
             vec3 ringColor = mix(vec3(0.75, 0.20, 0.28), vec3(1.0, 0.68, 0.45), band);
-            float alpha = density * 0.55;
-
-            gl_FragColor = vec4(ringColor * alpha, alpha);
+            float a = band * edgeFade * 0.55 * uAlpha;
+            gl_FragColor = vec4(ringColor * a, a);
           }
         `,
       })
@@ -462,212 +386,22 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     ringMesh.rotation.y = -Math.PI * 0.14;
     planetRoot.add(ringMesh);
 
-    // 5. Instanced Micro-Asteroids Orbiting in the Ring
-    const asteroidCount = isMobile ? 80 : 180;
-    const asteroidGeo = track(new THREE.IcosahedronGeometry(0.065, 0));
-    const asteroidMat = track(
-      new THREE.MeshStandardMaterial({
-        color: 0xff6644,
-        roughness: 0.85,
-        metalness: 0.2,
-      })
-    );
-    const asteroids = new THREE.InstancedMesh(asteroidGeo, asteroidMat, asteroidCount);
-    const dummy = new THREE.Object3D();
-    const asteroidData: Array<{ radius: number; angle: number; speed: number; yOffset: number; scale: number }> = [];
-
-    for (let i = 0; i < asteroidCount; i++) {
-      const r = PLANET_RADIUS * (1.35 + Math.random() * 0.55);
-      const angle = Math.random() * Math.PI * 2;
-      const speed = (0.12 + Math.random() * 0.18) * (Math.random() > 0.5 ? 1 : 1);
-      const yOffset = (Math.random() - 0.5) * 0.45;
-      const scale = 0.5 + Math.random() * 1.5;
-
-      asteroidData.push({ radius: r, angle, speed, yOffset, scale });
-
-      dummy.position.set(Math.cos(angle) * r, yOffset, Math.sin(angle) * r);
-      dummy.scale.set(scale, scale, scale);
-      dummy.updateMatrix();
-      asteroids.setMatrixAt(i, dummy.matrix);
-    }
-    asteroids.instanceMatrix.needsUpdate = true;
-    ringMesh.add(asteroids);
-
-    /* ============================================================
-       THE KEPLER-186 HOST STAR (COOL RED DWARF)
-       ============================================================ */
-    const redDwarfGroup = new THREE.Group();
-    redDwarfGroup.position.set(-36, 18, -80);
-    scene.add(redDwarfGroup);
-
-    // Star Core
-    const sunCoreGeo = track(new THREE.SphereGeometry(6.2, 48, 48));
-    const sunCoreMat = track(
-      new THREE.ShaderMaterial({
-        uniforms: {
-          uTime: { value: 0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec3 vNormal;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform float uTime;
-          varying vec3 vNormal;
-
-          void main() {
-            float pulse = sin(uTime * 1.5) * 0.08 + 0.92;
-            vec3 core = vec3(1.0, 0.42, 0.22) * pulse * 2.2;
-            gl_FragColor = vec4(core, 1.0);
-          }
-        `,
-      })
-    );
-    const sunCoreMesh = new THREE.Mesh(sunCoreGeo, sunCoreMat);
-    redDwarfGroup.add(sunCoreMesh);
-
-    // Star Corona Glow Halo (Billboard plane)
-    const haloGeo = track(new THREE.PlaneGeometry(38, 38));
-    const haloMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uTime: { value: 0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform float uTime;
-          varying vec2 vUv;
-
-          void main() {
-            vec2 p = vUv - 0.5;
-            float dist = length(p) * 2.0;
-            float glow = exp(-dist * 2.6);
-            float flare = sin(atan(p.y, p.x) * 8.0 + uTime * 0.4) * 0.1 + 0.9;
-            glow *= flare;
-
-            vec3 coronaColor = mix(vec3(1.0, 0.22, 0.15), vec3(1.0, 0.72, 0.38), glow);
-            float alpha = glow * 0.95;
-
-            gl_FragColor = vec4(coronaColor * alpha, alpha);
-          }
-        `,
-      })
-    );
-    const haloMesh = new THREE.Mesh(haloGeo, haloMat);
-    redDwarfGroup.add(haloMesh);
-
-    /* ============================================================
-       LIGHTS
-       ============================================================ */
-    // Main directional sunlight from Red Dwarf
-    const sunLight = new THREE.DirectionalLight(0xff6e4a, 3.4);
-    sunLight.position.copy(redDwarfGroup.position);
-    scene.add(sunLight);
-
-    // Deep ambient crimson bounce
-    const ambientLight = new THREE.AmbientLight(0x28080f, 0.95);
-    scene.add(ambientLight);
-
-    /* ============================================================
-       HYDROGEN-ALPHA NEBULA (CRIMSON COSMIC DUST)
-       ============================================================ */
-    const nebulaGeo = track(new THREE.PlaneGeometry(160, 100));
-    const nebulaMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uTime: { value: 0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform float uTime;
-          varying vec2 vUv;
-
-          float hash(vec2 p) {
-            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-          }
-
-          float noise(vec2 p) {
-            vec2 i = floor(p);
-            vec2 f = fract(p);
-            f = f * f * (3.0 - 2.0 * f);
-            return mix(
-              mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-              mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-              f.y
-            );
-          }
-
-          float fbm(vec2 p) {
-            float v = 0.0;
-            float a = 0.5;
-            for(int i = 0; i < 5; i++) {
-              v += a * noise(p);
-              p *= 2.02;
-              a *= 0.5;
-            }
-            return v;
-          }
-
-          void main() {
-            vec2 p = vUv * 3.5 + vec2(uTime * 0.008, 0.0);
-            float n = fbm(p);
-            float edgeFade = smoothstep(0.0, 0.35, vUv.x) * (1.0 - smoothstep(0.65, 1.0, vUv.x)) *
-                             smoothstep(0.0, 0.35, vUv.y) * (1.0 - smoothstep(0.65, 1.0, vUv.y));
-
-            float alpha = smoothstep(0.25, 0.8, n) * edgeFade * 0.28;
-            vec3 col = mix(vec3(0.54, 0.09, 0.15), vec3(1.0, 0.38, 0.25), n);
-
-            gl_FragColor = vec4(col * alpha, alpha);
-          }
-        `,
-      })
-    );
-
-    const nebulaMesh = new THREE.Mesh(nebulaGeo, nebulaMat);
-    nebulaMesh.position.set(-15, 8, -60);
-    nebulaMesh.rotation.z = -0.15;
-    scene.add(nebulaMesh);
-
-    /* ============================================================
-       STARFIELD
-       ============================================================ */
-    const starCount = isMobile ? 650 : 1500;
+    // Deep Space Starfield
+    const starCount = isMobile ? 600 : 1400;
     const starPos = new Float32Array(starCount * 3);
     const starCol = new Float32Array(starCount * 3);
     const starSizes = new Float32Array(starCount);
 
     const starHues = [
-      new THREE.Color(0xff4a5a), // rich crimson
-      new THREE.Color(0xff8d55), // warm amber/orange
-      new THREE.Color(0xffd5ad), // peach-white dwarf
-      new THREE.Color(0xffffff), // pure white
-      new THREE.Color(0xff3344), // red dwarf light
+      new THREE.Color(0xff4a5a),
+      new THREE.Color(0xff8d55),
+      new THREE.Color(0xffd5ad),
+      new THREE.Color(0xffffff),
     ];
 
     for (let i = 0; i < starCount; i++) {
       const i3 = i * 3;
-      const radius = 250 + Math.random() * 650;
+      const radius = 250 + Math.random() * 600;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(Math.random() * 2 - 1);
 
@@ -680,7 +414,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       starCol[i3 + 1] = color.g;
       starCol[i3 + 2] = color.b;
 
-      starSizes[i] = 1.0 + Math.random() * 2.4;
+      starSizes[i] = 1.0 + Math.random() * 2.2;
     }
 
     const starGeo = track(new THREE.BufferGeometry());
@@ -695,6 +429,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
+          uAlpha: { value: 1.0 },
           uPixelRatio: { value: pixelRatio },
         },
         vertexShader: /* glsl */ `
@@ -704,98 +439,422 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
           varying float vTwinkle;
           uniform float uTime;
           uniform float uPixelRatio;
-
           void main() {
             vColor = color;
             float seed = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453);
             vTwinkle = 0.6 + 0.4 * sin(uTime * 1.8 + seed * 6.28);
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = size * vTwinkle * uPixelRatio * (180.0 / -mvPosition.z);
-            gl_Position = projectionMatrix * mvPosition;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = size * vTwinkle * uPixelRatio * (180.0 / -mv.z);
+            gl_Position = projectionMatrix * mv;
           }
         `,
         fragmentShader: /* glsl */ `
           varying vec3 vColor;
           varying float vTwinkle;
-
+          uniform float uAlpha;
           void main() {
             vec2 uv = gl_PointCoord - 0.5;
             float dist = length(uv);
             if (dist > 0.5) discard;
-            float a = smoothstep(0.5, 0.05, dist);
-            gl_FragColor = vec4(vColor * vTwinkle, a * 0.85);
+            float a = smoothstep(0.5, 0.05, dist) * 0.85 * uAlpha;
+            gl_FragColor = vec4(vColor * vTwinkle, a);
           }
         `,
       })
     );
-
     const starMesh = new THREE.Points(starGeo, starMat);
-    scene.add(starMesh);
+    spaceGroup.add(starMesh);
 
     /* ============================================================
-       FOREGROUND SPACE EMBERS & CRIMSON DUST
+       2. RE-ENTRY GROUP: ATMOSPHERIC ENTRY SHOCKWAVES & CLOUDS
        ============================================================ */
-    const emberCount = isMobile ? 120 : 320;
-    const emberPos = new Float32Array(emberCount * 3);
-    const emberVel = new Float32Array(emberCount * 3);
-    const emberScales = new Float32Array(emberCount);
+    // Plasma Streaks rushing toward camera
+    const streakCount = isMobile ? 80 : 200;
+    const streakPos = new Float32Array(streakCount * 3);
+    const streakSpeed = new Float32Array(streakCount);
 
-    for (let i = 0; i < emberCount; i++) {
+    for (let i = 0; i < streakCount; i++) {
       const i3 = i * 3;
-      emberPos[i3] = (Math.random() - 0.5) * 28;
-      emberPos[i3 + 1] = (Math.random() - 0.5) * 18;
-      emberPos[i3 + 2] = -4 + Math.random() * 20;
-
-      emberVel[i3] = (Math.random() - 0.5) * 0.015;
-      emberVel[i3 + 1] = 0.008 + Math.random() * 0.02;
-      emberVel[i3 + 2] = (Math.random() - 0.5) * 0.015;
-
-      emberScales[i] = 1.5 + Math.random() * 3.5;
+      streakPos[i3] = (Math.random() - 0.5) * 22;
+      streakPos[i3 + 1] = (Math.random() - 0.5) * 16;
+      streakPos[i3 + 2] = -30 + Math.random() * 40;
+      streakSpeed[i] = 0.8 + Math.random() * 1.4;
     }
 
-    const emberGeo = track(new THREE.BufferGeometry());
-    emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
-    emberGeo.setAttribute('size', new THREE.BufferAttribute(emberScales, 1));
+    const streakGeo = track(new THREE.BufferGeometry());
+    streakGeo.setAttribute('position', new THREE.BufferAttribute(streakPos, 3));
 
-    const emberMat = track(
+    const streakMat = track(
       new THREE.ShaderMaterial({
         transparent: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
+          uAlpha: { value: 0.0 },
           uPixelRatio: { value: pixelRatio },
         },
         vertexShader: /* glsl */ `
-          attribute float size;
-          uniform float uTime;
           uniform float uPixelRatio;
-          varying float vAlpha;
-
+          varying float vDist;
           void main() {
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            vAlpha = smoothstep(2.0, 14.0, -mvPosition.z) * (1.0 - smoothstep(22.0, 36.0, -mvPosition.z));
-            gl_PointSize = size * uPixelRatio * (120.0 / -mvPosition.z);
-            gl_Position = projectionMatrix * mvPosition;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            vDist = -mv.z;
+            gl_PointSize = clamp((35.0 / -mv.z) * uPixelRatio, 1.5, 12.0);
+            gl_Position = projectionMatrix * mv;
           }
         `,
         fragmentShader: /* glsl */ `
-          varying float vAlpha;
-
+          uniform float uAlpha;
+          varying float vDist;
           void main() {
-            vec2 uv = gl_PointCoord - 0.5;
-            float dist = length(uv);
-            if (dist > 0.5) discard;
-            float a = smoothstep(0.5, 0.02, dist);
-            vec3 emberColor = mix(vec3(1.0, 0.32, 0.15), vec3(1.0, 0.85, 0.5), 1.0 - dist * 2.0);
-            gl_FragColor = vec4(emberColor * a * 1.5, a * vAlpha * 0.75);
+            vec2 p = gl_PointCoord - 0.5;
+            float d = length(p);
+            if (d > 0.5) discard;
+            float a = smoothstep(0.5, 0.02, d) * uAlpha;
+            // Fiery friction plasma: brilliant gold-vermilion core
+            vec3 col = mix(vec3(1.0, 0.35, 0.15), vec3(1.0, 0.9, 0.55), 1.0 - d * 2.0);
+            gl_FragColor = vec4(col * a * 2.0, a);
           }
         `,
       })
     );
+    const streakMesh = new THREE.Points(streakGeo, streakMat);
+    reentryGroup.add(streakMesh);
 
-    const emberMesh = new THREE.Points(emberGeo, emberMat);
-    scene.add(emberMesh);
+    // Thick Atmospheric Entry Clouds (Passing Planes)
+    const cloudSheetGeo = track(new THREE.PlaneGeometry(60, 40));
+    const cloudSheetMat = track(
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        uniforms: {
+          uTime: { value: 0 },
+          uAlpha: { value: 0.0 },
+        },
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uTime;
+          uniform float uAlpha;
+          varying vec2 vUv;
+          ${glslNoise}
+
+          void main() {
+            vec2 uv = vUv * 3.5 + vec2(uTime * 0.12, uTime * 0.04);
+            float n = snoise(vec3(uv, uTime * 0.08)) * 0.5 + 0.5;
+            float edge = smoothstep(0.0, 0.3, vUv.x) * (1.0 - smoothstep(0.7, 1.0, vUv.x)) *
+                         smoothstep(0.0, 0.3, vUv.y) * (1.0 - smoothstep(0.7, 1.0, vUv.y));
+
+            float a = smoothstep(0.3, 0.8, n) * edge * uAlpha * 0.85;
+            vec3 col = mix(vec3(0.7, 0.12, 0.2), vec3(1.0, 0.5, 0.25), n);
+            gl_FragColor = vec4(col * a, a);
+          }
+        `,
+      })
+    );
+    const cloudSheetMesh = new THREE.Mesh(cloudSheetGeo, cloudSheetMat);
+    cloudSheetMesh.position.set(0, 0, 5);
+    reentryGroup.add(cloudSheetMesh);
+
+    /* ============================================================
+       3. LANDSCAPE GROUP: ALIEN RED TERRAIN OF KEPLER-186F
+       ============================================================ */
+    // Procedural Mountain & Valley Surface Plane
+    const terrainRes = isMobile ? 100 : 160;
+    const terrainGeo = track(new THREE.PlaneGeometry(320, 320, terrainRes, terrainRes));
+    terrainGeo.rotateX(-Math.PI * 0.5);
+
+    const terrainMat = track(
+      new THREE.ShaderMaterial({
+        transparent: true,
+        uniforms: {
+          uTime: { value: 0 },
+          uAlpha: { value: 0.0 },
+          uSunPos: { value: new THREE.Vector3(0, 35, -140) },
+        },
+        vertexShader: /* glsl */ `
+          uniform float uTime;
+          varying vec3 vWorldPos;
+          varying vec2 vUv;
+          varying float vElevation;
+
+          ${glslNoise}
+
+          float getTerrainHeight(vec2 pos) {
+            float h = 0.0;
+            // Primary mountain ranges
+            h += snoise(vec3(pos * 0.012, 0.5)) * 18.0;
+            // Secondary volcanic ridges & canyon fractures
+            h += snoise(vec3(pos * 0.035, 1.2)) * 6.5;
+            // Rolling hills
+            h += snoise(vec3(pos * 0.09, 2.5)) * 2.2;
+            // Flatten lake basins in lower valleys
+            if (h < 1.0) {
+              h = smoothstep(-4.0, 1.0, h) * 1.0;
+            }
+            return h;
+          }
+
+          void main() {
+            vUv = uv;
+            vec3 pos = position;
+            float h = getTerrainHeight(pos.xz);
+            pos.y += h;
+            vElevation = h;
+
+            vec4 world = modelMatrix * vec4(pos, 1.0);
+            vWorldPos = world.xyz;
+            gl_Position = projectionMatrix * viewMatrix * world;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uAlpha;
+          uniform vec3 uSunPos;
+          uniform float uTime;
+          varying vec3 vWorldPos;
+          varying vec2 vUv;
+          varying float vElevation;
+
+          void main() {
+            // Reconstruct surface normals via screen derivatives
+            vec3 dX = dFdx(vWorldPos);
+            vec3 dY = dFdy(vWorldPos);
+            vec3 N = normalize(cross(dY, dX));
+
+            vec3 L = normalize(uSunPos - vWorldPos);
+            vec3 V = normalize(cameraPosition - vWorldPos);
+
+            float NdotL = max(dot(N, L), 0.0);
+            float diff = NdotL * 0.75 + 0.25;
+
+            // Specular ocean/liquid sheen in low basins
+            vec3 H = normalize(L + V);
+            float spec = pow(max(dot(N, H), 0.0), 38.0) * step(vElevation, 1.2);
+            vec3 specColor = vec3(1.0, 0.65, 0.45) * spec * 2.0;
+
+            // Biome Colors:
+            // Basalt lakes (black obsidian): #0e0508
+            // Alien Red Grass & photosynthetic forests: #cf2e3f / #8a1825
+            // High volcanic peak rock: #2a0b12 with geothermal veins
+            vec3 lakeColor = vec3(0.06, 0.02, 0.035);
+            vec3 redGrassColor = vec3(0.82, 0.18, 0.24); // #cf2e3f
+            vec3 deepForest = vec3(0.54, 0.09, 0.15);    // #8a1825
+            vec3 peakRock = vec3(0.18, 0.06, 0.08);
+
+            vec3 surfaceColor = mix(lakeColor, redGrassColor, smoothstep(0.8, 2.5, vElevation));
+            surfaceColor = mix(surfaceColor, deepForest, smoothstep(2.5, 9.0, vElevation));
+            surfaceColor = mix(surfaceColor, peakRock, smoothstep(9.0, 18.0, vElevation));
+
+            // Geothermal fissure veins on mountain peaks
+            float fissure = smoothstep(12.0, 20.0, vElevation) * max(0.0, N.y * 0.5);
+            vec3 fissureGlow = vec3(1.0, 0.42, 0.25) * fissure * 0.8;
+
+            vec3 litColor = surfaceColor * (diff * vec3(1.15, 0.68, 0.60)) + specColor + fissureGlow;
+
+            // Atmospheric distance fog (Crimson twilight haze)
+            float dist = length(cameraPosition - vWorldPos);
+            float fogFactor = clamp((dist - 20.0) / 220.0, 0.0, 1.0);
+            vec3 fogColor = vec3(0.14, 0.03, 0.05);
+
+            vec3 finalColor = mix(litColor, fogColor, fogFactor);
+            gl_FragColor = vec4(finalColor, uAlpha);
+          }
+        `,
+      })
+    );
+    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+    landscapeGroup.add(terrainMesh);
+
+    // Alien Crystalline Monolith Spires scattered across ridges
+    const spireCount = isMobile ? 30 : 65;
+    const spireGeo = track(new THREE.ConeGeometry(0.8, 12, 5));
+    const spireMat = track(
+      new THREE.MeshStandardMaterial({
+        color: 0x3d0b16,
+        emissive: 0xff3344,
+        emissiveIntensity: 0.8,
+        roughness: 0.3,
+        metalness: 0.7,
+        transparent: true,
+      })
+    );
+    const spires = new THREE.InstancedMesh(spireGeo, spireMat, spireCount);
+    const dummy = new THREE.Object3D();
+
+    for (let i = 0; i < spireCount; i++) {
+      const x = (Math.random() - 0.5) * 160;
+      const z = -20 - Math.random() * 120;
+      const scale = 0.6 + Math.random() * 1.4;
+
+      dummy.position.set(x, 4.0 + Math.random() * 4.0, z);
+      dummy.scale.set(scale, scale * (1.5 + Math.random()), scale);
+      dummy.rotation.y = Math.random() * Math.PI;
+      dummy.rotation.z = (Math.random() - 0.5) * 0.2;
+      dummy.updateMatrix();
+      spires.setMatrixAt(i, dummy.matrix);
+    }
+    spires.instanceMatrix.needsUpdate = true;
+    landscapeGroup.add(spires);
+
+    // Massive Low-Hanging Red Dwarf Star on the Alien Horizon
+    const horizonStarGroup = new THREE.Group();
+    horizonStarGroup.position.set(0, 32, -180);
+    landscapeGroup.add(horizonStarGroup);
+
+    const horizonSunGeo = track(new THREE.SphereGeometry(18, 48, 48));
+    const horizonSunMat = track(
+      new THREE.ShaderMaterial({
+        transparent: true,
+        uniforms: {
+          uTime: { value: 0 },
+          uAlpha: { value: 0.0 },
+        },
+        vertexShader: /* glsl */ `
+          varying vec3 vNormal;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uTime;
+          uniform float uAlpha;
+          void main() {
+            float pulse = sin(uTime * 1.6) * 0.06 + 0.94;
+            vec3 core = vec3(1.0, 0.38, 0.20) * pulse * 2.2;
+            gl_FragColor = vec4(core, uAlpha);
+          }
+        `,
+      })
+    );
+    const horizonSunMesh = new THREE.Mesh(horizonSunGeo, horizonSunMat);
+    horizonStarGroup.add(horizonSunMesh);
+
+    // Glowing Sun Flare Disc
+    const sunHaloGeo = track(new THREE.PlaneGeometry(90, 90));
+    const sunHaloMat = track(
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        uniforms: {
+          uTime: { value: 0 },
+          uAlpha: { value: 0.0 },
+        },
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uAlpha;
+          varying vec2 vUv;
+          void main() {
+            vec2 p = vUv - 0.5;
+            float d = length(p) * 2.0;
+            float glow = exp(-d * 2.4);
+            vec3 col = mix(vec3(1.0, 0.24, 0.15), vec3(1.0, 0.72, 0.42), glow);
+            float a = glow * uAlpha * 0.95;
+            gl_FragColor = vec4(col * a, a);
+          }
+        `,
+      })
+    );
+    const sunHaloMesh = new THREE.Mesh(sunHaloGeo, sunHaloMat);
+    horizonStarGroup.add(sunHaloMesh);
+
+    // Two Alien Moons in the Twilight Sky
+    const moonGeo = track(new THREE.SphereGeometry(3.5, 32, 32));
+    const moonMat = track(
+      new THREE.MeshStandardMaterial({
+        color: 0x4a1820,
+        roughness: 0.9,
+        metalness: 0.1,
+        transparent: true,
+      })
+    );
+    const moon1 = new THREE.Mesh(moonGeo, moonMat);
+    moon1.position.set(-42, 48, -140);
+    moon1.scale.set(1.4, 1.4, 1.4);
+    landscapeGroup.add(moon1);
+
+    const moon2 = new THREE.Mesh(moonGeo, moonMat);
+    moon2.position.set(52, 60, -160);
+    moon2.scale.set(0.8, 0.8, 0.8);
+    landscapeGroup.add(moon2);
+
+    // Floating Ground Spores / Bioluminescent Embers
+    const sporeCount = isMobile ? 140 : 350;
+    const sporePos = new Float32Array(sporeCount * 3);
+    const sporeVel = new Float32Array(sporeCount * 3);
+
+    for (let i = 0; i < sporeCount; i++) {
+      const i3 = i * 3;
+      sporePos[i3] = (Math.random() - 0.5) * 90;
+      sporePos[i3 + 1] = 1.0 + Math.random() * 14.0;
+      sporePos[i3 + 2] = -Math.random() * 90;
+
+      sporeVel[i3] = (Math.random() - 0.5) * 0.02;
+      sporeVel[i3 + 1] = 0.006 + Math.random() * 0.015;
+      sporeVel[i3 + 2] = (Math.random() - 0.5) * 0.02;
+    }
+
+    const sporeGeo = track(new THREE.BufferGeometry());
+    sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePos, 3));
+
+    const sporeMat = track(
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        uniforms: {
+          uTime: { value: 0 },
+          uAlpha: { value: 0.0 },
+          uPixelRatio: { value: pixelRatio },
+        },
+        vertexShader: /* glsl */ `
+          uniform float uPixelRatio;
+          void main() {
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = clamp((120.0 / -mv.z) * uPixelRatio, 2.0, 14.0);
+            gl_Position = projectionMatrix * mv;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uAlpha;
+          void main() {
+            vec2 p = gl_PointCoord - 0.5;
+            float d = length(p);
+            if (d > 0.5) discard;
+            float a = smoothstep(0.5, 0.02, d) * uAlpha * 0.85;
+            vec3 col = mix(vec3(1.0, 0.28, 0.18), vec3(1.0, 0.85, 0.45), 1.0 - d * 2.0);
+            gl_FragColor = vec4(col * a * 1.8, a);
+          }
+        `,
+      })
+    );
+    const sporeMesh = new THREE.Points(sporeGeo, sporeMat);
+    landscapeGroup.add(sporeMesh);
+
+    /* ============================================================
+       LIGHTS
+       ============================================================ */
+    // Red Dwarf Sun directional light
+    const surfaceSunLight = new THREE.DirectionalLight(0xff6e4a, 3.2);
+    surfaceSunLight.position.set(0, 45, -160);
+    landscapeGroup.add(surfaceSunLight);
+
+    const surfaceAmbient = new THREE.AmbientLight(0x28080f, 1.1);
+    landscapeGroup.add(surfaceAmbient);
 
     /* ============================================================
        RESIZE LISTENER
@@ -809,7 +868,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
 
       const newRatio = Math.min(
         window.devicePixelRatio || 1,
-        width < 768 ? 1.25 : 1.85
+        width < 768 ? 1.25 : 1.75
       );
 
       renderer.setPixelRatio(newRatio);
@@ -817,13 +876,14 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       composer.setSize(width, height);
 
       starMat.uniforms.uPixelRatio.value = newRatio;
-      emberMat.uniforms.uPixelRatio.value = newRatio;
+      streakMat.uniforms.uPixelRatio.value = newRatio;
+      sporeMat.uniforms.uPixelRatio.value = newRatio;
     };
 
     window.addEventListener('resize', handleResize);
 
     /* ============================================================
-       VISIBILITY OBSERVER (PAUSE ON OFFSCREEN)
+       VISIBILITY OBSERVER
        ============================================================ */
     let isVisible = true;
     const observer = new IntersectionObserver(
@@ -835,13 +895,13 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     observer.observe(container);
 
     /* ============================================================
-       ANIMATION LOOP & CINEMATIC SCROLL TRAJECTORY
+       ANIMATION LOOP & PLANET-TO-LANDSCAPE DESCENT TRAJECTORY
        ============================================================ */
     const clock = new THREE.Clock();
     let animationFrame = 0;
     let smoothScroll = scrollRef.current;
-    let cameraSmoothX = 0;
-    let cameraSmoothY = 0;
+    let camSmoothX = 0;
+    let camSmoothY = 0;
 
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -851,10 +911,11 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       if (!isVisible) return;
 
       const elapsed = clock.getElapsedTime();
-      const scroll = Math.min(Math.max(scrollRef.current, 0), 1);
+      const targetScroll = Math.min(Math.max(scrollRef.current, 0), 1);
 
-      // Smooth scroll interpolation
-      smoothScroll = lerp(smoothScroll, scroll, reducedMotion ? 1 : 0.055);
+      // Smooth scroll lerp
+      smoothScroll = lerp(smoothScroll, targetScroll, reducedMotion ? 1 : 0.055);
+      const s = smoothScroll;
 
       // Mouse Parallax Damping
       mouse.x = lerp(mouse.x, mouse.targetX, 0.07);
@@ -862,98 +923,136 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       mouse.dragX *= 0.92;
       mouse.dragY *= 0.92;
 
-      const targetCamX = mouse.x * 1.5 + mouse.dragX * 3.5;
-      const targetCamY = mouse.y * 0.9 + mouse.dragY * 2.5;
+      camSmoothX = lerp(camSmoothX, mouse.x * 1.4 + mouse.dragX * 3.0, 0.06);
+      camSmoothY = lerp(camSmoothY, mouse.y * 0.9 + mouse.dragY * 2.0, 0.06);
 
-      cameraSmoothX = lerp(cameraSmoothX, targetCamX, 0.06);
-      cameraSmoothY = lerp(cameraSmoothY, targetCamY, 0.06);
+      // Natural planet & star rotations
+      planetMesh.rotation.y = elapsed * 0.04 + s * 1.5;
+      ringMesh.rotation.z = elapsed * 0.02;
 
-      // Update shader uniforms
+      // Update Time Uniforms
       planetMat.uniforms.uTime.value = elapsed;
-      planetMat.uniforms.uScroll.value = smoothScroll;
-      cloudMat.uniforms.uTime.value = elapsed;
-      atmosMat.uniforms.uTime.value = elapsed;
-      ringMat.uniforms.uTime.value = elapsed;
-      sunCoreMat.uniforms.uTime.value = elapsed;
-      haloMat.uniforms.uTime.value = elapsed;
-      nebulaMat.uniforms.uTime.value = elapsed;
       starMat.uniforms.uTime.value = elapsed;
-      emberMat.uniforms.uTime.value = elapsed;
-
-      // Planet System Natural Rotation
-      planetMesh.rotation.y = elapsed * 0.045 + smoothScroll * 1.25;
-      planetMesh.rotation.x = 0.18 + Math.sin(elapsed * 0.08) * 0.04;
-
-      cloudMesh.rotation.y = elapsed * 0.065 + smoothScroll * 1.6;
-      cloudMesh.rotation.z = Math.sin(elapsed * 0.05) * 0.03;
-
-      // Rotate Asteroids in ring
-      ringMesh.rotation.z = elapsed * 0.025;
-      for (let i = 0; i < asteroidCount; i++) {
-        const ast = asteroidData[i];
-        ast.angle += ast.speed * 0.008;
-        const x = Math.cos(ast.angle) * ast.radius;
-        const z = Math.sin(ast.angle) * ast.radius;
-
-        dummy.position.set(x, ast.yOffset + Math.sin(elapsed + i) * 0.08, z);
-        dummy.rotation.x = elapsed * 0.4 + i;
-        dummy.rotation.y = elapsed * 0.6 + i;
-        dummy.scale.set(ast.scale, ast.scale, ast.scale);
-        dummy.updateMatrix();
-        asteroids.setMatrixAt(i, dummy.matrix);
-      }
-      asteroids.instanceMatrix.needsUpdate = true;
-
-      // Drift Foreground Embers
-      const posArray = emberGeo.attributes.position.array as Float32Array;
-      for (let i = 0; i < emberCount; i++) {
-        const i3 = i * 3;
-        posArray[i3] += emberVel[i3];
-        posArray[i3 + 1] += emberVel[i3 + 1];
-        posArray[i3 + 2] += emberVel[i3 + 2] - smoothScroll * 0.15;
-
-        // Wrap around bounds
-        if (posArray[i3 + 1] > 14) posArray[i3 + 1] = -14;
-        if (posArray[i3 + 2] > 22) posArray[i3 + 2] = -4;
-        if (posArray[i3 + 2] < -4) posArray[i3 + 2] = 22;
-      }
-      emberGeo.attributes.position.needsUpdate = true;
-
-      // Face Billboard Halo toward Camera
-      haloMesh.lookAt(camera.position);
+      streakMat.uniforms.uTime.value = elapsed;
+      cloudSheetMat.uniforms.uTime.value = elapsed;
+      terrainMat.uniforms.uTime.value = elapsed;
+      horizonSunMat.uniforms.uTime.value = elapsed;
+      sunHaloMat.uniforms.uTime.value = elapsed;
+      sporeMat.uniforms.uTime.value = elapsed;
 
       /* ============================================================
-         CINEMATIC SCROLL TRAJECTORY
+         DESCENT CHOREOGRAPHY (ORBIT -> RE-ENTRY -> LANDSCAPE)
          ------------------------------------------------------------
-         Scroll 0.0: Wide majestic view of Kepler-186f on right flank.
-         Scroll 0.0 -> 0.55: Swoop inward across the ring plane towards
-                             the twilight terminator.
-         Scroll 0.55 -> 1.0: Skim close to the upper atmospheric limb,
-                             horizon curving gracefully across screen.
+         Stage 1: s = [0.00, 0.28]  High Orbit View of Kepler-186f
+         Stage 2: s = [0.28, 0.58]  Atmospheric Entry Shockwave & Clouds
+         Stage 3: s = [0.58, 1.00]  Ground-Level Alien Landscape
          ============================================================ */
-      const s = smoothScroll;
 
-      // Planet Position Shift on scroll
-      planetRoot.position.x = lerp(3.4, 1.2, s);
-      planetRoot.position.y = lerp(-0.6, -1.8, s);
-      planetRoot.position.z = lerp(0.0, -1.5, s);
+      // 1. Group Opacity Crossfades
+      const spaceAlpha = clamp(1.0 - (s - 0.25) / 0.25, 0.0, 1.0);
+      planetMat.uniforms.uAlpha.value = spaceAlpha;
+      atmosMat.uniforms.uAlpha.value = spaceAlpha;
+      ringMat.uniforms.uAlpha.value = spaceAlpha;
+      starMat.uniforms.uAlpha.value = spaceAlpha;
+      spaceGroup.visible = spaceAlpha > 0.01;
 
-      // Camera Position & Pitch
-      const baseCamX = lerp(0.0, 1.6, s) + cameraSmoothX;
-      const baseCamY = lerp(1.2, 0.2, s) + cameraSmoothY;
-      const baseCamZ = lerp(16.0, 7.8, s);
+      // Re-entry Peak around s = 0.42
+      let reentryAlpha = 0.0;
+      if (s >= 0.22 && s <= 0.62) {
+        if (s < 0.42) {
+          reentryAlpha = (s - 0.22) / 0.20;
+        } else {
+          reentryAlpha = 1.0 - (s - 0.42) / 0.20;
+        }
+      }
+      streakMat.uniforms.uAlpha.value = reentryAlpha;
+      cloudSheetMat.uniforms.uAlpha.value = reentryAlpha;
+      reentryGroup.visible = reentryAlpha > 0.01;
 
-      camera.position.set(baseCamX, baseCamY, baseCamZ);
+      // Landscape Reveal from s = 0.40 to 1.00
+      const landscapeAlpha = clamp((s - 0.38) / 0.24, 0.0, 1.0);
+      terrainMat.uniforms.uAlpha.value = landscapeAlpha;
+      spireMat.opacity = landscapeAlpha;
+      horizonSunMat.uniforms.uAlpha.value = landscapeAlpha;
+      sunHaloMat.uniforms.uAlpha.value = landscapeAlpha;
+      moonMat.opacity = landscapeAlpha;
+      sporeMat.uniforms.uAlpha.value = landscapeAlpha;
+      landscapeGroup.visible = landscapeAlpha > 0.01;
 
-      // Look slightly ahead on the planetary curve
-      const lookTargetX = lerp(0.8, 1.4, s) + cameraSmoothX * 0.4;
-      const lookTargetY = lerp(-0.2, -1.2, s) + cameraSmoothY * 0.4;
-      const lookTargetZ = lerp(0.0, -1.5, s);
+      // Dynamic Fog Shift: Space deep black -> Re-entry fiery haze -> Alien red horizon
+      if (s < 0.35) {
+        sceneFog.color.setHex(0x0a0305);
+        sceneFog.density = 0.0075;
+      } else if (s < 0.60) {
+        sceneFog.color.setHex(0x2d080e);
+        sceneFog.density = 0.018;
+      } else {
+        sceneFog.color.setHex(0x1a0508);
+        sceneFog.density = 0.012;
+      }
 
-      camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
+      // 2. Camera Flight Coordinates
+      if (s < 0.48) {
+        // --- ORBITAL & RE-ENTRY FLIGHT ---
+        const t = s / 0.48;
+        // Dive toward planetary terminator
+        planetRoot.position.x = lerp(3.4, 0.5, t);
+        planetRoot.position.y = lerp(-0.6, -1.8, t);
 
-      // Camera subtle bank roll
-      camera.rotation.z = -mouse.x * 0.02 - mouse.dragX * 0.04 + s * 0.08;
+        const camX = lerp(0.0, 1.2, t) + camSmoothX;
+        const camY = lerp(1.2, 0.2, t) + camSmoothY;
+        const camZ = lerp(16.0, 4.2, t);
+
+        camera.position.set(camX, camY, camZ);
+        camera.lookAt(planetRoot.position.x * 0.4, planetRoot.position.y * 0.4, 0);
+
+        // Animate Re-entry Streaks
+        const streakArr = streakGeo.attributes.position.array as Float32Array;
+        for (let i = 0; i < streakCount; i++) {
+          const i3 = i * 3;
+          streakArr[i3 + 2] += streakSpeed[i] * 1.8;
+          if (streakArr[i3 + 2] > 20) {
+            streakArr[i3 + 2] = -40;
+          }
+        }
+        streakGeo.attributes.position.needsUpdate = true;
+      } else {
+        // --- SURFACE ALIEN LANDSCAPE CRUISE ---
+        const t = (s - 0.48) / 0.52; // 0.0 -> 1.0 across landscape phase
+
+        // Camera flies forward across the crimson mountain valley
+        const startX = 0.0;
+        const targetX = 0.0 + camSmoothX * 1.8;
+        const camX = lerp(startX, targetX, t);
+
+        // Altitude drops from low aerial (y = 18) down to cruising altitude (y = 4.2)
+        const camY = lerp(16.0, 3.8, t) + camSmoothY * 0.8;
+
+        // Moves forward along z-axis into the landscape
+        const camZ = lerp(35.0, -42.0, t);
+
+        camera.position.set(camX, camY, camZ);
+
+        // Look toward the setting Red Dwarf star on horizon
+        const lookZ = camZ - 50.0;
+        const lookY = lerp(8.0, 5.0, t) + camSmoothY * 0.5;
+        camera.lookAt(camX * 0.3, lookY, lookZ);
+
+        // Animate ground spores drifting
+        const spArr = sporeGeo.attributes.position.array as Float32Array;
+        for (let i = 0; i < sporeCount; i++) {
+          const i3 = i * 3;
+          spArr[i3] += sporeVel[i3];
+          spArr[i3 + 1] += sporeVel[i3 + 1];
+          spArr[i3 + 2] += sporeVel[i3 + 2];
+
+          if (spArr[i3 + 1] > 22.0) spArr[i3 + 1] = 1.0;
+        }
+        sporeGeo.attributes.position.needsUpdate = true;
+      }
+
+      // Billboard Sun Halo always faces camera
+      sunHaloMesh.lookAt(camera.position);
 
       composer.render();
     };
@@ -995,5 +1094,9 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     />
   );
 };
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
 
 export default KeplerHeroScene;
