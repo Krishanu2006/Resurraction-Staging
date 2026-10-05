@@ -35,15 +35,17 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
        SCENE & ENVIRONMENT
        ============================================================ */
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0305);
-    const sceneFog = new THREE.FogExp2(0x1a060a, 0.008);
+    scene.background = new THREE.Color(0x0a0306);
+
+    // Height-based cinematic atmospheric fog
+    const sceneFog = new THREE.FogExp2(0x180509, 0.0075);
     scene.fog = sceneFog;
 
     /* ============================================================
        CAMERA
        ============================================================ */
     const camera = new THREE.PerspectiveCamera(
-      46,
+      45,
       window.innerWidth / window.innerHeight,
       0.1,
       2500
@@ -69,7 +71,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
+    renderer.toneMappingExposure = 1.15;
 
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.inset = '0';
@@ -88,9 +90,9 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      isMobile ? 0.8 : 1.15, // strength
-      0.45,                  // radius
-      0.68                   // threshold
+      isMobile ? 0.75 : 1.05, // strength
+      0.45,                   // radius
+      0.72                    // threshold (keeps bloom focused on sun, embers, and reflections)
     );
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
@@ -105,7 +107,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     };
 
     /* ============================================================
-       MOUSE & PARALLAX STATE
+       INTERACTION & PARALLAX STATE
        ============================================================ */
     const mouse = {
       x: 0,
@@ -126,8 +128,8 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       if (mouse.isDown) {
         const dx = (e.clientX - mouse.lastX) / window.innerWidth;
         const dy = (e.clientY - mouse.lastY) / window.innerHeight;
-        mouse.dragX += dx * 1.6;
-        mouse.dragY += dy * 1.6;
+        mouse.dragX += dx * 1.5;
+        mouse.dragY += dy * 1.5;
         mouse.lastX = e.clientX;
         mouse.lastY = e.clientY;
       }
@@ -158,9 +160,9 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
 
     /* ============================================================
        SCENE ROOT GROUPS
-       - spaceGroup: High orbit view of Kepler-186f & space
-       - reentryGroup: Burning atmospheric entry plasma & cloud sheets
-       - landscapeGroup: Surface view of Kepler-186f crimson terrain
+       - spaceGroup: Orbit view of Kepler-186f
+       - reentryGroup: High-speed atmospheric entry streaks
+       - landscapeGroup: Photorealistic Alien Terrain of Kepler-186f
        ============================================================ */
     const spaceGroup = new THREE.Group();
     const reentryGroup = new THREE.Group();
@@ -170,11 +172,11 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     scene.add(reentryGroup);
     scene.add(landscapeGroup);
 
-    landscapeGroup.position.set(0, -60, -80); // Placed at surface origin
+    landscapeGroup.position.set(0, 0, 0);
     reentryGroup.position.set(0, 0, 0);
 
     /* ============================================================
-       SHARED GLSL CHUNKS (NOISE)
+       SHARED GLSL CHUNKS (ADVANCED MULTIFRACTAL NOISE)
        ============================================================ */
     const glslNoise = /* glsl */ `
       vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -224,6 +226,39 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         m = m * m;
         return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
       }
+
+      // Realistic Eroded Mountain Heightmap with Canyon Valley
+      float getLandscapeElevation(vec2 p) {
+        // Canyon corridor along X=0 for the camera flight
+        float valleyDist = abs(p.x);
+        float valleyWall = smoothstep(6.0, 38.0, valleyDist);
+
+        // Domain warping for natural tectonic folding
+        vec2 warp = vec2(
+          snoise(vec3(p * 0.012, 0.4)),
+          snoise(vec3(p * 0.012 + vec2(4.2, 1.8), 0.9))
+        ) * 16.0;
+
+        vec2 q = p + warp;
+
+        // Sharp Alpine Ridge Multifractal (1.0 - abs(noise))
+        float r1 = 1.0 - abs(snoise(vec3(q * 0.016, 1.2)));
+        r1 = r1 * r1 * 26.0;
+
+        float r2 = 1.0 - abs(snoise(vec3(q * 0.038, 2.5)));
+        r2 = r2 * 9.5;
+
+        // Rolling foothills & basalt terraces
+        float hills = snoise(vec3(p * 0.075, 4.0)) * 2.8;
+
+        float totalElevation = (r1 + r2 + hills) * valleyWall;
+
+        // Central Obsidian Riverbed channel
+        float riverDepth = smoothstep(6.0, 0.0, valleyDist) * 1.5;
+        totalElevation = max(totalElevation - riverDepth, 0.2);
+
+        return totalElevation;
+      }
     `;
 
     /* ============================================================
@@ -236,7 +271,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
 
     const sunLightDir = new THREE.Vector3(-28, 16, 12).normalize();
 
-    // Planet Core Mesh
+    // Planet Core
     const planetGeo = track(new THREE.SphereGeometry(PLANET_RADIUS, isMobile ? 64 : 96, isMobile ? 64 : 96));
     const planetMat = track(
       new THREE.ShaderMaterial({
@@ -281,7 +316,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
             float terminator = smoothstep(-0.25, 0.25, NdotL) * (1.0 - smoothstep(0.05, 0.65, NdotL));
             vec3 twilightColor = vec3(1.0, 0.38, 0.18) * terminator * 1.8;
 
-            // Specular ocean glint
+            // Specular ocean reflection
             vec3 H = normalize(L + V);
             float spec = pow(max(dot(N, H), 0.0), 32.0) * (1.0 - tex.r * 0.5) * smoothstep(0.0, 0.25, NdotL);
             vec3 specColor = vec3(1.0, 0.68, 0.5) * spec * 1.6;
@@ -298,7 +333,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const planetMesh = new THREE.Mesh(planetGeo, planetMat);
     planetRoot.add(planetMesh);
 
-    // Planet Atmosphere Shell
+    // Planet Atmospheric Limb
     const atmosGeo = track(new THREE.SphereGeometry(PLANET_RADIUS * 1.085, isMobile ? 48 : 64, isMobile ? 48 : 64));
     const atmosMat = track(
       new THREE.ShaderMaterial({
@@ -342,7 +377,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const atmosMesh = new THREE.Mesh(atmosGeo, atmosMat);
     planetRoot.add(atmosMesh);
 
-    // Orbital Crystalline Ring
+    // Orbital Debris Ring
     const ringGeo = track(new THREE.RingGeometry(PLANET_RADIUS * 1.32, PLANET_RADIUS * 1.95, isMobile ? 64 : 128, 4));
     const ringMat = track(
       new THREE.ShaderMaterial({
@@ -365,10 +400,8 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
           }
         `,
         fragmentShader: /* glsl */ `
-          uniform vec3 uSunDir;
           uniform float uAlpha;
           varying vec2 vUv;
-          varying vec3 vWorldPos;
           void main() {
             vec2 p = vUv - 0.5;
             float dist = length(p) * 2.0;
@@ -386,7 +419,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     ringMesh.rotation.y = -Math.PI * 0.14;
     planetRoot.add(ringMesh);
 
-    // Deep Space Starfield
+    // Starfield in Orbit
     const starCount = isMobile ? 600 : 1400;
     const starPos = new Float32Array(starCount * 3);
     const starCol = new Float32Array(starCount * 3);
@@ -466,19 +499,18 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     spaceGroup.add(starMesh);
 
     /* ============================================================
-       2. RE-ENTRY GROUP: ATMOSPHERIC ENTRY SHOCKWAVES & CLOUDS
+       2. RE-ENTRY GROUP: HIGH-SPEED ATMOSPHERIC ENTRY STREAKS
        ============================================================ */
-    // Plasma Streaks rushing toward camera
     const streakCount = isMobile ? 80 : 200;
     const streakPos = new Float32Array(streakCount * 3);
     const streakSpeed = new Float32Array(streakCount);
 
     for (let i = 0; i < streakCount; i++) {
       const i3 = i * 3;
-      streakPos[i3] = (Math.random() - 0.5) * 22;
-      streakPos[i3 + 1] = (Math.random() - 0.5) * 16;
+      streakPos[i3] = (Math.random() - 0.5) * 24;
+      streakPos[i3 + 1] = (Math.random() - 0.5) * 18;
       streakPos[i3 + 2] = -30 + Math.random() * 40;
-      streakSpeed[i] = 0.8 + Math.random() * 1.4;
+      streakSpeed[i] = 1.0 + Math.random() * 1.5;
     }
 
     const streakGeo = track(new THREE.BufferGeometry());
@@ -500,21 +532,19 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
           void main() {
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
             vDist = -mv.z;
-            gl_PointSize = clamp((35.0 / -mv.z) * uPixelRatio, 1.5, 12.0);
+            gl_PointSize = clamp((38.0 / -mv.z) * uPixelRatio, 1.5, 12.0);
             gl_Position = projectionMatrix * mv;
           }
         `,
         fragmentShader: /* glsl */ `
           uniform float uAlpha;
-          varying float vDist;
           void main() {
             vec2 p = gl_PointCoord - 0.5;
             float d = length(p);
             if (d > 0.5) discard;
             float a = smoothstep(0.5, 0.02, d) * uAlpha;
-            // Fiery friction plasma: brilliant gold-vermilion core
             vec3 col = mix(vec3(1.0, 0.35, 0.15), vec3(1.0, 0.9, 0.55), 1.0 - d * 2.0);
-            gl_FragColor = vec4(col * a * 2.0, a);
+            gl_FragColor = vec4(col * a * 2.2, a);
           }
         `,
       })
@@ -522,94 +552,25 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const streakMesh = new THREE.Points(streakGeo, streakMat);
     reentryGroup.add(streakMesh);
 
-    // Thick Atmospheric Entry Clouds (Passing Planes)
-    const cloudSheetGeo = track(new THREE.PlaneGeometry(60, 40));
-    const cloudSheetMat = track(
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: {
-          uTime: { value: 0 },
-          uAlpha: { value: 0.0 },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform float uTime;
-          uniform float uAlpha;
-          varying vec2 vUv;
-          ${glslNoise}
-
-          void main() {
-            vec2 uv = vUv * 3.5 + vec2(uTime * 0.12, uTime * 0.04);
-            float n = snoise(vec3(uv, uTime * 0.08)) * 0.5 + 0.5;
-            float edge = smoothstep(0.0, 0.3, vUv.x) * (1.0 - smoothstep(0.7, 1.0, vUv.x)) *
-                         smoothstep(0.0, 0.3, vUv.y) * (1.0 - smoothstep(0.7, 1.0, vUv.y));
-
-            float a = smoothstep(0.3, 0.8, n) * edge * uAlpha * 0.85;
-            vec3 col = mix(vec3(0.7, 0.12, 0.2), vec3(1.0, 0.5, 0.25), n);
-            gl_FragColor = vec4(col * a, a);
-          }
-        `,
-      })
-    );
-    const cloudSheetMesh = new THREE.Mesh(cloudSheetGeo, cloudSheetMat);
-    cloudSheetMesh.position.set(0, 0, 5);
-    reentryGroup.add(cloudSheetMesh);
-
     /* ============================================================
-       3. LANDSCAPE GROUP: ALIEN RED TERRAIN OF KEPLER-186F
+       3. LANDSCAPE GROUP: PHOTOREALISTIC ALIEN CANYON OF KEPLER-186F
        ============================================================ */
-    // Procedural Mountain & Valley Surface Plane
-    const terrainRes = isMobile ? 100 : 160;
-    const terrainGeo = track(new THREE.PlaneGeometry(320, 320, terrainRes, terrainRes));
-    terrainGeo.rotateX(-Math.PI * 0.5);
 
-    const terrainMat = track(
+    // 3.1 ATMOSPHERIC TWILIGHT SKY DOME
+    const skyDomeGeo = track(new THREE.SphereGeometry(320, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.5));
+    const skyDomeMat = track(
       new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
         transparent: true,
         uniforms: {
-          uTime: { value: 0 },
           uAlpha: { value: 0.0 },
-          uSunPos: { value: new THREE.Vector3(0, 35, -140) },
+          uSunPos: { value: new THREE.Vector3(0, 16, -170) },
         },
         vertexShader: /* glsl */ `
-          uniform float uTime;
           varying vec3 vWorldPos;
-          varying vec2 vUv;
-          varying float vElevation;
-
-          ${glslNoise}
-
-          float getTerrainHeight(vec2 pos) {
-            float h = 0.0;
-            // Primary mountain ranges
-            h += snoise(vec3(pos * 0.012, 0.5)) * 18.0;
-            // Secondary volcanic ridges & canyon fractures
-            h += snoise(vec3(pos * 0.035, 1.2)) * 6.5;
-            // Rolling hills
-            h += snoise(vec3(pos * 0.09, 2.5)) * 2.2;
-            // Flatten lake basins in lower valleys
-            if (h < 1.0) {
-              h = smoothstep(-4.0, 1.0, h) * 1.0;
-            }
-            return h;
-          }
-
           void main() {
-            vUv = uv;
-            vec3 pos = position;
-            float h = getTerrainHeight(pos.xz);
-            pos.y += h;
-            vElevation = h;
-
-            vec4 world = modelMatrix * vec4(pos, 1.0);
+            vec4 world = modelMatrix * vec4(position, 1.0);
             vWorldPos = world.xyz;
             gl_Position = projectionMatrix * viewMatrix * world;
           }
@@ -617,99 +578,43 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         fragmentShader: /* glsl */ `
           uniform float uAlpha;
           uniform vec3 uSunPos;
-          uniform float uTime;
           varying vec3 vWorldPos;
-          varying vec2 vUv;
-          varying float vElevation;
 
           void main() {
-            // Reconstruct surface normals via screen derivatives
-            vec3 dX = dFdx(vWorldPos);
-            vec3 dY = dFdy(vWorldPos);
-            vec3 N = normalize(cross(dY, dX));
+            vec3 V = normalize(vWorldPos);
+            vec3 L = normalize(uSunPos);
 
-            vec3 L = normalize(uSunPos - vWorldPos);
-            vec3 V = normalize(cameraPosition - vWorldPos);
+            // Zenith to Horizon angle
+            float height = clamp(V.y, 0.0, 1.0);
 
-            float NdotL = max(dot(N, L), 0.0);
-            float diff = NdotL * 0.75 + 0.25;
+            // Red Dwarf sunset atmospheric scattering
+            float sunDot = max(dot(V, L), 0.0);
+            float sunGlow = pow(sunDot, 6.0) * 1.8;
 
-            // Specular ocean/liquid sheen in low basins
-            vec3 H = normalize(L + V);
-            float spec = pow(max(dot(N, H), 0.0), 38.0) * step(vElevation, 1.2);
-            vec3 specColor = vec3(1.0, 0.65, 0.45) * spec * 2.0;
+            vec3 zenithColor  = vec3(0.04, 0.01, 0.025); // Deep cosmic void
+            vec3 midSkyColor  = vec3(0.42, 0.06, 0.12);  // Rich ruby twilight
+            vec3 horizonColor = vec3(0.98, 0.38, 0.16);  // Blazing vermilion sunset
 
-            // Biome Colors:
-            // Basalt lakes (black obsidian): #0e0508
-            // Alien Red Grass & photosynthetic forests: #cf2e3f / #8a1825
-            // High volcanic peak rock: #2a0b12 with geothermal veins
-            vec3 lakeColor = vec3(0.06, 0.02, 0.035);
-            vec3 redGrassColor = vec3(0.82, 0.18, 0.24); // #cf2e3f
-            vec3 deepForest = vec3(0.54, 0.09, 0.15);    // #8a1825
-            vec3 peakRock = vec3(0.18, 0.06, 0.08);
+            vec3 sky = mix(horizonColor, midSkyColor, smoothstep(0.0, 0.28, height));
+            sky = mix(sky, zenithColor, smoothstep(0.28, 0.95, height));
+            sky += vec3(1.0, 0.72, 0.45) * sunGlow;
 
-            vec3 surfaceColor = mix(lakeColor, redGrassColor, smoothstep(0.8, 2.5, vElevation));
-            surfaceColor = mix(surfaceColor, deepForest, smoothstep(2.5, 9.0, vElevation));
-            surfaceColor = mix(surfaceColor, peakRock, smoothstep(9.0, 18.0, vElevation));
-
-            // Geothermal fissure veins on mountain peaks
-            float fissure = smoothstep(12.0, 20.0, vElevation) * max(0.0, N.y * 0.5);
-            vec3 fissureGlow = vec3(1.0, 0.42, 0.25) * fissure * 0.8;
-
-            vec3 litColor = surfaceColor * (diff * vec3(1.15, 0.68, 0.60)) + specColor + fissureGlow;
-
-            // Atmospheric distance fog (Crimson twilight haze)
-            float dist = length(cameraPosition - vWorldPos);
-            float fogFactor = clamp((dist - 20.0) / 220.0, 0.0, 1.0);
-            vec3 fogColor = vec3(0.14, 0.03, 0.05);
-
-            vec3 finalColor = mix(litColor, fogColor, fogFactor);
-            gl_FragColor = vec4(finalColor, uAlpha);
+            gl_FragColor = vec4(sky, uAlpha);
           }
         `,
       })
     );
-    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
-    landscapeGroup.add(terrainMesh);
+    const skyDomeMesh = new THREE.Mesh(skyDomeGeo, skyDomeMat);
+    landscapeGroup.add(skyDomeMesh);
 
-    // Alien Crystalline Monolith Spires scattered across ridges
-    const spireCount = isMobile ? 30 : 65;
-    const spireGeo = track(new THREE.ConeGeometry(0.8, 12, 5));
-    const spireMat = track(
-      new THREE.MeshStandardMaterial({
-        color: 0x3d0b16,
-        emissive: 0xff3344,
-        emissiveIntensity: 0.8,
-        roughness: 0.3,
-        metalness: 0.7,
-        transparent: true,
-      })
-    );
-    const spires = new THREE.InstancedMesh(spireGeo, spireMat, spireCount);
-    const dummy = new THREE.Object3D();
-
-    for (let i = 0; i < spireCount; i++) {
-      const x = (Math.random() - 0.5) * 160;
-      const z = -20 - Math.random() * 120;
-      const scale = 0.6 + Math.random() * 1.4;
-
-      dummy.position.set(x, 4.0 + Math.random() * 4.0, z);
-      dummy.scale.set(scale, scale * (1.5 + Math.random()), scale);
-      dummy.rotation.y = Math.random() * Math.PI;
-      dummy.rotation.z = (Math.random() - 0.5) * 0.2;
-      dummy.updateMatrix();
-      spires.setMatrixAt(i, dummy.matrix);
-    }
-    spires.instanceMatrix.needsUpdate = true;
-    landscapeGroup.add(spires);
-
-    // Massive Low-Hanging Red Dwarf Star on the Alien Horizon
+    // 3.2 THE RED DWARF HOST STAR (KEPLER-186) ON THE HORIZON
     const horizonStarGroup = new THREE.Group();
-    horizonStarGroup.position.set(0, 32, -180);
+    horizonStarGroup.position.set(0, 16, -170);
     landscapeGroup.add(horizonStarGroup);
 
-    const horizonSunGeo = track(new THREE.SphereGeometry(18, 48, 48));
-    const horizonSunMat = track(
+    // Glowing Star Core
+    const sunCoreGeo = track(new THREE.SphereGeometry(14, 48, 48));
+    const sunCoreMat = track(
       new THREE.ShaderMaterial({
         transparent: true,
         uniforms: {
@@ -727,18 +632,18 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
           uniform float uTime;
           uniform float uAlpha;
           void main() {
-            float pulse = sin(uTime * 1.6) * 0.06 + 0.94;
-            vec3 core = vec3(1.0, 0.38, 0.20) * pulse * 2.2;
+            float pulse = sin(uTime * 1.5) * 0.05 + 0.95;
+            vec3 core = vec3(1.0, 0.42, 0.22) * pulse * 2.4;
             gl_FragColor = vec4(core, uAlpha);
           }
         `,
       })
     );
-    const horizonSunMesh = new THREE.Mesh(horizonSunGeo, horizonSunMat);
-    horizonStarGroup.add(horizonSunMesh);
+    const sunCoreMesh = new THREE.Mesh(sunCoreGeo, sunCoreMat);
+    horizonStarGroup.add(sunCoreMesh);
 
-    // Glowing Sun Flare Disc
-    const sunHaloGeo = track(new THREE.PlaneGeometry(90, 90));
+    // Coronal God-Ray Flare Halo
+    const sunHaloGeo = track(new THREE.PlaneGeometry(95, 95));
     const sunHaloMat = track(
       new THREE.ShaderMaterial({
         transparent: true,
@@ -757,13 +662,20 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
         `,
         fragmentShader: /* glsl */ `
           uniform float uAlpha;
+          uniform float uTime;
           varying vec2 vUv;
           void main() {
             vec2 p = vUv - 0.5;
             float d = length(p) * 2.0;
-            float glow = exp(-d * 2.4);
-            vec3 col = mix(vec3(1.0, 0.24, 0.15), vec3(1.0, 0.72, 0.42), glow);
-            float a = glow * uAlpha * 0.95;
+            float glow = exp(-d * 2.2);
+
+            // Solar ray flare spikes
+            float angle = atan(p.y, p.x);
+            float rays = sin(angle * 12.0 + uTime * 0.3) * 0.12 + 0.88;
+            glow *= rays;
+
+            vec3 col = mix(vec3(1.0, 0.25, 0.15), vec3(1.0, 0.82, 0.45), glow);
+            float a = glow * uAlpha * 0.92;
             gl_FragColor = vec4(col * a, a);
           }
         `,
@@ -772,40 +684,206 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     const sunHaloMesh = new THREE.Mesh(sunHaloGeo, sunHaloMat);
     horizonStarGroup.add(sunHaloMesh);
 
-    // Two Alien Moons in the Twilight Sky
-    const moonGeo = track(new THREE.SphereGeometry(3.5, 32, 32));
+    // Two Alien Moons in Twilight Sky
+    const moonGeo = track(new THREE.SphereGeometry(3.8, 32, 32));
     const moonMat = track(
       new THREE.MeshStandardMaterial({
-        color: 0x4a1820,
+        color: 0x541e28,
+        roughness: 0.85,
+        metalness: 0.15,
+        transparent: true,
+      })
+    );
+    const moon1 = new THREE.Mesh(moonGeo, moonMat);
+    moon1.position.set(-48, 52, -150);
+    moon1.scale.set(1.4, 1.4, 1.4);
+    landscapeGroup.add(moon1);
+
+    const moon2 = new THREE.Mesh(moonGeo, moonMat);
+    moon2.position.set(58, 62, -165);
+    moon2.scale.set(0.75, 0.75, 0.75);
+    landscapeGroup.add(moon2);
+
+    // 3.3 PROCEDURAL MOUNTAIN CANYON TERRAIN (ANALYTICAL NORMALS & GEOLOGICAL STRATIFICATION)
+    const terrainRes = isMobile ? 120 : 200;
+    const terrainGeo = track(new THREE.PlaneGeometry(360, 360, terrainRes, terrainRes));
+    terrainGeo.rotateX(-Math.PI * 0.5);
+
+    const terrainMat = track(
+      new THREE.ShaderMaterial({
+        transparent: true,
+        uniforms: {
+          uTime: { value: 0 },
+          uAlpha: { value: 0.0 },
+          uSunPos: { value: new THREE.Vector3(0, 16, -170) },
+        },
+        vertexShader: /* glsl */ `
+          uniform float uTime;
+          varying vec3 vWorldPos;
+          varying vec2 vUv;
+          varying float vElevation;
+          varying vec3 vAnalyticalNormal;
+
+          ${glslNoise}
+
+          void main() {
+            vUv = uv;
+            vec3 pos = position;
+
+            // Height calculation
+            float h = getLandscapeElevation(pos.xz);
+            pos.y = h;
+            vElevation = h;
+
+            // Analytical Finite-Difference Normals (Eliminates triangular facet artifacts)
+            float eps = 0.22;
+            float hR = getLandscapeElevation(pos.xz + vec2(eps, 0.0));
+            float hU = getLandscapeElevation(pos.xz + vec2(0.0, eps));
+            vAnalyticalNormal = normalize(vec3(h - hR, eps, h - hU));
+
+            vec4 world = modelMatrix * vec4(pos, 1.0);
+            vWorldPos = world.xyz;
+            gl_Position = projectionMatrix * viewMatrix * world;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uAlpha;
+          uniform vec3 uSunPos;
+          uniform float uTime;
+          varying vec3 vWorldPos;
+          varying vec2 vUv;
+          varying float vElevation;
+          varying vec3 vAnalyticalNormal;
+
+          ${glslNoise}
+
+          void main() {
+            vec3 N = normalize(vAnalyticalNormal);
+            vec3 L = normalize(uSunPos - vWorldPos);
+            vec3 V = normalize(cameraPosition - vWorldPos);
+
+            // Slope factor: 0.0 = completely flat, 1.0 = vertical cliff
+            float slope = clamp(1.0 - N.y, 0.0, 1.0);
+
+            // Low-angle grazing sunlight diffuse with warm terminator wrap
+            float NdotL = dot(N, L);
+            float diff = clamp(NdotL * 0.65 + 0.35, 0.0, 1.0);
+
+            // --- 1. GEOLOGICAL ROCK STRATIFICATION (Sedimentary Cliff Layers) ---
+            float strataNoise = snoise(vec3(vWorldPos.y * 0.8, vWorldPos.x * 0.04, 0.0));
+            vec3 darkBasalt   = vec3(0.12, 0.04, 0.06); // Dark volcanic slate
+            vec3 ironRedStone = vec3(0.48, 0.11, 0.15); // Weathered iron oxide
+            vec3 cliffRock = mix(darkBasalt, ironRedStone, strataNoise * 0.5 + 0.5);
+
+            // Fine rock micro-bump detail
+            float rockGrain = snoise(vWorldPos * 1.5) * 0.08;
+            cliffRock += vec3(rockGrain);
+
+            // --- 2. CRIMSON ALIEN VEGETATION (Photosynthetic Lichen & Moss) ---
+            vec3 scarletMoss = vec3(0.82, 0.16, 0.22); // #cf2e3f
+            vec3 deepVelvet  = vec3(0.55, 0.08, 0.14); // #8a1825
+            float floraNoise = snoise(vec3(vWorldPos.xz * 0.18, 1.0)) * 0.5 + 0.5;
+            vec3 alienFoliage = mix(deepVelvet, scarletMoss, floraNoise);
+
+            // Backlit Sub-surface Scattering on foliage
+            float sss = pow(clamp(dot(V, -L), 0.0, 1.0), 3.0) * (1.0 - slope);
+            alienFoliage += vec3(1.0, 0.45, 0.25) * sss * 0.7;
+
+            // Blend Cliffs vs Foliage based on slope
+            vec3 terrainAlbedo = mix(alienFoliage, cliffRock, smoothstep(0.28, 0.65, slope));
+
+            // High Mountain Peak Geothermal Fissures
+            float fissure = smoothstep(18.0, 32.0, vElevation) * max(0.0, slope * 0.8);
+            vec3 fissureGlow = vec3(1.0, 0.45, 0.22) * fissure * 1.4;
+
+            // --- 3. CENTRAL LIQUID OBSIDIAN RIVER (Low Elevation) ---
+            float isWater = 1.0 - smoothstep(0.3, 1.2, vElevation);
+
+            // Water ripple perturbation
+            vec3 waterNormal = normalize(vec3(
+              N.x + sin(vWorldPos.z * 1.2 + uTime * 2.0) * 0.06,
+              1.0,
+              N.z + cos(vWorldPos.x * 1.5 + uTime * 2.0) * 0.06
+            ));
+
+            vec3 H = normalize(L + V);
+            float waterSpec = pow(max(dot(waterNormal, H), 0.0), 64.0);
+            float fresnel = pow(1.0 - max(dot(V, waterNormal), 0.0), 4.0);
+
+            vec3 waterDeep = vec3(0.03, 0.008, 0.018); // Dark obsidian liquid
+            vec3 waterReflection = mix(vec3(0.95, 0.35, 0.18), vec3(1.0, 0.85, 0.55), waterSpec);
+            vec3 liquidSurface = mix(waterDeep, waterReflection, fresnel * 0.85 + waterSpec * 1.8);
+
+            // Combine Land and River
+            vec3 surfaceColor = mix(terrainAlbedo * (diff * vec3(1.15, 0.72, 0.62)) + fissureGlow, liquidSurface, isWater);
+
+            // Mountain Crest Rim Highlight (from the Red Dwarf sun)
+            float rim = pow(clamp(1.0 - max(dot(V, N), 0.0), 0.0, 1.0), 4.0) * max(dot(N, L), 0.0);
+            surfaceColor += vec3(1.0, 0.55, 0.28) * rim * 1.2;
+
+            // --- 4. VOLUMETRIC AERIAL PERSPECTIVE (Atmospheric Valley Mist) ---
+            float dist = length(cameraPosition - vWorldPos);
+            float distanceHaze = clamp((dist - 15.0) / 240.0, 0.0, 1.0);
+
+            // Height-based valley fog (nestled in low canyons)
+            float valleyFog = clamp(exp(-(vWorldPos.y - 1.5) * 0.14), 0.0, 1.0) * clamp(dist / 60.0, 0.0, 1.0);
+            float totalFog = clamp(distanceHaze * 0.75 + valleyFog * 0.55, 0.0, 1.0);
+
+            vec3 fogColor = mix(vec3(0.18, 0.04, 0.08), vec3(0.95, 0.35, 0.18), pow(max(dot(V, L), 0.0), 4.0) * 0.6);
+
+            vec3 finalColor = mix(surfaceColor, fogColor, totalFog);
+            gl_FragColor = vec4(finalColor, uAlpha);
+          }
+        `,
+      })
+    );
+    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+    landscapeGroup.add(terrainMesh);
+
+    // 3.4 GEOLOGICAL BOULDERS & ALIEN FLORA INSTANCES
+    const rockCount = isMobile ? 35 : 75;
+    const rockGeo = track(new THREE.DodecahedronGeometry(0.8, 1));
+    const rockMat = track(
+      new THREE.MeshStandardMaterial({
+        color: 0x380e16,
         roughness: 0.9,
         metalness: 0.1,
         transparent: true,
       })
     );
-    const moon1 = new THREE.Mesh(moonGeo, moonMat);
-    moon1.position.set(-42, 48, -140);
-    moon1.scale.set(1.4, 1.4, 1.4);
-    landscapeGroup.add(moon1);
+    const rocks = new THREE.InstancedMesh(rockGeo, rockMat, rockCount);
+    const dummy = new THREE.Object3D();
 
-    const moon2 = new THREE.Mesh(moonGeo, moonMat);
-    moon2.position.set(52, 60, -160);
-    moon2.scale.set(0.8, 0.8, 0.8);
-    landscapeGroup.add(moon2);
+    for (let i = 0; i < rockCount; i++) {
+      // Clustered along canyon edges
+      const side = Math.random() > 0.5 ? 1 : -1;
+      const x = side * (5.5 + Math.random() * 24.0);
+      const z = 20.0 - Math.random() * 140.0;
+      const scale = 0.6 + Math.random() * 1.8;
 
-    // Floating Ground Spores / Bioluminescent Embers
-    const sporeCount = isMobile ? 140 : 350;
+      dummy.position.set(x, 0.8 + Math.random() * 2.5, z);
+      dummy.scale.set(scale * (0.8 + Math.random() * 0.4), scale, scale * (0.8 + Math.random() * 0.4));
+      dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      dummy.updateMatrix();
+      rocks.setMatrixAt(i, dummy.matrix);
+    }
+    rocks.instanceMatrix.needsUpdate = true;
+    landscapeGroup.add(rocks);
+
+    // 3.5 FLOATING BIOLUMINESCENT SPORES & VALLEY EMBERS
+    const sporeCount = isMobile ? 120 : 300;
     const sporePos = new Float32Array(sporeCount * 3);
     const sporeVel = new Float32Array(sporeCount * 3);
 
     for (let i = 0; i < sporeCount; i++) {
       const i3 = i * 3;
-      sporePos[i3] = (Math.random() - 0.5) * 90;
+      sporePos[i3] = (Math.random() - 0.5) * 45.0;
       sporePos[i3 + 1] = 1.0 + Math.random() * 14.0;
-      sporePos[i3 + 2] = -Math.random() * 90;
+      sporePos[i3 + 2] = 20.0 - Math.random() * 120.0;
 
-      sporeVel[i3] = (Math.random() - 0.5) * 0.02;
-      sporeVel[i3 + 1] = 0.006 + Math.random() * 0.015;
-      sporeVel[i3 + 2] = (Math.random() - 0.5) * 0.02;
+      sporeVel[i3] = (Math.random() - 0.5) * 0.015;
+      sporeVel[i3 + 1] = 0.005 + Math.random() * 0.012;
+      sporeVel[i3 + 2] = (Math.random() - 0.5) * 0.015;
     }
 
     const sporeGeo = track(new THREE.BufferGeometry());
@@ -825,7 +903,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
           uniform float uPixelRatio;
           void main() {
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = clamp((120.0 / -mv.z) * uPixelRatio, 2.0, 14.0);
+            gl_PointSize = clamp((120.0 / -mv.z) * uPixelRatio, 2.0, 12.0);
             gl_Position = projectionMatrix * mv;
           }
         `,
@@ -848,13 +926,13 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     /* ============================================================
        LIGHTS
        ============================================================ */
-    // Red Dwarf Sun directional light
-    const surfaceSunLight = new THREE.DirectionalLight(0xff6e4a, 3.2);
-    surfaceSunLight.position.set(0, 45, -160);
-    landscapeGroup.add(surfaceSunLight);
+    // Main directional sunlight from Red Dwarf
+    const sunLight = new THREE.DirectionalLight(0xff6844, 3.6);
+    sunLight.position.set(0, 24, -170);
+    scene.add(sunLight);
 
-    const surfaceAmbient = new THREE.AmbientLight(0x28080f, 1.1);
-    landscapeGroup.add(surfaceAmbient);
+    const ambientLight = new THREE.AmbientLight(0x24080e, 1.0);
+    scene.add(ambientLight);
 
     /* ============================================================
        RESIZE LISTENER
@@ -895,7 +973,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
     observer.observe(container);
 
     /* ============================================================
-       ANIMATION LOOP & PLANET-TO-LANDSCAPE DESCENT TRAJECTORY
+       ANIMATION LOOP & CINEMATIC CAMERA DESCENT CHOREOGRAPHY
        ============================================================ */
     const clock = new THREE.Clock();
     let animationFrame = 0;
@@ -913,7 +991,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       const elapsed = clock.getElapsedTime();
       const targetScroll = Math.min(Math.max(scrollRef.current, 0), 1);
 
-      // Smooth scroll lerp
+      // Smooth scroll damping
       smoothScroll = lerp(smoothScroll, targetScroll, reducedMotion ? 1 : 0.055);
       const s = smoothScroll;
 
@@ -923,122 +1001,121 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
       mouse.dragX *= 0.92;
       mouse.dragY *= 0.92;
 
-      camSmoothX = lerp(camSmoothX, mouse.x * 1.4 + mouse.dragX * 3.0, 0.06);
-      camSmoothY = lerp(camSmoothY, mouse.y * 0.9 + mouse.dragY * 2.0, 0.06);
+      camSmoothX = lerp(camSmoothX, mouse.x * 1.6 + mouse.dragX * 3.5, 0.06);
+      camSmoothY = lerp(camSmoothY, mouse.y * 1.0 + mouse.dragY * 2.0, 0.06);
 
-      // Natural planet & star rotations
+      // Planet rotation in space
       planetMesh.rotation.y = elapsed * 0.04 + s * 1.5;
       ringMesh.rotation.z = elapsed * 0.02;
 
-      // Update Time Uniforms
+      // Update shader uniforms
       planetMat.uniforms.uTime.value = elapsed;
       starMat.uniforms.uTime.value = elapsed;
       streakMat.uniforms.uTime.value = elapsed;
-      cloudSheetMat.uniforms.uTime.value = elapsed;
       terrainMat.uniforms.uTime.value = elapsed;
-      horizonSunMat.uniforms.uTime.value = elapsed;
+      sunCoreMat.uniforms.uTime.value = elapsed;
       sunHaloMat.uniforms.uTime.value = elapsed;
       sporeMat.uniforms.uTime.value = elapsed;
 
       /* ============================================================
-         DESCENT CHOREOGRAPHY (ORBIT -> RE-ENTRY -> LANDSCAPE)
+         PHASE MANAGEMENT
          ------------------------------------------------------------
-         Stage 1: s = [0.00, 0.28]  High Orbit View of Kepler-186f
-         Stage 2: s = [0.28, 0.58]  Atmospheric Entry Shockwave & Clouds
-         Stage 3: s = [0.58, 1.00]  Ground-Level Alien Landscape
+         s in [0.00, 0.32] -> High Orbit
+         s in [0.32, 0.56] -> Atmospheric Re-entry Plunge
+         s in [0.56, 1.00] -> Canyon Flight over Alien Surface
          ============================================================ */
 
-      // 1. Group Opacity Crossfades
-      const spaceAlpha = clamp(1.0 - (s - 0.25) / 0.25, 0.0, 1.0);
+      // 1. Space Opacity Fade Out
+      const spaceAlpha = clamp(1.0 - (s - 0.28) / 0.24, 0.0, 1.0);
       planetMat.uniforms.uAlpha.value = spaceAlpha;
       atmosMat.uniforms.uAlpha.value = spaceAlpha;
       ringMat.uniforms.uAlpha.value = spaceAlpha;
       starMat.uniforms.uAlpha.value = spaceAlpha;
       spaceGroup.visible = spaceAlpha > 0.01;
 
-      // Re-entry Peak around s = 0.42
+      // 2. Re-entry Peak
       let reentryAlpha = 0.0;
-      if (s >= 0.22 && s <= 0.62) {
+      if (s >= 0.24 && s <= 0.60) {
         if (s < 0.42) {
-          reentryAlpha = (s - 0.22) / 0.20;
+          reentryAlpha = (s - 0.24) / 0.18;
         } else {
-          reentryAlpha = 1.0 - (s - 0.42) / 0.20;
+          reentryAlpha = 1.0 - (s - 0.42) / 0.18;
         }
       }
       streakMat.uniforms.uAlpha.value = reentryAlpha;
-      cloudSheetMat.uniforms.uAlpha.value = reentryAlpha;
       reentryGroup.visible = reentryAlpha > 0.01;
 
-      // Landscape Reveal from s = 0.40 to 1.00
-      const landscapeAlpha = clamp((s - 0.38) / 0.24, 0.0, 1.0);
+      // 3. Landscape Opacity Fade In
+      const landscapeAlpha = clamp((s - 0.42) / 0.22, 0.0, 1.0);
+      skyDomeMat.uniforms.uAlpha.value = landscapeAlpha;
       terrainMat.uniforms.uAlpha.value = landscapeAlpha;
-      spireMat.opacity = landscapeAlpha;
-      horizonSunMat.uniforms.uAlpha.value = landscapeAlpha;
+      rockMat.opacity = landscapeAlpha;
+      sunCoreMat.uniforms.uAlpha.value = landscapeAlpha;
       sunHaloMat.uniforms.uAlpha.value = landscapeAlpha;
       moonMat.opacity = landscapeAlpha;
       sporeMat.uniforms.uAlpha.value = landscapeAlpha;
       landscapeGroup.visible = landscapeAlpha > 0.01;
 
-      // Dynamic Fog Shift: Space deep black -> Re-entry fiery haze -> Alien red horizon
+      // Dynamic Fog Shift
       if (s < 0.35) {
-        sceneFog.color.setHex(0x0a0305);
+        sceneFog.color.setHex(0x0a0306);
         sceneFog.density = 0.0075;
-      } else if (s < 0.60) {
-        sceneFog.color.setHex(0x2d080e);
+      } else if (s < 0.58) {
+        sceneFog.color.setHex(0x28080e);
         sceneFog.density = 0.018;
       } else {
-        sceneFog.color.setHex(0x1a0508);
-        sceneFog.density = 0.012;
+        sceneFog.color.setHex(0x180509);
+        sceneFog.density = 0.010;
       }
 
-      // 2. Camera Flight Coordinates
-      if (s < 0.48) {
-        // --- ORBITAL & RE-ENTRY FLIGHT ---
-        const t = s / 0.48;
-        // Dive toward planetary terminator
-        planetRoot.position.x = lerp(3.4, 0.5, t);
+      // --- 4. CAMERA TRAJECTORY ---
+      if (s < 0.52) {
+        // --- ORBIT & PLUNGE ---
+        const t = s / 0.52;
+        planetRoot.position.x = lerp(3.4, 0.4, t);
         planetRoot.position.y = lerp(-0.6, -1.8, t);
 
         const camX = lerp(0.0, 1.2, t) + camSmoothX;
         const camY = lerp(1.2, 0.2, t) + camSmoothY;
-        const camZ = lerp(16.0, 4.2, t);
+        const camZ = lerp(16.0, 4.0, t);
 
         camera.position.set(camX, camY, camZ);
         camera.lookAt(planetRoot.position.x * 0.4, planetRoot.position.y * 0.4, 0);
 
-        // Animate Re-entry Streaks
+        // Move Re-entry Streaks
         const streakArr = streakGeo.attributes.position.array as Float32Array;
         for (let i = 0; i < streakCount; i++) {
           const i3 = i * 3;
-          streakArr[i3 + 2] += streakSpeed[i] * 1.8;
+          streakArr[i3 + 2] += streakSpeed[i] * 2.2;
           if (streakArr[i3 + 2] > 20) {
             streakArr[i3 + 2] = -40;
           }
         }
         streakGeo.attributes.position.needsUpdate = true;
       } else {
-        // --- SURFACE ALIEN LANDSCAPE CRUISE ---
-        const t = (s - 0.48) / 0.52; // 0.0 -> 1.0 across landscape phase
+        // --- SURFACE CANYON FLIGHT ---
+        const t = (s - 0.52) / 0.48; // 0.0 -> 1.0 along landscape phase
 
-        // Camera flies forward across the crimson mountain valley
-        const startX = 0.0;
-        const targetX = 0.0 + camSmoothX * 1.8;
-        const camX = lerp(startX, targetX, t);
+        // Camera flies straight through the canyon pass
+        const camX = camSmoothX * 1.5;
 
-        // Altitude drops from low aerial (y = 18) down to cruising altitude (y = 4.2)
-        const camY = lerp(16.0, 3.8, t) + camSmoothY * 0.8;
+        // Altitude starts at low aerial (y = 16.0) and descends into low canyon cruise (y = 5.2)
+        const camY = lerp(16.0, 5.2, t) + camSmoothY * 0.6;
 
-        // Moves forward along z-axis into the landscape
-        const camZ = lerp(35.0, -42.0, t);
+        // Advances forward along Z: from 30 down into the canyon at -55
+        const camZ = lerp(32.0, -55.0, t);
 
         camera.position.set(camX, camY, camZ);
 
-        // Look toward the setting Red Dwarf star on horizon
-        const lookZ = camZ - 50.0;
-        const lookY = lerp(8.0, 5.0, t) + camSmoothY * 0.5;
-        camera.lookAt(camX * 0.3, lookY, lookZ);
+        // Look straight ahead towards the Red Dwarf sun on the horizon
+        const lookTargetZ = camZ - 65.0;
+        const lookTargetY = lerp(9.0, 6.0, t) + camSmoothY * 0.4;
+        camera.lookAt(camX * 0.35, lookTargetY, lookTargetZ);
 
-        // Animate ground spores drifting
+        // Camera roll banking on horizontal steer
+        camera.rotation.z = -mouse.x * 0.04 - mouse.dragX * 0.06;
+
+        // Animate drifting spores
         const spArr = sporeGeo.attributes.position.array as Float32Array;
         for (let i = 0; i < sporeCount; i++) {
           const i3 = i * 3;
@@ -1046,7 +1123,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({
           spArr[i3 + 1] += sporeVel[i3 + 1];
           spArr[i3 + 2] += sporeVel[i3 + 2];
 
-          if (spArr[i3 + 1] > 22.0) spArr[i3 + 1] = 1.0;
+          if (spArr[i3 + 1] > 18.0) spArr[i3 + 1] = 1.0;
         }
         sporeGeo.attributes.position.needsUpdate = true;
       }
