@@ -5,7 +5,11 @@ import React, {
 
 import { HeroContent } from './HeroContent';
 import SpaceScene from './SpaceScene';
-import { type ThemeId } from '../../config/theme';
+import ThemeHeroScene from './ThemeHeroScene';
+
+import {
+  type ThemeId,
+} from '../../config/theme';
 
 interface HeroSectionProps {
   /**
@@ -19,7 +23,10 @@ interface HeroSectionProps {
   handoff?: boolean;
 
   /**
-   * Active world theme to align the video grading & mood.
+   * Active world theme.
+   *
+   * IMPORTANT:
+   * This must be passed from App.tsx.
    */
   themeId?: ThemeId;
 }
@@ -29,7 +36,7 @@ export const HeroSection: React.FC<
 > = ({
   onHeroComplete,
   handoff = false,
-  themeId,
+  themeId = 'tau-ceti',
 }) => {
   const [
     scrollProgress,
@@ -40,6 +47,12 @@ export const HeroSection: React.FC<
     completeFired,
     setCompleteFired,
   ] = useState(false);
+
+  /*
+   * =========================================================
+   * HERO SCROLL PROGRESS
+   * =========================================================
+   */
 
   useEffect(() => {
     let ticking = false;
@@ -102,6 +115,10 @@ export const HeroSection: React.FC<
         clamped
       );
 
+      /*
+       * Fire completion only once.
+       */
+
       if (
         clamped >= 1 &&
         !completeFired
@@ -161,6 +178,71 @@ export const HeroSection: React.FC<
     completeFired,
   ]);
 
+  /*
+   * =========================================================
+   * THEME-SPECIFIC HERO SCENE
+   * =========================================================
+   *
+   * TAU CETI
+   *   Existing cinematic SpaceScene
+   *
+   * MILLER
+   *   Procedural tidal ocean
+   *
+   * PANDORA
+   *   Alien jungle + bioluminescent spores
+   *
+   * KEPLER
+   *   Molten planet + lava + debris
+   */
+
+  const renderHeroScene = () => {
+    /*
+     * =======================================================
+     * TAU CETI
+     * =======================================================
+     *
+     * Keep the existing SpaceScene for Tau Ceti.
+     */
+
+    if (
+      themeId === 'tau-ceti'
+    ) {
+      return (
+        <SpaceScene
+          scrollProgress={
+            scrollProgress
+          }
+          themeId={
+            themeId
+          }
+        />
+      );
+    }
+
+    /*
+     * =======================================================
+     * MILLER / PANDORA / KEPLER
+     * =======================================================
+     *
+     * These worlds use their own dedicated Three.js scene.
+     */
+
+    return (
+      <ThemeHeroScene
+        themeId={
+          themeId as Exclude<
+            ThemeId,
+            'tau-ceti'
+          >
+        }
+        scrollProgress={
+          scrollProgress
+        }
+      />
+    );
+  };
+
   return (
     <section
       id="hero-section"
@@ -188,24 +270,40 @@ export const HeroSection: React.FC<
           width: '100%',
           height: '100vh',
           overflow: 'hidden',
+
+          /*
+           * Keep Hero above the global background.
+           */
           zIndex: 50,
+
           isolation: 'isolate',
+
           willChange:
             'opacity, transform, filter',
+
           transform:
             'translate3d(0, 0, 0)',
+
           background:
             'var(--theme-background)',
         }}
       >
+
         {/* =================================================
-            INTERACTIVE THREE.JS SPACE SCENE (THEME MATCHED)
+            THEME-SPECIFIC THREE.JS WORLD
             ================================================= */}
 
-        <SpaceScene
-          scrollProgress={scrollProgress}
-          themeId={themeId}
-        />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            pointerEvents: 'none',
+            overflow: 'hidden',
+          }}
+        >
+          {renderHeroScene()}
+        </div>
 
         {/* =================================================
             HERO CONTENT
@@ -242,8 +340,10 @@ export const HeroSection: React.FC<
             width: 140,
             zIndex: 40,
             pointerEvents: 'none',
+
             opacity:
               handoff ? 0 : 1,
+
             transition:
               'opacity 420ms ease',
           }}
@@ -259,13 +359,17 @@ export const HeroSection: React.FC<
             <div
               style={{
                 height: '100%',
+
                 width: `${
                   scrollProgress * 100
                 }%`,
+
                 background:
                   'linear-gradient(90deg, var(--theme-accent), var(--theme-primary), var(--theme-cta))',
+
                 boxShadow:
                   '0 0 14px var(--theme-accent)',
+
                 transition:
                   'width 80ms linear',
               }}

@@ -336,7 +336,9 @@ const App: React.FC = () => {
                       while Hero is visible.
                      ============================================== */}
 
-                  <HeroSection />
+                  <HeroSection
+                    themeId={selectedTheme}
+                  />
 
 
                   {/* ==============================================
