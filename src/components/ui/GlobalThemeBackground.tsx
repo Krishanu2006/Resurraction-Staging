@@ -30,26 +30,18 @@ const globalSpaceThemeConfigs: Record<
      ============================================================ */
 
   'tau-ceti': {
-    nebulaA: 0x087a3d,
-    nebulaB: 0x04130b,
-    nebulaC: 0x18d66b,
-
-    nebulaOpacity: 0.36,
-
-    starColor1: 0x9dffbf,
-    starColor2: 0x18d66b,
-    starColor3: 0xffb36b,
-
-    dustColor: 0x34c878,
-
-    rockColor: 0x0b3b25,
-    rockRimColor: 0xff6a00,
-
-    shootingStarColor: [
-      1.0,
-      0.42,
-      0.05,
-    ],
+    // Golden Dune World: warm amber, solar gold, bronze stardust
+    nebulaA: 0x9e681c,
+    nebulaB: 0x3d2508,
+    nebulaC: 0xe5a93c,
+    nebulaOpacity: 0.22,
+    starColor1: 0xffe4a0,
+    starColor2: 0xe5a93c,
+    starColor3: 0xffffff,
+    dustColor: 0xd4a559,
+    rockColor: 0x2e2015,
+    rockRimColor: 0xe5a93c,
+    shootingStarColor: [1.0, 0.85, 0.45],
   },
 
   /* ============================================================

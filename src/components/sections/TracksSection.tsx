@@ -32,7 +32,7 @@ const planetCards: PlanetCard[] = [
     id: 'tau-ceti-e',
     image: tauCetiImage,
     name: 'Tau Ceti e',
-    accent: '#e5a93c',
+    accent: '#f97316',
 
     event: 'BUILDATHON',
     title: 'Build. Break. Rebuild.',

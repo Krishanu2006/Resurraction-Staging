@@ -204,14 +204,29 @@ const SpaceScene: React.FC<
       );
 
     /* ------------------------------------------------------------
-     * FOG — created once and captured in a local const so
-     * TypeScript can narrow the type. `scene.fog` is typed as
-     * `Fog | FogBase | null`, but `fog` below is `FogExp2`.
+     * FOG — green with a touch of warm orange mixed in so the
+     * horizon reads warm-green (matches Adrian atmosphere).
+     *
+     * Captured in a local `const` so TypeScript knows the type
+     * is always FogExp2 (scene.fog is typed as Fog|FogBase|null).
      * ------------------------------------------------------------ */
+
+    const fogGreenLinear =
+      new THREE.Color(profile.fogGreen).convertSRGBToLinear();
+
+    const fogOrangeLinear =
+      new THREE.Color(profile.fogOrange).convertSRGBToLinear();
+
+    const fogMixedLinear =
+      new THREE.Color(
+        lerp(fogGreenLinear.r, fogOrangeLinear.r, 0.18),
+        lerp(fogGreenLinear.g, fogOrangeLinear.g, 0.18),
+        lerp(fogGreenLinear.b, fogOrangeLinear.b, 0.18)
+      ).convertLinearToSRGB();
 
     const fog =
       new THREE.FogExp2(
-        profile.fogGreen,
+        fogMixedLinear.getHex(),
         0.00042
       );
 
@@ -382,6 +397,7 @@ const SpaceScene: React.FC<
               skyBase = mix(uGreenMid, uGreenZenith, (tUp - 0.5) * 2.0);
             }
 
+            // --- BIG ORANGE PATCHES ---
             vec3 np = dir * 1.6 + vec3(uTime * 0.010, 0.0, uTime * 0.006);
 
             float patchField = fbm(np, 4);
@@ -1404,6 +1420,7 @@ const SpaceScene: React.FC<
                     n
                   );
 
+                // --- BIG ORANGE PATCHES ---
                 vec2 patchUV =
                   stretched * 1.7 +
                   vec2(
