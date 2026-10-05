@@ -32,7 +32,7 @@ export const PrizesSection: React.FC = () => {
 
         {/* Featured prize panel using shadcn Card & Tailwind */}
         <Reveal delay={80}>
-          <Card className="prize-feature relative overflow-hidden grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] min-h-[390px] border-[var(--theme-card-border)] bg-gradient-to-br from-[color-mix(in_srgb,var(--theme-card-bg)_95%,black)] to-[color-mix(in_srgb,var(--theme-surface)_80%,var(--theme-primary)_20%)] shadow-[var(--theme-glow)] backdrop-blur-xl">
+          <Card className="prize-feature relative overflow-hidden grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] min-h-[390px] transition-all duration-300 hover:border-[var(--theme-accent)]/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.2)]">
             <div className="p-8 sm:p-12 lg:p-16 relative z-10 flex flex-col justify-center">
               <Badge variant="accent" className="w-fit flex items-center gap-2 mb-6">
                 <Trophy size={15} strokeWidth={1.5} />
@@ -67,7 +67,7 @@ export const PrizesSection: React.FC = () => {
               key={prize.id}
               delay={130 + index * 60}
             >
-              <Card className="prize-card group min-h-[240px] p-7 border-[var(--theme-card-border)] bg-[var(--theme-card-bg)] backdrop-blur-xl hover:border-[var(--theme-accent)] hover:-translate-y-1 transition-all duration-300">
+              <Card className="prize-card group min-h-[240px] p-7 transition-all duration-300 hover:border-[var(--theme-accent)]/50 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.2)]">
                 <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
                   <Badge variant="outline" className="font-mono text-[10px] tracking-wider text-[var(--theme-accent)] border-[var(--theme-card-border)]">
                     {prize.tier}
