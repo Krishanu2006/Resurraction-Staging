@@ -5,6 +5,14 @@ import React, {
 } from 'react';
 
 import { Header } from './components/layout/Header';
+
+/*
+ * HeroSection.tsx now exports both:
+ *   - named   → export const HeroSection
+ *   - default → export default HeroSection
+ *
+ * App.tsx uses the default export, which is fine.
+ */
 import HeroSection from './components/hero/HeroSection';
 
 import { AboutSection } from './components/sections/AboutSection';
@@ -22,14 +30,7 @@ import { RockyCursor } from './components/ui/RockyCursor';
 import { BootLoader } from './components/ui/BootLoader';
 import { ThemeSelector } from './components/ui/ThemeSelector';
 
-/*
- * GLOBAL THREE.JS SPACE BACKGROUND
- *
- * This is intentionally separate from ThemeSelector.
- * It appears behind the website after Hero/About begins.
- */
 import GlobalThemeBackground from './components/ui/GlobalThemeBackground';
-
 import AdrianEnvironment from './components/Environment/AdrianEnvironment';
 
 import {
@@ -37,9 +38,11 @@ import {
   type ThemeId,
 } from './config/theme';
 
+/* ============================================================
+   APP
+   ============================================================ */
 
 const App: React.FC = () => {
-
   /* ============================================================
      BOOT STATE
      ============================================================ */
@@ -75,7 +78,6 @@ const App: React.FC = () => {
     return 'tau-ceti';
   });
 
-
   /* ============================================================
      BOOT COMPLETE
      ============================================================ */
@@ -85,20 +87,15 @@ const App: React.FC = () => {
       setBootComplete(true);
     }, []);
 
-
   /* ============================================================
      THEME SELECTION
      ============================================================ */
 
   const handleThemeSelect =
-    useCallback(
-      (themeId: ThemeId) => {
-        setSelectedTheme(themeId);
-        setThemeSelected(true);
-      },
-      []
-    );
-
+    useCallback((themeId: ThemeId) => {
+      setSelectedTheme(themeId);
+      setThemeSelected(true);
+    }, []);
 
   /* ============================================================
      ACTIVE THEME PALETTE
@@ -107,352 +104,164 @@ const App: React.FC = () => {
   const palette =
     themePalettes[selectedTheme];
 
-
   /* ============================================================
      APPLY THEME VARIABLES
      ============================================================ */
 
   useEffect(() => {
-
-    const root =
-      document.documentElement;
-
+    const root = document.documentElement;
 
     root.style.setProperty(
       '--theme-primary',
       palette.primary
     );
-
-
     root.style.setProperty(
       '--theme-secondary',
       palette.secondary
     );
-
-
     root.style.setProperty(
       '--theme-accent',
       palette.accent
     );
-
-
     root.style.setProperty(
       '--theme-background',
       palette.background
     );
-
-
     root.style.setProperty(
       '--theme-surface',
       palette.surface
     );
-
-
     root.style.setProperty(
       '--theme-text',
       palette.text
     );
-
-
     root.style.setProperty(
       '--theme-muted',
       palette.muted
     );
-
-
     root.style.setProperty(
       '--theme-border',
       palette.border
     );
-
   }, [palette]);
 
-
   /* ============================================================
-     APP
+     RENDER
      ============================================================ */
 
   return (
     <>
-
       {/* ======================================================
           BOOT SEQUENCE
-
-          BootLoader
-              ↓
-          ThemeSelector
-              ↓
-          Website
          ====================================================== */}
 
       {!bootComplete && (
         <BootLoader
-          onComplete={
-            handleBootComplete
-          }
+          onComplete={handleBootComplete}
         />
       )}
 
-
       {/* ======================================================
           THEME SELECTOR
-
-          UNCHANGED
          ====================================================== */}
 
-      {bootComplete &&
-        !themeSelected && (
-          <ThemeSelector
-            onSelect={(themeId) => {
-              handleThemeSelect(
-                themeId as ThemeId
-              );
-            }}
-          />
-        )}
-
+      {bootComplete && !themeSelected && (
+        <ThemeSelector
+          onSelect={(themeId) => {
+            handleThemeSelect(themeId as ThemeId);
+          }}
+        />
+      )}
 
       {/* ======================================================
           MAIN WEBSITE
          ====================================================== */}
 
-      {bootComplete &&
-        themeSelected && (
-          <>
+      {bootComplete && themeSelected && (
+        <>
+          <AdrianEnvironment />
 
-            {/* ==================================================
-                EXISTING ADRIAN ENVIRONMENT
+          <GlobalThemeBackground
+            themeId={selectedTheme}
+          />
 
-                Kept unchanged.
-               ================================================== */}
+          <div
+            id="app-theme"
+            style={
+              {
+                '--theme-primary': palette.primary,
+                '--theme-secondary': palette.secondary,
+                '--theme-accent': palette.accent,
+                '--theme-background': palette.background,
+                '--theme-surface': palette.surface,
+                '--theme-text': palette.text,
+                '--theme-muted': palette.muted,
+                '--theme-border': palette.border,
 
-            <AdrianEnvironment />
-
-
-            {/* ==================================================
-                GLOBAL THREE.JS SPACE BACKGROUND
-
-                IMPORTANT:
-
-                - Behind all website content
-                - Not inside Hero
-                - Not inside ThemeSelector
-                - Starts becoming visible around About
-                - Tau Ceti gets green/orange background
-                - Tau Ceti planets are static
-               ================================================== */}
-
-            <GlobalThemeBackground
-              themeId={selectedTheme}
-            />
-
-
-            {/* ==================================================
-                MAIN THEMED WEBSITE
-
-                zIndex 1 keeps all actual website content
-                above the Three.js background.
-               ================================================== */}
-
+                backgroundColor: 'transparent',
+                color: 'var(--theme-text)',
+                minHeight: '100vh',
+                position: 'relative',
+                zIndex: 1,
+              } as React.CSSProperties
+            }
+          >
             <div
-              id="app-theme"
-              style={
-                {
-                  '--theme-primary':
-                    palette.primary,
-
-                  '--theme-secondary':
-                    palette.secondary,
-
-                  '--theme-accent':
-                    palette.accent,
-
-                  '--theme-background':
-                    palette.background,
-
-                  '--theme-surface':
-                    palette.surface,
-
-                  '--theme-text':
-                    palette.text,
-
-                  '--theme-muted':
-                    palette.muted,
-
-                  '--theme-border':
-                    palette.border,
-
-                  /*
-                   * IMPORTANT:
-                   *
-                   * Do NOT give this wrapper an opaque
-                   * background because that would cover
-                   * the Three.js planets/background.
-                   */
-                  backgroundColor:
-                    'transparent',
-
-                  color:
-                    'var(--theme-text)',
-
-                  minHeight:
-                    '100vh',
-
-                  position:
-                    'relative',
-
-                  zIndex:
-                    1,
-                } as React.CSSProperties
-              }
+              className="app-container"
+              style={{
+                position: 'relative',
+                zIndex: 1,
+              }}
             >
+              <Header />
 
-              {/* ==================================================
-                  APPLICATION CONTAINER
-                 ================================================== */}
-
-              <div
-                className="app-container"
+              <main
+                id="main-content"
                 style={{
-                  position:
-                    'relative',
-
-                  zIndex:
-                    1,
+                  position: 'relative',
+                  zIndex: 1,
                 }}
               >
+                {/* ==============================================
+                    HERO
+                   ============================================== */}
 
-                {/* ==================================================
-                    HEADER
-                   ================================================== */}
+                <HeroSection
+                  themeId={selectedTheme}
+                />
 
-                <Header />
+                {/* ==============================================
+                    ABOUT
+                   ============================================== */}
 
+                <AboutSection active />
 
-                {/* ==================================================
-                    MAIN CONTENT
-                   ================================================== */}
+                {/* ==============================================
+                    OTHER SECTIONS
+                   ============================================== */}
 
-                <main
-                  id="main-content"
-                  style={{
-                    position:
-                      'relative',
+                <TracksSection />
+                <PrizesSection />
+                <TimelineSection />
+                <SponsorsSection />
+                <JurySection />
+                <RulesSection />
+                <FAQSection />
+              </main>
 
-                    zIndex:
-                      1,
-                  }}
-                >
-
-                  {/* ==============================================
-                      HERO
-
-                      NO CHANGES.
-
-                      The GlobalThemeBackground remains hidden
-                      while Hero is visible.
-                     ============================================== */}
-
-                  <HeroSection
-                    themeId={selectedTheme}
-                  />
-
-
-                  {/* ==============================================
-                      ABOUT
-
-                      Tau Ceti background begins appearing here.
-                     ============================================== */}
-
-                  <AboutSection
-                    active
-                  />
-
-
-                  {/* ==============================================
-                      TRACKS
-                     ============================================== */}
-
-                  <TracksSection />
-
-
-                  {/* ==============================================
-                      PRIZES
-                     ============================================== */}
-
-                  <PrizesSection />
-
-
-                  {/* ==============================================
-                      TIMELINE
-                     ============================================== */}
-
-                  <TimelineSection />
-
-
-                  {/* ==============================================
-                      SPONSORS
-                     ============================================== */}
-
-                  <SponsorsSection />
-
-
-                  {/* ==============================================
-                      JURY
-                     ============================================== */}
-
-                  <JurySection />
-
-
-                  {/* ==============================================
-                      RULES
-                     ============================================== */}
-
-                  <RulesSection />
-
-
-                  {/* ==============================================
-                      FAQ
-                     ============================================== */}
-
-                  <FAQSection />
-
-                </main>
-
-
-                {/* ==================================================
-                    FOOTER
-                   ================================================== */}
-
-                <Footer />
-
-              </div>
-
+              <Footer />
             </div>
-
-          </>
-        )}
-
-
-      {/* ========================================================
-          ROCKY CUSTOM CURSOR
-
-          Kept unchanged.
-
-          Rendered after the website so it stays above:
-          - Three.js background
-          - website sections
-          - images
-          - overlays
-         ======================================================== */}
-
-      {bootComplete && (
-        <RockyCursor />
+          </div>
+        </>
       )}
 
+      {/* ======================================================
+          ROCKY CURSOR
+         ====================================================== */}
+
+      {bootComplete && <RockyCursor />}
     </>
   );
 };
-
 
 export default App;
