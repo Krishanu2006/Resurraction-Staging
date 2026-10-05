@@ -6,10 +6,12 @@ import React, {
 import { HeroContent } from './HeroContent';
 import SpaceScene from './SpaceScene';
 import ThemeHeroScene from './ThemeHeroScene';
+import PandoraHeroScene from './PandoraHeroScene';
 
 import {
   type ThemeId,
 } from '../../config/theme';
+
 
 interface HeroSectionProps {
   /**
@@ -31,6 +33,7 @@ interface HeroSectionProps {
   themeId?: ThemeId;
 }
 
+
 export const HeroSection: React.FC<
   HeroSectionProps
 > = ({
@@ -38,15 +41,18 @@ export const HeroSection: React.FC<
   handoff = false,
   themeId = 'tau-ceti',
 }) => {
+
   const [
     scrollProgress,
     setScrollProgress,
   ] = useState(0);
 
+
   const [
     completeFired,
     setCompleteFired,
   ] = useState(false);
+
 
   /*
    * =========================================================
@@ -55,39 +61,54 @@ export const HeroSection: React.FC<
    */
 
   useEffect(() => {
+
     let ticking = false;
 
+
     const updateProgress = () => {
+
       const hero =
         document.getElementById(
           'hero-section'
         );
 
+
       if (!hero) {
+
         ticking = false;
+
         return;
       }
+
 
       const rect =
         hero.getBoundingClientRect();
 
+
       const heroHeight =
         hero.offsetHeight;
 
+
       const viewportHeight =
         window.innerHeight;
+
 
       const scrollDistance =
         heroHeight -
         viewportHeight;
 
+
       if (
         scrollDistance <= 0
       ) {
+
         setScrollProgress(0);
+
         ticking = false;
+
         return;
       }
+
 
       const travelled =
         Math.min(
@@ -98,9 +119,11 @@ export const HeroSection: React.FC<
           scrollDistance
         );
 
+
       const progress =
         travelled /
         scrollDistance;
+
 
       const clamped =
         Math.min(
@@ -111,9 +134,11 @@ export const HeroSection: React.FC<
           1
         );
 
+
       setScrollProgress(
         clamped
       );
+
 
       /*
        * Fire completion only once.
@@ -123,6 +148,7 @@ export const HeroSection: React.FC<
         clamped >= 1 &&
         !completeFired
       ) {
+
         setCompleteFired(
           true
         );
@@ -130,11 +156,15 @@ export const HeroSection: React.FC<
         onHeroComplete?.();
       }
 
+
       ticking = false;
     };
 
+
     const handleScroll = () => {
+
       if (!ticking) {
+
         window.requestAnimationFrame(
           updateProgress
         );
@@ -143,9 +173,12 @@ export const HeroSection: React.FC<
       }
     };
 
+
     const handleResize = () => {
+
       updateProgress();
     };
+
 
     window.addEventListener(
       'scroll',
@@ -155,28 +188,39 @@ export const HeroSection: React.FC<
       }
     );
 
+
     window.addEventListener(
       'resize',
       handleResize
     );
 
+
+    /*
+     * Initial calculation.
+     */
+
     updateProgress();
 
+
     return () => {
+
       window.removeEventListener(
         'scroll',
         handleScroll
       );
+
 
       window.removeEventListener(
         'resize',
         handleResize
       );
     };
+
   }, [
     onHeroComplete,
     completeFired,
   ]);
+
 
   /*
    * =========================================================
@@ -184,30 +228,72 @@ export const HeroSection: React.FC<
    * =========================================================
    *
    * TAU CETI
-   *   Existing cinematic SpaceScene
+   *   Existing SpaceScene
    *
    * MILLER
-   *   Procedural tidal ocean
+   *   Existing ThemeHeroScene Miller environment
    *
    * PANDORA
-   *   Alien jungle + bioluminescent spores
+   *   Dedicated PandoraHeroScene
    *
    * KEPLER
-   *   Molten planet + lava + debris
+   *   Existing ThemeHeroScene Kepler environment
+   *
+   * IMPORTANT:
+   *
+   * Pandora is separated here so changing Pandora does
+   * NOT modify the Miller implementation.
+   * =========================================================
    */
 
   const renderHeroScene = () => {
+
+    /*
+     * =======================================================
+     * PANDORA
+     * =======================================================
+     *
+     * Dedicated Pandora Three.js environment.
+     *
+     * This is the scene based on your Pandora reference:
+     *
+     * - giant blue atmospheric moon
+     * - floating jungle islands
+     * - waterfalls
+     * - distant mountains
+     * - dense foreground vegetation
+     * - blue/cyan atmosphere
+     * - bioluminescent particles
+     * - interactive parallax
+     * - cinematic scroll camera
+     */
+
+    if (
+      themeId === 'pandora'
+    ) {
+
+      return (
+        <PandoraHeroScene
+          scrollProgress={
+            scrollProgress
+          }
+        />
+      );
+    }
+
+
     /*
      * =======================================================
      * TAU CETI
      * =======================================================
      *
-     * Keep the existing SpaceScene for Tau Ceti.
+     * Keep the existing SpaceScene.
      */
 
     if (
       themeId === 'tau-ceti'
     ) {
+
       return (
         <SpaceScene
           scrollProgress={
@@ -220,12 +306,15 @@ export const HeroSection: React.FC<
       );
     }
 
+
     /*
      * =======================================================
-     * MILLER / PANDORA / KEPLER
+     * MILLER / KEPLER
      * =======================================================
      *
-     * These worlds use their own dedicated Three.js scene.
+     * These continue using the existing ThemeHeroScene.
+     *
+     * Miller is therefore NOT changed by the Pandora update.
      */
 
     return (
@@ -243,17 +332,26 @@ export const HeroSection: React.FC<
     );
   };
 
+
   return (
     <section
       id="hero-section"
+
       style={{
-        position: 'relative',
-        width: '100%',
-        height: '300vh',
+        position:
+          'relative',
+
+        width:
+          '100%',
+
+        height:
+          '300vh',
+
         background:
           'var(--theme-background, #02040a)',
       }}
     >
+
       {/* =====================================================
           STICKY HERO VIEWPORT
           ===================================================== */}
@@ -264,19 +362,31 @@ export const HeroSection: React.FC<
             ? ' hero-sticky--fading'
             : ''
         }`}
+
         style={{
-          position: 'sticky',
-          top: 0,
-          width: '100%',
-          height: '100vh',
-          overflow: 'hidden',
+          position:
+            'sticky',
+
+          top:
+            0,
+
+          width:
+            '100%',
+
+          height:
+            '100vh',
+
+          overflow:
+            'hidden',
 
           /*
            * Keep Hero above the global background.
            */
-          zIndex: 50,
+          zIndex:
+            50,
 
-          isolation: 'isolate',
+          isolation:
+            'isolate',
 
           willChange:
             'opacity, transform, filter',
@@ -295,15 +405,27 @@ export const HeroSection: React.FC<
 
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 1,
-            pointerEvents: 'none',
-            overflow: 'hidden',
+            position:
+              'absolute',
+
+            inset:
+              0,
+
+            zIndex:
+              1,
+
+            pointerEvents:
+              'none',
+
+            overflow:
+              'hidden',
           }}
         >
+
           {renderHeroScene()}
+
         </div>
+
 
         {/* =================================================
             HERO CONTENT
@@ -311,18 +433,28 @@ export const HeroSection: React.FC<
 
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 20,
-            pointerEvents: 'none',
+            position:
+              'absolute',
+
+            inset:
+              0,
+
+            zIndex:
+              20,
+
+            pointerEvents:
+              'none',
           }}
         >
+
           <HeroContent
             scrollProgress={
               scrollProgress
             }
           />
+
         </div>
+
 
         {/* =================================================
             SCROLL PROGRESS
@@ -330,39 +462,64 @@ export const HeroSection: React.FC<
 
         <div
           aria-hidden="true"
+
           className="hero-progress-indicator"
+
           style={{
-            position: 'absolute',
-            bottom: 28,
-            left: '50%',
+            position:
+              'absolute',
+
+            bottom:
+              28,
+
+            left:
+              '50%',
+
             transform:
               'translateX(-50%)',
-            width: 140,
-            zIndex: 40,
-            pointerEvents: 'none',
+
+            width:
+              140,
+
+            zIndex:
+              40,
+
+            pointerEvents:
+              'none',
 
             opacity:
-              handoff ? 0 : 1,
+              handoff
+                ? 0
+                : 1,
 
             transition:
               'opacity 420ms ease',
           }}
         >
+
           <div
             style={{
-              height: 1,
-              width: '100%',
+              height:
+                1,
+
+              width:
+                '100%',
+
               background:
                 'rgba(255,255,255,0.16)',
             }}
           >
+
             <div
               style={{
-                height: '100%',
+                height:
+                  '100%',
 
-                width: `${
-                  scrollProgress * 100
-                }%`,
+                width:
+                  `${
+                    scrollProgress *
+                    100
+                  }%`,
 
                 background:
                   'linear-gradient(90deg, var(--theme-accent), var(--theme-primary), var(--theme-cta))',
@@ -374,9 +531,13 @@ export const HeroSection: React.FC<
                   'width 80ms linear',
               }}
             />
+
           </div>
+
         </div>
+
       </div>
+
 
       {/* =====================================================
           HERO TRANSITION
@@ -384,6 +545,7 @@ export const HeroSection: React.FC<
 
       <style>
         {`
+
           .hero-sticky {
             opacity: 1;
 
@@ -423,6 +585,7 @@ export const HeroSection: React.FC<
                 );
           }
 
+
           .hero-sticky.hero-sticky--fading {
             opacity: 0;
 
@@ -441,6 +604,7 @@ export const HeroSection: React.FC<
               none;
           }
 
+
           /* ===============================================
              REDUCED MOTION
              =============================================== */
@@ -448,13 +612,16 @@ export const HeroSection: React.FC<
           @media (
             prefers-reduced-motion: reduce
           ) {
+
             .hero-sticky {
               transition:
                 none;
             }
 
+
             .hero-sticky.hero-sticky--fading {
-              opacity: 0;
+              opacity:
+                0;
 
               transform:
                 none;
@@ -464,6 +631,7 @@ export const HeroSection: React.FC<
             }
           }
 
+
           /* ===============================================
              MOBILE
              =============================================== */
@@ -471,6 +639,7 @@ export const HeroSection: React.FC<
           @media (
             max-width: 700px
           ) {
+
             .hero-progress-indicator {
               width:
                 110px !important;
@@ -479,10 +648,13 @@ export const HeroSection: React.FC<
                 22px !important;
             }
           }
+
         `}
       </style>
+
     </section>
   );
 };
+
 
 export default HeroSection;
