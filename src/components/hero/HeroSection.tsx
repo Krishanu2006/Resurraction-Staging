@@ -4,14 +4,6 @@ import React, {
 } from 'react';
 
 import { HeroContent } from './HeroContent';
-import SpaceScene from './SpaceScene';
-import ThemeHeroScene from './ThemeHeroScene';
-import PandoraHeroScene from './PandoraHeroScene';
-
-import {
-  type ThemeId,
-} from '../../config/theme';
-
 
 interface HeroSectionProps {
   /**
@@ -23,16 +15,7 @@ interface HeroSectionProps {
    * Starts the cinematic handoff into About.
    */
   handoff?: boolean;
-
-  /**
-   * Active world theme.
-   *
-   * IMPORTANT:
-   * This must be passed from App.tsx.
-   */
-  themeId?: ThemeId;
 }
-
 
 export const HeroSection: React.FC<
   HeroSectionProps
@@ -41,24 +24,11 @@ export const HeroSection: React.FC<
   handoff = false,
   themeId = 'tau-ceti',
 }) => {
+  const [scrollProgress, setScrollProgress] =
+    useState(0);
 
-  const [
-    scrollProgress,
-    setScrollProgress,
-  ] = useState(0);
-
-
-  const [
-    completeFired,
-    setCompleteFired,
-  ] = useState(false);
-
-
-  /*
-   * =========================================================
-   * HERO SCROLL PROGRESS
-   * =========================================================
-   */
+  const [completeFired, setCompleteFired] =
+    useState(false);
 
   useEffect(() => {
 
@@ -160,24 +130,21 @@ export const HeroSection: React.FC<
       ticking = false;
     };
 
-
-    const handleScroll = () => {
-
-      if (!ticking) {
-
-        window.requestAnimationFrame(
-          updateProgress
-        );
+    const handleScroll =
+      () => {
+        if (!ticking) {
+          window.requestAnimationFrame(
+            updateProgress
+          );
 
         ticking = true;
       }
     };
 
-
-    const handleResize = () => {
-
-      updateProgress();
-    };
+    const handleResize =
+      () => {
+        updateProgress();
+      };
 
 
     window.addEventListener(
@@ -221,118 +188,6 @@ export const HeroSection: React.FC<
     completeFired,
   ]);
 
-
-  /*
-   * =========================================================
-   * THEME-SPECIFIC HERO SCENE
-   * =========================================================
-   *
-   * TAU CETI
-   *   Existing SpaceScene
-   *
-   * MILLER
-   *   Existing ThemeHeroScene Miller environment
-   *
-   * PANDORA
-   *   Dedicated PandoraHeroScene
-   *
-   * KEPLER
-   *   Existing ThemeHeroScene Kepler environment
-   *
-   * IMPORTANT:
-   *
-   * Pandora is separated here so changing Pandora does
-   * NOT modify the Miller implementation.
-   * =========================================================
-   */
-
-  const renderHeroScene = () => {
-
-    /*
-     * =======================================================
-     * PANDORA
-     * =======================================================
-     *
-     * Dedicated Pandora Three.js environment.
-     *
-     * This is the scene based on your Pandora reference:
-     *
-     * - giant blue atmospheric moon
-     * - floating jungle islands
-     * - waterfalls
-     * - distant mountains
-     * - dense foreground vegetation
-     * - blue/cyan atmosphere
-     * - bioluminescent particles
-     * - interactive parallax
-     * - cinematic scroll camera
-     */
-
-    if (
-      themeId === 'pandora'
-    ) {
-
-      return (
-        <PandoraHeroScene
-          scrollProgress={
-            scrollProgress
-          }
-        />
-      );
-    }
-
-
-    /*
-     * =======================================================
-     * TAU CETI
-     * =======================================================
-     *
-     * Keep the existing SpaceScene.
-     */
-
-    if (
-      themeId === 'tau-ceti'
-    ) {
-
-      return (
-        <SpaceScene
-          scrollProgress={
-            scrollProgress
-          }
-          themeId={
-            themeId
-          }
-        />
-      );
-    }
-
-
-    /*
-     * =======================================================
-     * MILLER / KEPLER
-     * =======================================================
-     *
-     * These continue using the existing ThemeHeroScene.
-     *
-     * Miller is therefore NOT changed by the Pandora update.
-     */
-
-    return (
-      <ThemeHeroScene
-        themeId={
-          themeId as Exclude<
-            ThemeId,
-            'tau-ceti'
-          >
-        }
-        scrollProgress={
-          scrollProgress
-        }
-      />
-    );
-  };
-
-
   return (
     <section
       id="hero-section"
@@ -341,17 +196,16 @@ export const HeroSection: React.FC<
         position:
           'relative',
 
-        width:
-          '100%',
-
         height:
           '300vh',
+
+        width:
+          '100%',
 
         background:
           'var(--theme-background, #02040a)',
       }}
     >
-
       {/* =====================================================
           STICKY HERO VIEWPORT
           ===================================================== */}
@@ -367,8 +221,7 @@ export const HeroSection: React.FC<
           position:
             'sticky',
 
-          top:
-            0,
+          top: 0,
 
           width:
             '100%',
@@ -376,17 +229,16 @@ export const HeroSection: React.FC<
           height:
             '100vh',
 
+          // height:
+          //   '100svh',
+
           overflow:
             'hidden',
 
-          /*
-           * Keep Hero above the global background.
-           */
           zIndex:
             50,
 
-          isolation:
-            'isolate',
+          isolation: 'isolate',
 
           willChange:
             'opacity, transform, filter',
@@ -403,29 +255,11 @@ export const HeroSection: React.FC<
             THEME-SPECIFIC THREE.JS WORLD
             ================================================= */}
 
-        <div
-          style={{
-            position:
-              'absolute',
-
-            inset:
-              0,
-
-            zIndex:
-              1,
-
-            pointerEvents:
-              'none',
-
-            overflow:
-              'hidden',
-          }}
-        >
-
-          {renderHeroScene()}
-
-        </div>
-
+        <ScrollVideoBackground
+          progress={
+            scrollProgress
+          }
+        />
 
         {/* =================================================
             HERO CONTENT
@@ -436,8 +270,7 @@ export const HeroSection: React.FC<
             position:
               'absolute',
 
-            inset:
-              0,
+            inset: 0,
 
             zIndex:
               20,
@@ -455,42 +288,116 @@ export const HeroSection: React.FC<
 
         </div>
 
-
         {/* =================================================
-            SCROLL PROGRESS
+            CINEMATIC VIGNETTE
             ================================================= */}
 
         <div
           aria-hidden="true"
-
-          className="hero-progress-indicator"
-
           style={{
             position:
               'absolute',
 
-            bottom:
-              28,
-
-            left:
-              '50%',
-
-            transform:
-              'translateX(-50%)',
-
-            width:
-              140,
+            inset: 0,
 
             zIndex:
-              40,
+              10,
 
             pointerEvents:
               'none',
 
+            background: `
+              radial-gradient(
+                circle at center,
+                transparent 0%,
+                rgba(5, 8, 22, 0.03) 35%,
+                rgba(5, 8, 22, 0.25) 72%,
+                rgba(5, 8, 22, 0.58) 100%
+              )
+            `,
+          }}
+        />
+
+        {/* =================================================
+            TOP VIGNETTE
+            ================================================= */}
+
+        <div
+          aria-hidden="true"
+          style={{
+            position:
+              'absolute',
+
+            top: 0,
+
+            left: 0,
+
+            right: 0,
+
+            height:
+              '20%',
+
+            zIndex:
+              11,
+
+            pointerEvents:
+              'none',
+
+            background:
+              'linear-gradient(to bottom, rgba(3,5,16,.55), transparent)',
+          }}
+        />
+
+        {/* =================================================
+            BOTTOM VIGNETTE
+            ================================================= */}
+
+        <div
+          aria-hidden="true"
+          style={{
+            position:
+              'absolute',
+
+            bottom: 0,
+
+            left: 0,
+
+            right: 0,
+
+            height:
+              '24%',
+
+            zIndex:
+              11,
+
+            pointerEvents:
+              'none',
+
+            background:
+              'linear-gradient(to top, rgba(3,5,16,.75), transparent)',
+          }}
+        />
+
+        {/* =================================================
+            HERO PROGRESS
+            ================================================= */}
+
+        <div
+          aria-hidden="true"
+          className="hero-progress-indicator"
+
+          style={{
+            position: 'absolute',
+            bottom: 28,
+            left: '50%',
+            transform:
+              'translateX(-50%)',
+            width: 140,
+            zIndex: 40,
+            pointerEvents: 'none',
+
             opacity:
-              handoff
-                ? 0
-                : 1,
+              handoff ? 0 : 1,
 
             transition:
               'opacity 420ms ease',
@@ -499,12 +406,8 @@ export const HeroSection: React.FC<
 
           <div
             style={{
-              height:
-                1,
-
-              width:
-                '100%',
-
+              height: 1,
+              width: '100%',
               background:
                 'rgba(255,255,255,0.16)',
             }}
@@ -512,14 +415,10 @@ export const HeroSection: React.FC<
 
             <div
               style={{
-                height:
-                  '100%',
+                height: '100%',
 
                 width:
-                  `${
-                    scrollProgress *
-                    100
-                  }%`,
+                  `${scrollProgress * 100}%`,
 
                 background:
                   'linear-gradient(90deg, var(--theme-accent), var(--theme-primary), var(--theme-cta))',
@@ -536,6 +435,33 @@ export const HeroSection: React.FC<
 
         </div>
 
+        {/* =================================================
+            HERO → ABOUT ATMOSPHERIC BRIDGE
+            ================================================= */}
+
+        <div
+          className="hero-about-bridge"
+          aria-hidden="true"
+        />
+
+        {/* =================================================
+            LIGHT TRACE
+            ================================================= */}
+
+        <div
+          className="hero-about-light-trace"
+          aria-hidden="true"
+        />
+
+        {/* =================================================
+            SOFT BOTTOM EDGE
+            ================================================= */}
+
+        <div
+          className="hero-about-soft-edge"
+          aria-hidden="true"
+        />
+
       </div>
 
 
@@ -545,7 +471,6 @@ export const HeroSection: React.FC<
 
       <style>
         {`
-
           .hero-sticky {
             opacity: 1;
 
@@ -585,7 +510,6 @@ export const HeroSection: React.FC<
                 );
           }
 
-
           .hero-sticky.hero-sticky--fading {
             opacity: 0;
 
@@ -606,6 +530,287 @@ export const HeroSection: React.FC<
 
 
           /* ===============================================
+             ATMOSPHERIC BRIDGE
+             =============================================== */
+
+          .hero-about-bridge {
+            position:
+              absolute;
+
+            left:
+              0;
+
+            right:
+              0;
+
+            bottom:
+              -1px;
+
+            height:
+              34vh;
+
+            z-index:
+              55;
+
+            pointer-events:
+              none;
+
+            opacity:
+              0;
+
+            background:
+
+              radial-gradient(
+                ellipse at 50% 100%,
+                rgba(
+                  34,
+                  211,
+                  238,
+                  0.12
+                ) 0%,
+
+                rgba(
+                  59,
+                  130,
+                  246,
+                  0.07
+                ) 20%,
+
+                rgba(
+                  5,
+                  8,
+                  22,
+                  0.55
+                ) 52%,
+
+                rgba(
+                  3,
+                  5,
+                  16,
+                  0.96
+                ) 100%
+              ),
+
+              linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(
+                  3,
+                  5,
+                  16,
+                  0.25
+                ) 35%,
+                rgba(
+                  3,
+                  5,
+                  16,
+                  0.88
+                ) 82%,
+                #030510 100%
+              );
+
+            transform:
+              translate3d(
+                0,
+                12%,
+                0
+              );
+
+            will-change:
+              opacity,
+              transform;
+
+            transition:
+
+              opacity 850ms
+                cubic-bezier(
+                  0.22,
+                  1,
+                  0.36,
+                  1
+                ),
+
+              transform 1100ms
+                cubic-bezier(
+                  0.22,
+                  1,
+                  0.36,
+                  1
+                );
+          }
+
+
+          .hero-sticky.hero-sticky--fading
+            .hero-about-bridge {
+
+            opacity:
+              1;
+
+            transform:
+              translate3d(
+                0,
+                0,
+                0
+              );
+          }
+
+
+          /* ===============================================
+             CYAN LIGHT TRACE
+             =============================================== */
+
+          .hero-about-light-trace {
+            position:
+              absolute;
+
+            left:
+              50%;
+
+            bottom:
+              -1px;
+
+            width:
+              min(
+                180px,
+                22vw
+              );
+
+            height:
+              1px;
+
+            z-index:
+              58;
+
+            pointer-events:
+              none;
+
+            opacity:
+              0;
+
+            transform:
+              translateX(-50%)
+              scaleX(0.35);
+
+            background:
+              linear-gradient(
+                90deg,
+                transparent,
+                rgba(
+                  34,
+                  211,
+                  238,
+                  0.95
+                ),
+                transparent
+              );
+
+            box-shadow:
+              0 0 12px
+                rgba(
+                  34,
+                  211,
+                  238,
+                  0.65
+                ),
+
+              0 0 35px
+                rgba(
+                  59,
+                  130,
+                  246,
+                  0.35
+                );
+
+            transition:
+              opacity 500ms ease,
+              transform 1000ms
+                cubic-bezier(
+                  0.22,
+                  1,
+                  0.36,
+                  1
+                );
+          }
+
+
+          .hero-sticky.hero-sticky--fading
+            .hero-about-light-trace {
+
+            opacity:
+              1;
+
+            transform:
+              translateX(-50%)
+              scaleX(1);
+          }
+
+
+          /* ===============================================
+             SOFT EDGE
+             =============================================== */
+
+          .hero-about-soft-edge {
+            position:
+              absolute;
+
+            left:
+              0;
+
+            right:
+              0;
+
+            bottom:
+              -1px;
+
+            height:
+              90px;
+
+            z-index:
+              57;
+
+            pointer-events:
+              none;
+
+            opacity:
+              0;
+
+            background:
+              linear-gradient(
+                to bottom,
+                transparent,
+                rgba(
+                  3,
+                  5,
+                  16,
+                  0.42
+                ) 42%,
+                rgba(
+                  3,
+                  5,
+                  16,
+                  0.92
+                ) 100%
+              );
+
+            transition:
+              opacity 700ms
+                cubic-bezier(
+                  0.22,
+                  1,
+                  0.36,
+                  1
+                );
+          }
+
+
+          .hero-sticky.hero-sticky--fading
+            .hero-about-soft-edge {
+            opacity:
+              1;
+          }
+
+
+          /* ===============================================
              REDUCED MOTION
              =============================================== */
 
@@ -613,15 +818,17 @@ export const HeroSection: React.FC<
             prefers-reduced-motion: reduce
           ) {
 
-            .hero-sticky {
+            .hero-sticky,
+            .hero-about-bridge,
+            .hero-about-light-trace,
+            .hero-about-soft-edge {
               transition:
                 none;
             }
 
 
             .hero-sticky.hero-sticky--fading {
-              opacity:
-                0;
+              opacity: 0;
 
               transform:
                 none;
@@ -631,7 +838,6 @@ export const HeroSection: React.FC<
             }
           }
 
-
           /* ===============================================
              MOBILE
              =============================================== */
@@ -640,7 +846,17 @@ export const HeroSection: React.FC<
             max-width: 700px
           ) {
 
-            .hero-progress-indicator {
+            .hero-about-bridge {
+              height:
+                27vh;
+            }
+
+            .hero-about-soft-edge {
+              height:
+                70px;
+            }
+
+            .hero-about-light-trace {
               width:
                 110px !important;
 
@@ -648,13 +864,9 @@ export const HeroSection: React.FC<
                 22px !important;
             }
           }
-
         `}
       </style>
 
     </section>
   );
 };
-
-
-export default HeroSection;
