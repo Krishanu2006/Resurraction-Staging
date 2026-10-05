@@ -44,19 +44,36 @@ const App: React.FC = () => {
      BOOT STATE
      ============================================================ */
 
-  const [bootComplete, setBootComplete] =
-    useState(false);
-
+  const [bootComplete, setBootComplete] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.has('theme') || params.has('skipBoot');
+    }
+    return false;
+  });
 
   /* ============================================================
      THEME STATE
      ============================================================ */
 
-  const [themeSelected, setThemeSelected] =
-    useState(false);
+  const [themeSelected, setThemeSelected] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.has('theme');
+    }
+    return false;
+  });
 
-  const [selectedTheme, setSelectedTheme] =
-    useState<ThemeId>('tau-ceti');
+  const [selectedTheme, setSelectedTheme] = useState<ThemeId>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get('theme');
+      if (t === 'kepler' || t === 'miller' || t === 'pandora' || t === 'tau-ceti') {
+        return t;
+      }
+    }
+    return 'tau-ceti';
+  });
 
 
   /* ============================================================
