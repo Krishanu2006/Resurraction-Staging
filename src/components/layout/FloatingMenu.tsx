@@ -125,7 +125,6 @@ const Menu3DOrb: React.FC<Menu3DOrbProps> = ({ isOpen, isHovered }) => {
     // 4. Swirling constellation particles
     const particleCount = 42;
     const particlePositions = new Float32Array(particleCount * 3);
-    const particleScales = new Float32Array(particleCount);
     for (let i = 0; i < particleCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(Math.random() * 2 - 1);
@@ -133,7 +132,6 @@ const Menu3DOrb: React.FC<Menu3DOrbProps> = ({ isOpen, isHovered }) => {
       particlePositions[i * 3] = rad * Math.sin(phi) * Math.cos(theta);
       particlePositions[i * 3 + 1] = rad * Math.sin(phi) * Math.sin(theta);
       particlePositions[i * 3 + 2] = rad * Math.cos(phi);
-      particleScales[i] = 0.5 + Math.random() * 0.8;
     }
 
     const particleGeo = new THREE.BufferGeometry();
