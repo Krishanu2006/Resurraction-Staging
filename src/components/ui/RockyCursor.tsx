@@ -113,11 +113,11 @@ export const RockyCursor: React.FC = () => {
       tiltAngle += (targetTilt - tiltAngle) * 0.15;
 
       if (cursor) {
-        cursor.style.transform = `translate3d(${currentX - 28}px, ${currentY - 24}px, 0) rotate(${tiltAngle.toFixed(2)}deg)`;
+        cursor.style.transform = `translate3d(${currentX - 8}px, ${currentY}px, 0) rotate(${tiltAngle.toFixed(2)}deg)`;
       }
 
       if (aura) {
-        aura.style.transform = `translate3d(${currentX - 35}px, ${currentY - 35}px, 0)`;
+        aura.style.transform = `translate3d(${currentX - 15}px, ${currentY - 15}px, 0)`;
       }
 
       animationFrame = requestAnimationFrame(animate);
