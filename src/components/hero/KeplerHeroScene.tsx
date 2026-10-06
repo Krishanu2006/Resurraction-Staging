@@ -121,7 +121,7 @@ const planetFragment = /* glsl */ `
     ocean = mix(ocean, vec3(0.03, 0.17, 0.20), shelf * 0.55);
 
     vec3 albedo = mix(ocean, land, landMask);
-    vec3 starCol = vec3(1.0, 0.82, 0.76) * 2.4;
+    vec3 starCol = vec3(1.0, 0.52, 0.40) * 2.6;
     vec3 col = albedo * (starCol * diff + vec3(0.05, 0.07, 0.11) * 0.9);
 
     float spec = pow(max(dot(N, H), 0.0), 140.0) * smoothstep(0.0, 0.3, ndl) * (1.0 - landMask);
@@ -153,7 +153,7 @@ const cloudFragment = /* glsl */ `
     vec3 V = normalize(cameraPosition - vWorldPos);
     float diff = smoothstep(-0.30, 0.65, dot(N, L));
     float rim = pow(1.0 - max(dot(N, V), 0.0), 2.0);
-    vec3 col = mix(vec3(0.40, 0.25, 0.27), vec3(1.0, 0.90, 0.88), diff) * (0.08 + 0.92 * diff) * 1.6;
+    vec3 col = mix(vec3(0.40, 0.22, 0.25), vec3(1.0, 0.82, 0.78), diff) * (0.08 + 0.92 * diff) * 1.6;
     float a = d * (0.10 + 0.90 * diff) * 0.78 * (0.75 + 0.5 * rim) * uFade;
     gl_FragColor = vec4(col, a);
     ${FINISH}
@@ -406,27 +406,55 @@ function createCloudTexture(width = 512, height = 256) {
   return tex;
 }
 
-/* Host star: a glowing disc with a faint granulated surface and a red halo. */
+/* Host star: an unmistakable glowing red dwarf star (Kepler-186) with fiery
+   crimson disc, dynamic solar granulation, and radiant ruby/vermilion corona. */
 function createStarTexture() {
-  const size = 256;
+  const size = 512;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d')!;
   const c = size / 2;
 
+  // 1. Wide Atmospheric Red Corona Halo
   const halo = ctx.createRadialGradient(c, c, 0, c, c, c);
-  halo.addColorStop(0, 'rgba(255,90,95,0.70)');
-  halo.addColorStop(0.31, 'rgba(255,80,90,0.50)');
-  halo.addColorStop(0.45, 'rgba(255,60,80,0.16)');
-  halo.addColorStop(1, 'rgba(255,40,70,0)');
+  halo.addColorStop(0.0, 'rgba(255, 45, 55, 0.95)');
+  halo.addColorStop(0.18, 'rgba(255, 65, 35, 0.78)');
+  halo.addColorStop(0.38, 'rgba(235, 25, 45, 0.48)');
+  halo.addColorStop(0.62, 'rgba(185, 12, 35, 0.22)');
+  halo.addColorStop(0.85, 'rgba(125, 0, 22, 0.08)');
+  halo.addColorStop(1.0, 'rgba(60, 0, 10, 0.0)');
   ctx.fillStyle = halo;
   ctx.fillRect(0, 0, size, size);
 
-  const R = 40;
+  // 2. Anamorphic Red Lens Flare Spikes (Optical cross diffraction)
+  const drawSpike = (angleRad: number, length: number, width: number) => {
+    ctx.save();
+    ctx.translate(c, c);
+    ctx.rotate(angleRad);
+    const grad = ctx.createLinearGradient(-length, 0, length, 0);
+    grad.addColorStop(0.0, 'rgba(255, 35, 45, 0.0)');
+    grad.addColorStop(0.35, 'rgba(255, 65, 55, 0.40)');
+    grad.addColorStop(0.5, 'rgba(255, 150, 110, 0.90)');
+    grad.addColorStop(0.65, 'rgba(255, 65, 55, 0.40)');
+    grad.addColorStop(1.0, 'rgba(255, 35, 45, 0.0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, length, width, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  drawSpike(THREE.MathUtils.degToRad(-26), size * 0.48, 5.5);
+  drawSpike(THREE.MathUtils.degToRad(64), size * 0.36, 4.0);
+
+  // 3. Dense Incandescent Red Solar Disc
+  const R = 68;
   const disc = ctx.createRadialGradient(c, c, 0, c, c, R);
-  disc.addColorStop(0, '#ffffff');
-  disc.addColorStop(0.78, '#ffeef0');
-  disc.addColorStop(1, '#ffb7c0');
+  disc.addColorStop(0.0, '#ff7a5c'); // Hot incandescent vermilion/orange core
+  disc.addColorStop(0.42, '#ff2536'); // Vibrant ruby crimson
+  disc.addColorStop(0.82, '#d6001a'); // Saturated deep scarlet
+  disc.addColorStop(1.0, '#8c0014'); // Solar limb darkening
+
   ctx.save();
   ctx.beginPath();
   ctx.arc(c, c, R, 0, Math.PI * 2);
@@ -434,14 +462,15 @@ function createStarTexture() {
   ctx.fillStyle = disc;
   ctx.fillRect(c - R, c - R, R * 2, R * 2);
 
-  let s = 7;
+  // Solar surface granulation and fiery convective flares
+  let s = 186;
   const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
-  for (let i = 0; i < 420; i++) {
+  for (let i = 0; i < 500; i++) {
     const a = rnd() * Math.PI * 2;
     const r = Math.sqrt(rnd()) * R;
-    ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,150,160,0.16)' : 'rgba(255,255,255,0.22)';
+    ctx.fillStyle = rnd() > 0.5 ? 'rgba(255, 130, 90, 0.38)' : 'rgba(170, 0, 25, 0.48)';
     ctx.beginPath();
-    ctx.arc(c + Math.cos(a) * r, c + Math.sin(a) * r, 0.8 + rnd() * 1.6, 0, Math.PI * 2);
+    ctx.arc(c + Math.cos(a) * r, c + Math.sin(a) * r, 1.2 + rnd() * 2.8, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -595,8 +624,8 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({ scrollProgress
     });
     container.appendChild(renderer.domElement);
 
-    /* ---------------- Host star ---------------- */
-    const starPosition = new THREE.Vector3(-8.8, 6.4, -12);
+    /* ---------------- Red dwarf host star (Kepler-186) ---------------- */
+    const starPosition = new THREE.Vector3(-6.8, 4.8, -10.5);
     const starTexture = createStarTexture();
     const star = new THREE.Sprite(
       new THREE.SpriteMaterial({
@@ -607,14 +636,18 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({ scrollProgress
         toneMapped: false,
       })
     );
-    const STAR_SIZE = isMobile ? 3.4 : 4.2;
+    const STAR_SIZE = isMobile ? 4.5 : 5.8;
     star.scale.set(STAR_SIZE, STAR_SIZE, 1);
     star.position.copy(starPosition);
     scene.add(star);
 
-    const starLight = new THREE.PointLight(0xffc5b8, isMobile ? 75 : 105, 100, 2);
+    const starLight = new THREE.PointLight(0xff3322, isMobile ? 95 : 135, 120, 1.8);
     starLight.position.copy(starPosition);
     scene.add(starLight);
+
+    const redSunDirLight = new THREE.DirectionalLight(0xff4433, 2.6);
+    redSunDirLight.position.copy(starPosition);
+    scene.add(redSunDirLight);
 
     /* ---------------- Nebula ---------------- */
     const nebulaCanvas = document.createElement('canvas');
