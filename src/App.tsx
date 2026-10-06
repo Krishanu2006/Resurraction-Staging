@@ -109,8 +109,8 @@ const App: React.FC = () => {
   /* ============================================================
      THEME SELECTION
      ------------------------------------------------------------
-     When user selects a theme (e.g. on first visit), save choice,
-     mark theme as selected, and ensure boot sequence begins.
+     When user selects a theme (first boot), save choice and
+     reveal the main website.
      ============================================================ */
 
   const handleThemeSelect =
@@ -122,7 +122,6 @@ const App: React.FC = () => {
       }
       setSelectedTheme(themeId);
       setThemeSelected(true);
-      setBootComplete(false);
     }, []);
 
   /* ============================================================
@@ -185,10 +184,21 @@ const App: React.FC = () => {
       <RockyCursor />
 
       {/* ======================================================
-          1. THEME SELECTION: FIRST TIME USER EXPERIENCE
-          Shown first if user hasn't selected a theme yet.
+          STEP 1 (FIRST & SECOND BOOT): LOADER BAR & VIDEO ANIMATION
+          Runs on first boot and second boot (refresh).
          ====================================================== */}
-      {!themeSelected && (
+      {!bootComplete && (
+        <BootLoader
+          onComplete={handleBootComplete}
+        />
+      )}
+
+      {/* ======================================================
+          STEP 2 (FIRST BOOT ONLY): THEME SELECTOR
+          Shown after video animation completes, only if theme
+          has not been selected yet.
+         ====================================================== */}
+      {bootComplete && !themeSelected && (
         <React.Suspense fallback={null}>
           <ThemeSelector
             onSelect={(themeId) => {
@@ -199,20 +209,11 @@ const App: React.FC = () => {
       )}
 
       {/* ======================================================
-          2. BOOT SEQUENCE: INTRO VID & ANIMATION
-          Shown after theme selection (or on refresh) until boot finishes.
+          STEP 3: MAIN WEBSITE
+          Shown after boot completes and theme is selected.
+          On second boot, jumps directly here after the video animation.
          ====================================================== */}
-      {themeSelected && !bootComplete && (
-        <BootLoader
-          onComplete={handleBootComplete}
-        />
-      )}
-
-      {/* ======================================================
-          3. MAIN WEBSITE
-          Shown only when theme is selected AND boot is complete.
-         ====================================================== */}
-      {themeSelected && bootComplete && (
+      {bootComplete && themeSelected && (
         <>
           <React.Suspense fallback={null}>
             <GlobalThemeBackground

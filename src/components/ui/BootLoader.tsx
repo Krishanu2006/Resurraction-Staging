@@ -125,34 +125,14 @@ export const BootLoader: React.FC<BootLoaderProps> = ({ onComplete }) => {
       title="Click or press ESC to skip"
     >
       {/* =====================================================
-          BUFFERING LOADING HUD (Until Video Is 100% Loaded)
+          SIMPLE LINE PROGRESS BAR (Preload Progress)
           ===================================================== */}
       {!videoLoaded && (
-        <div className="resurrection-boot__buffer-hud" aria-live="polite">
-          <div className="resurrection-boot__buffer-radar">
-            <div className="resurrection-boot__radar-ring resurrection-boot__radar-ring--1" />
-            <div className="resurrection-boot__radar-ring resurrection-boot__radar-ring--2" />
-            <div className="resurrection-boot__radar-core" />
-          </div>
-
-          <div className="resurrection-boot__buffer-telemetry">
-            <div className="resurrection-boot__buffer-title">
-              INITIALIZING MISSION FEED
-            </div>
-            <div className="resurrection-boot__buffer-status">
-              BUFFERING STREAM PACKETS [{loadProgress}%]
-            </div>
-            <div className="resurrection-boot__buffer-subtext">
-              AWAITING VIDEO SYNCHRONIZATION BEFORE LAUNCH
-            </div>
-          </div>
-
-          <div className="resurrection-boot__progress-bar">
-            <div
-              className="resurrection-boot__progress-fill"
-              style={{ width: `${Math.max(6, loadProgress)}%` }}
-            />
-          </div>
+        <div className="resurrection-boot__line-progress-container" aria-live="polite">
+          <div
+            className="resurrection-boot__line-progress-bar"
+            style={{ width: `${Math.max(4, loadProgress)}%` }}
+          />
         </div>
       )}
 
@@ -244,116 +224,27 @@ export const BootLoader: React.FC<BootLoaderProps> = ({ onComplete }) => {
           pointer-events: none;
         }
 
-        /* ---------------- Video Preload Buffer HUD ---------------- */
-        .resurrection-boot__buffer-hud {
-          position: relative;
-          z-index: 5;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1.5rem;
-          padding: 2rem;
-          text-align: center;
-          user-select: none;
-        }
-
-        .resurrection-boot__buffer-radar {
-          position: relative;
-          width: 72px;
-          height: 72px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .resurrection-boot__radar-ring {
+        /* ---------------- Simple Line Progress Bar ---------------- */
+        .resurrection-boot__line-progress-container {
           position: absolute;
-          inset: 0;
-          border-radius: 50%;
-          border: 1.5px solid transparent;
-        }
-
-        .resurrection-boot__radar-ring--1 {
-          border-top-color: var(--theme-accent, #00d2ff);
-          border-right-color: var(--theme-accent, #00d2ff);
-          animation: resurrectionRadarSpin 1.6s linear infinite;
-        }
-
-        .resurrection-boot__radar-ring--2 {
-          inset: 10px;
-          border-bottom-color: var(--theme-primary, #3b82f6);
-          border-left-color: var(--theme-primary, #3b82f6);
-          animation: resurrectionRadarSpinReverse 2.2s linear infinite;
-        }
-
-        .resurrection-boot__radar-core {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: var(--theme-accent, #00d2ff);
-          box-shadow: 0 0 12px var(--theme-accent, #00d2ff);
-          animation: resurrectionPulseCore 1.5s ease-in-out infinite alternate;
-        }
-
-        @keyframes resurrectionRadarSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        @keyframes resurrectionRadarSpinReverse {
-          from { transform: rotate(360deg); }
-          to { transform: rotate(0deg); }
-        }
-
-        @keyframes resurrectionPulseCore {
-          0% { transform: scale(0.8); opacity: 0.5; }
-          100% { transform: scale(1.3); opacity: 1; }
-        }
-
-        .resurrection-boot__buffer-telemetry {
-          display: flex;
-          flex-direction: column;
-          gap: 0.4rem;
-          font-family: 'Space Mono', monospace;
-        }
-
-        .resurrection-boot__buffer-title {
-          font-size: 0.85rem;
-          font-weight: 700;
-          letter-spacing: 0.28em;
-          color: #ffffff;
-          text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
-        }
-
-        .resurrection-boot__buffer-status {
-          font-size: 0.72rem;
-          letter-spacing: 0.18em;
-          color: var(--theme-accent, #00d2ff);
-          font-weight: 600;
-        }
-
-        .resurrection-boot__buffer-subtext {
-          font-size: 0.62rem;
-          letter-spacing: 0.12em;
-          color: rgba(255, 255, 255, 0.45);
-          margin-top: 0.2rem;
-        }
-
-        .resurrection-boot__progress-bar {
-          width: min(320px, 80vw);
-          height: 4px;
-          background: rgba(255, 255, 255, 0.1);
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          width: min(280px, 64vw);
+          height: 2px;
+          background: rgba(255, 255, 255, 0.08);
           border-radius: 999px;
           overflow: hidden;
-          position: relative;
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          z-index: 10;
+          pointer-events: none;
         }
 
-        .resurrection-boot__progress-fill {
+        .resurrection-boot__line-progress-bar {
           height: 100%;
-          background: linear-gradient(90deg, var(--theme-primary, #3b82f6), var(--theme-accent, #00d2ff));
-          box-shadow: 0 0 10px var(--theme-accent, #00d2ff);
-          transition: width 0.25s ease-out;
+          background: var(--theme-accent, #00d2ff);
+          box-shadow: 0 0 10px var(--theme-accent, #00d2ff), 0 0 20px var(--theme-accent, #00d2ff);
+          border-radius: 999px;
+          transition: width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         /* ---------------- Background Video ---------------- */
