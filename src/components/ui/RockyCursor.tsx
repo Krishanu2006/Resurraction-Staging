@@ -2,6 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 
 type CursorState = 'default' | 'pointer' | 'card' | 'text' | 'pressed';
 
+// Eager image decoding in module scope
+if (typeof window !== 'undefined') {
+  const img1 = new Image();
+  img1.src = '/assets/about/rocky.webp';
+  const img2 = new Image();
+  img2.src = '/assets/about/rocky-pointer.webp';
+}
+
 export const RockyCursor: React.FC = () => {
   const cursorRef = useRef<HTMLDivElement | null>(null);
   const auraRef = useRef<HTMLDivElement | null>(null);
@@ -9,6 +17,7 @@ export const RockyCursor: React.FC = () => {
   const [cursorState, setCursorState] = useState<CursorState>('default');
   const [isFinePointer, setIsFinePointer] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const isVisibleRef = useRef(false);
 
   useEffect(() => {
     // Check if the user has a fine pointer (mouse/trackpad), otherwise hide custom cursor on touch devices
@@ -32,18 +41,35 @@ export const RockyCursor: React.FC = () => {
     let tiltAngle = 0;
     let isPressed = false;
     let animationFrame = 0;
+    let hasFirstPosition = false;
 
     const handleMouseMove = (event: MouseEvent) => {
       targetX = event.clientX;
       targetY = event.clientY;
-      if (!isVisible) setIsVisible(true);
+      if (!hasFirstPosition) {
+        hasFirstPosition = true;
+        currentX = event.clientX;
+        currentY = event.clientY;
+        if (cursor) {
+          cursor.style.transform = `translate3d(${currentX - 8}px, ${currentY}px, 0)`;
+        }
+        if (aura) {
+          aura.style.transform = `translate3d(${currentX - 15}px, ${currentY - 15}px, 0)`;
+        }
+      }
+      if (!isVisibleRef.current) {
+        isVisibleRef.current = true;
+        setIsVisible(true);
+      }
     };
 
     const handleMouseEnter = () => {
+      isVisibleRef.current = true;
       setIsVisible(true);
     };
 
     const handleMouseLeave = () => {
+      isVisibleRef.current = false;
       setIsVisible(false);
     };
 
@@ -145,7 +171,7 @@ export const RockyCursor: React.FC = () => {
       document.body.classList.remove('has-rocky-cursor');
       cancelAnimationFrame(animationFrame);
     };
-  }, [isVisible]);
+  }, []);
 
   if (!isFinePointer) return null;
 

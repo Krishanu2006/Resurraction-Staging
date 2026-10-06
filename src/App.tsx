@@ -26,10 +26,8 @@ import { FAQSection } from './components/sections/FAQSection';
 
 import { Footer } from './components/layout/Footer';
 import { BootLoader } from './components/ui/BootLoader';
+import { RockyCursor } from './components/ui/RockyCursor';
 
-const RockyCursor = React.lazy(() =>
-  import('./components/ui/RockyCursor').then((m) => ({ default: m.RockyCursor }))
-);
 const ThemeSelector = React.lazy(() =>
   import('./components/ui/ThemeSelector').then((m) => ({ default: m.ThemeSelector }))
 );
@@ -52,23 +50,6 @@ const isBotCrawler = () => {
    ============================================================ */
 
 const App: React.FC = () => {
-  /* ============================================================
-     BOOT STATE
-     ============================================================ */
-
-  const [bootComplete, setBootComplete] = useState(() => {
-    if (typeof window !== 'undefined') {
-      if (isBotCrawler()) return true;
-      const params = new URLSearchParams(window.location.search);
-      return (
-        params.has('theme') ||
-        params.has('skipBoot') ||
-        sessionStorage.getItem('resurrection_boot_seen') === 'true'
-      );
-    }
-    return false;
-  });
-
   /* ============================================================
      THEME STATE
      ============================================================ */
@@ -100,21 +81,36 @@ const App: React.FC = () => {
   });
 
   /* ============================================================
+     BOOT STATE
+     ------------------------------------------------------------
+     On both first-time selection and page refresh, the intro video
+     and animation will ALWAYS play before the main website loads.
+     Only bots or explicit ?skipBoot=true bypass it.
+     ============================================================ */
+
+  const [bootComplete, setBootComplete] = useState(() => {
+    if (typeof window !== 'undefined') {
+      if (isBotCrawler()) return true;
+      const params = new URLSearchParams(window.location.search);
+      return params.has('skipBoot');
+    }
+    return false;
+  });
+
+  /* ============================================================
      BOOT COMPLETE
      ============================================================ */
 
   const handleBootComplete =
     useCallback(() => {
-      try {
-        sessionStorage.setItem('resurrection_boot_seen', 'true');
-      } catch {
-        // ignore
-      }
       setBootComplete(true);
     }, []);
 
   /* ============================================================
      THEME SELECTION
+     ------------------------------------------------------------
+     When user selects a theme (e.g. on first visit), save choice,
+     mark theme as selected, and ensure boot sequence begins.
      ============================================================ */
 
   const handleThemeSelect =
@@ -126,6 +122,7 @@ const App: React.FC = () => {
       }
       setSelectedTheme(themeId);
       setThemeSelected(true);
+      setBootComplete(false);
     }, []);
 
   /* ============================================================
@@ -183,20 +180,15 @@ const App: React.FC = () => {
   return (
     <>
       {/* ======================================================
-          BOOT SEQUENCE
+          ROCKY CURSOR: ALWAYS MOUNTED IMMEDIATELY ACROSS ALL SCREENS
          ====================================================== */}
-
-      {!bootComplete && (
-        <BootLoader
-          onComplete={handleBootComplete}
-        />
-      )}
+      <RockyCursor />
 
       {/* ======================================================
-          THEME SELECTOR
+          1. THEME SELECTION: FIRST TIME USER EXPERIENCE
+          Shown first if user hasn't selected a theme yet.
          ====================================================== */}
-
-      {bootComplete && !themeSelected && (
+      {!themeSelected && (
         <React.Suspense fallback={null}>
           <ThemeSelector
             onSelect={(themeId) => {
@@ -207,10 +199,20 @@ const App: React.FC = () => {
       )}
 
       {/* ======================================================
-          MAIN WEBSITE
+          2. BOOT SEQUENCE: INTRO VID & ANIMATION
+          Shown after theme selection (or on refresh) until boot finishes.
          ====================================================== */}
+      {themeSelected && !bootComplete && (
+        <BootLoader
+          onComplete={handleBootComplete}
+        />
+      )}
 
-      {bootComplete && themeSelected && (
+      {/* ======================================================
+          3. MAIN WEBSITE
+          Shown only when theme is selected AND boot is complete.
+         ====================================================== */}
+      {themeSelected && bootComplete && (
         <>
           <React.Suspense fallback={null}>
             <GlobalThemeBackground
@@ -286,16 +288,6 @@ const App: React.FC = () => {
             </div>
           </div>
         </>
-      )}
-
-      {/* ======================================================
-          ROCKY CURSOR
-         ====================================================== */}
-
-      {bootComplete && (
-        <React.Suspense fallback={null}>
-          <RockyCursor />
-        </React.Suspense>
       )}
     </>
   );
