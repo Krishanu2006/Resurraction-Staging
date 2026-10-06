@@ -4,7 +4,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Header } from './components/layout/Header';
+import { FloatingMenu } from './components/layout/FloatingMenu';
 
 /*
  * HeroSection.tsx now exports both:
@@ -213,7 +213,7 @@ const App: React.FC = () => {
                 zIndex: 1,
               }}
             >
-              <Header />
+              <FloatingMenu />
 
               <main
                 id="main-content"
