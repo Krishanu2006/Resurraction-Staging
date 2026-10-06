@@ -121,20 +121,22 @@ const planetFragment = /* glsl */ `
     ocean = mix(ocean, vec3(0.03, 0.17, 0.20), shelf * 0.55);
 
     vec3 albedo = mix(ocean, land, landMask);
-    vec3 starCol = vec3(1.0, 0.58, 0.46) * 2.4;
+    vec3 starCol = vec3(1.0, 0.52, 0.38) * 2.6;
     vec3 col = albedo * (starCol * diff + vec3(0.04, 0.06, 0.08) * 0.85);
 
     float spec = pow(max(dot(N, H), 0.0), 140.0) * smoothstep(0.0, 0.3, ndl) * (1.0 - landMask);
-    col += vec3(0.35, 0.18, 0.15) * spec * 0.75;
+    col += vec3(0.45, 0.22, 0.18) * spec * 0.85;
 
-    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 4.0);
-    col += vec3(0.18, 0.55, 0.65) * fresnel * smoothstep(-0.08, 0.72, ndl) * 0.25;
+    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.2);
+    // Glowing red rim along the horizon facing the red star
+    float starRim = fresnel * smoothstep(-0.10, 0.55, ndl);
+    col += vec3(1.0, 0.22, 0.12) * starRim * 0.90;
+
+    // Warm red solar wash on the sunlit surface
+    col += vec3(0.85, 0.16, 0.08) * smoothstep(0.0, 0.65, ndl) * 0.22;
+
     float twilight = (1.0 - smoothstep(-0.12, 0.38, ndl)) * smoothstep(-0.42, 0.18, ndl);
-    col += vec3(0.65, 0.08, 0.05) * twilight * fresnel * 0.35;
-
-    // Subtle soft red rim glow on the horizon facing Kepler-186
-    float starRim = pow(1.0 - max(dot(N, V), 0.0), 3.5) * smoothstep(-0.10, 0.60, ndl);
-    col += vec3(0.85, 0.18, 0.12) * starRim * 0.45;
+    col += vec3(0.75, 0.10, 0.05) * twilight * fresnel * 0.45;
 
     gl_FragColor = vec4(col, uFade);
     ${FINISH}
@@ -156,9 +158,9 @@ const cloudFragment = /* glsl */ `
     vec3 L = normalize(uStarPosition - vWorldPos);
     vec3 V = normalize(cameraPosition - vWorldPos);
     float diff = smoothstep(-0.30, 0.65, dot(N, L));
-    float rim = pow(1.0 - max(dot(N, V), 0.0), 2.0);
-    vec3 col = mix(vec3(0.38, 0.18, 0.20), vec3(1.0, 0.82, 0.78), diff) * (0.08 + 0.92 * diff) * 1.5;
-    col += vec3(0.85, 0.18, 0.12) * rim * diff * 0.35;
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 2.2);
+    vec3 col = mix(vec3(0.35, 0.14, 0.16), vec3(1.0, 0.80, 0.74), diff) * (0.08 + 0.92 * diff) * 1.5;
+    col += vec3(1.0, 0.24, 0.14) * rim * diff * 0.65;
     float a = d * (0.10 + 0.90 * diff) * 0.78 * (0.75 + 0.5 * rim) * uFade;
     gl_FragColor = vec4(col, a);
     ${FINISH}
@@ -186,21 +188,32 @@ const atmosphereFragment = /* glsl */ `
     vec3 L = normalize(uStarPosition - p);
     float s = dot(n, L);
 
-    float solar = smoothstep(-0.25, 0.70, s);
-    float inner = pow(smoothstep(0.90, 1.0, x), 2.0);
-    float outer = exp(-(x - 1.0) * 58.0) * (1.0 - smoothstep(0.55, 1.0, (x - 1.0) / (uOuter - 1.0)));
+    // Inner limb (0.88 to 1.0): soft rim fade over the edge of the disk, zero in the middle
+    float inner = pow(smoothstep(0.88, 1.0, x), 2.2);
+
+    // Outer atmosphere halo (1.0 to uOuter): soft radiant glow extending into space
+    float normDist = clamp((x - 1.0) / (uOuter - 1.0), 0.0, 1.0);
+    float outer = pow(1.0 - normDist, 2.2);
+
     float g = x < 1.0 ? inner : outer;
 
+    float starFactor = smoothstep(-0.20, 0.60, s);
     float tw = smoothstep(-0.35, 0.05, s) * (1.0 - smoothstep(0.05, 0.50, s));
-    // Side facing Kepler-186 red dwarf receives a warm crimson/ruby solar atmospheric wash
-    vec3 starSideColor = vec3(0.92, 0.22, 0.14);
-    vec3 shadowSideColor = vec3(0.18, 0.45, 0.65);
-    vec3 col = mix(shadowSideColor, starSideColor, smoothstep(-0.15, 0.65, s));
-    // Crimson twilight transition along the terminator
-    col = mix(col, vec3(1.0, 0.12, 0.06), tw * 0.85);
 
-    // Alpha strictly bounded by physical atmospheric limb profile g (zero inside the planet disk)
-    float a = (0.05 + 0.95 * solar) * g * 0.90 * uFade;
+    // Radiant red/crimson glow on the starward limb
+    vec3 redGlow = mix(vec3(1.0, 0.18, 0.10), vec3(1.0, 0.45, 0.22), clamp(s, 0.0, 1.0));
+    vec3 shadowColor = vec3(0.06, 0.22, 0.35);
+    vec3 col = mix(shadowColor, redGlow, starFactor);
+
+    // Extra luminous atmospheric halo boost facing the red star
+    col += vec3(1.0, 0.28, 0.14) * outer * starFactor * 1.4;
+
+    // Rich twilight transition along the terminator
+    col = mix(col, vec3(1.0, 0.10, 0.04), tw * 0.90);
+
+    float alphaFactor = mix(0.20, 1.0, starFactor);
+    float a = g * alphaFactor * 0.95 * uFade;
+
     gl_FragColor = vec4(col, a);
     ${FINISH}
   }
@@ -694,7 +707,7 @@ export const KeplerHeroScene: React.FC<KeplerHeroSceneProps> = ({ scrollProgress
 
     /* ---------------- Planet ---------------- */
     const PLANET_RADIUS = 8.35;
-    const ATMOS_OUTER = 1.06;
+    const ATMOS_OUTER = 1.15;
     const seg = isMobile ? 48 : 72;
 
     const planetRoot = new THREE.Group();
