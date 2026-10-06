@@ -121,21 +121,20 @@ const planetFragment = /* glsl */ `
     ocean = mix(ocean, vec3(0.03, 0.17, 0.20), shelf * 0.55);
 
     vec3 albedo = mix(ocean, land, landMask);
-    vec3 starCol = vec3(1.0, 0.48, 0.36) * 2.8;
-    vec3 col = albedo * (starCol * diff + vec3(0.05, 0.07, 0.11) * 0.9);
+    vec3 starCol = vec3(1.0, 0.58, 0.46) * 2.4;
+    vec3 col = albedo * (starCol * diff + vec3(0.04, 0.06, 0.08) * 0.85);
 
     float spec = pow(max(dot(N, H), 0.0), 140.0) * smoothstep(0.0, 0.3, ndl) * (1.0 - landMask);
-    col += vec3(0.20, 0.46, 0.52) * spec * 0.9;
+    col += vec3(0.35, 0.18, 0.15) * spec * 0.75;
 
     float fresnel = pow(1.0 - max(dot(N, V), 0.0), 4.0);
-    col += vec3(0.24, 0.72, 0.82) * fresnel * smoothstep(-0.08, 0.72, ndl) * 0.25;
+    col += vec3(0.18, 0.55, 0.65) * fresnel * smoothstep(-0.08, 0.72, ndl) * 0.25;
     float twilight = (1.0 - smoothstep(-0.12, 0.38, ndl)) * smoothstep(-0.42, 0.18, ndl);
-    col += vec3(0.52, 0.055, 0.032) * twilight * fresnel * 0.34;
+    col += vec3(0.65, 0.08, 0.05) * twilight * fresnel * 0.35;
 
-    // Distinct crimson red glow hitting Kepler's horizon and dayside from the red star
-    float starRim = pow(1.0 - max(dot(N, V), 0.0), 3.2) * smoothstep(-0.15, 0.65, ndl);
-    col += vec3(1.0, 0.20, 0.12) * starRim * 0.75;
-    col += vec3(0.85, 0.14, 0.09) * smoothstep(0.05, 0.80, ndl) * 0.15;
+    // Subtle soft red rim glow on the horizon facing Kepler-186
+    float starRim = pow(1.0 - max(dot(N, V), 0.0), 3.5) * smoothstep(-0.10, 0.60, ndl);
+    col += vec3(0.85, 0.18, 0.12) * starRim * 0.45;
 
     gl_FragColor = vec4(col, uFade);
     ${FINISH}
@@ -158,9 +157,8 @@ const cloudFragment = /* glsl */ `
     vec3 V = normalize(cameraPosition - vWorldPos);
     float diff = smoothstep(-0.30, 0.65, dot(N, L));
     float rim = pow(1.0 - max(dot(N, V), 0.0), 2.0);
-    vec3 col = mix(vec3(0.40, 0.20, 0.22), vec3(1.0, 0.80, 0.74), diff) * (0.08 + 0.92 * diff) * 1.6;
-    // Red star rim scatter on clouds facing the star
-    col += vec3(1.0, 0.22, 0.14) * rim * diff * 0.40;
+    vec3 col = mix(vec3(0.38, 0.18, 0.20), vec3(1.0, 0.82, 0.78), diff) * (0.08 + 0.92 * diff) * 1.5;
+    col += vec3(0.85, 0.18, 0.12) * rim * diff * 0.35;
     float a = d * (0.10 + 0.90 * diff) * 0.78 * (0.75 + 0.5 * rim) * uFade;
     gl_FragColor = vec4(col, a);
     ${FINISH}
@@ -194,19 +192,15 @@ const atmosphereFragment = /* glsl */ `
     float g = x < 1.0 ? inner : outer;
 
     float tw = smoothstep(-0.35, 0.05, s) * (1.0 - smoothstep(0.05, 0.50, s));
-    // Side facing Kepler-186 red dwarf receives a vibrant crimson-vermilion solar wash
-    vec3 dayAtmo = mix(vec3(0.25, 0.62, 0.82), vec3(1.0, 0.28, 0.16), smoothstep(-0.15, 0.55, s));
-    vec3 nightAtmo = vec3(0.12, 0.32, 0.50);
-    vec3 col = mix(nightAtmo, dayAtmo, solar);
-    // Deep crimson twilight along terminator
-    col = mix(col, vec3(1.0, 0.12, 0.06), tw * 0.92);
+    // Side facing Kepler-186 red dwarf receives a warm crimson/ruby solar atmospheric wash
+    vec3 starSideColor = vec3(0.92, 0.22, 0.14);
+    vec3 shadowSideColor = vec3(0.18, 0.45, 0.65);
+    vec3 col = mix(shadowSideColor, starSideColor, smoothstep(-0.15, 0.65, s));
+    // Crimson twilight transition along the terminator
+    col = mix(col, vec3(1.0, 0.12, 0.06), tw * 0.85);
 
-    // Radiant red atmospheric rim bloom facing the star
-    float starLimb = exp(-(x - 1.0) * 42.0) * smoothstep(-0.05, 0.80, s);
-    col += vec3(1.0, 0.24, 0.14) * starLimb * 0.95;
-
-    float a = (0.06 + 0.94 * solar) * g * 0.95 * uFade;
-    a += starLimb * 0.25 * uFade;
+    // Alpha strictly bounded by physical atmospheric limb profile g (zero inside the planet disk)
+    float a = (0.05 + 0.95 * solar) * g * 0.90 * uFade;
     gl_FragColor = vec4(col, a);
     ${FINISH}
   }
@@ -525,22 +519,6 @@ function createSmokeTexture() {
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-
-  // Soft red star glow wash from top-left direction towards Kepler
-  const starHaze = ctx.createRadialGradient(
-    size * 0.22,
-    size * 0.22,
-    0,
-    size * 0.22,
-    size * 0.22,
-    size * 0.65
-  );
-  starHaze.addColorStop(0, 'rgba(255, 65, 45, 0.14)');
-  starHaze.addColorStop(0.35, 'rgba(220, 45, 35, 0.08)');
-  starHaze.addColorStop(0.7, 'rgba(160, 25, 25, 0.025)');
-  starHaze.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = starHaze;
   ctx.fillRect(0, 0, size, size);
 
   // Large irregular smoke patches.
