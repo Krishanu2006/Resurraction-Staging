@@ -116,9 +116,8 @@ export const BootLoader: React.FC<BootLoaderProps> = ({ onComplete }) => {
 
   return (
     <div
-      className={`resurrection-boot ${
-        exiting ? 'resurrection-boot--exiting' : ''
-      }`}
+      className={`resurrection-boot ${exiting ? 'resurrection-boot--exiting' : ''
+        }`}
       onClick={skipBoot}
       role="button"
       tabIndex={0}
@@ -142,10 +141,8 @@ export const BootLoader: React.FC<BootLoaderProps> = ({ onComplete }) => {
           ===================================================== */}
       <video
         ref={videoRef}
-        className={`resurrection-boot__video ${
-          videoLoaded ? 'resurrection-boot__video--ready' : ''
-        }`}
-        src="/assets/hero/scroll-space-background.mp4"
+        className={`resurrection-boot__video ${videoLoaded ? 'resurrection-boot__video--ready' : ''
+          }`}
         poster="/assets/hero/scroll-space-poster.webp"
         muted
         playsInline
@@ -154,7 +151,9 @@ export const BootLoader: React.FC<BootLoaderProps> = ({ onComplete }) => {
         onLoadedData={handleProgress}
         onProgress={handleProgress}
         onError={handleVideoReady} // Fail-safe: don't permanently stall if video cannot load
-      />
+      >
+        <source src="/assets/hero/scroll-space-background.webm" type="video/webm" />
+      </video>
 
       {/* =====================================================
           VERY SUBTLE DARKENING OVERLAY
@@ -165,9 +164,8 @@ export const BootLoader: React.FC<BootLoaderProps> = ({ onComplete }) => {
           LOGO (ANIMATES IN AFTER VIDEO HAS LOADED & PLAYED)
           ===================================================== */}
       <div
-        className={`resurrection-boot__logo ${
-          logoVisible ? 'resurrection-boot__logo--visible' : ''
-        }`}
+        className={`resurrection-boot__logo ${logoVisible ? 'resurrection-boot__logo--visible' : ''
+          }`}
       >
         <img
           src="/assets/brand/resurraction-logo.webp"
