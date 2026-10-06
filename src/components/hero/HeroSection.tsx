@@ -6,17 +6,16 @@ import React, {
 import { HeroContent } from './HeroContent';
 
 /* ============================================================
-   Theme-specific Three.js scenes
+   Theme-specific Three.js scenes (Code-Split / Lazy Loaded)
    ------------------------------------------------------------
-   Each scene draws the background for a specific theme.
-   Adjust the import paths so they point at the folders where
-   the components actually live in your project.
+   Only the active theme's scene is loaded into memory,
+   saving significant initial JavaScript parsing and bandwidth.
    ============================================================ */
 
-import SpaceScene from './SpaceScene';
-import ThemeHeroScene from './ThemeHeroScene';
-import PandoraHeroScene from './PandoraHeroScene';
-import KeplerHeroScene from './KeplerHeroScene';
+const SpaceScene = React.lazy(() => import('./SpaceScene'));
+const ThemeHeroScene = React.lazy(() => import('./ThemeHeroScene'));
+const PandoraHeroScene = React.lazy(() => import('./PandoraHeroScene'));
+const KeplerHeroScene = React.lazy(() => import('./KeplerHeroScene'));
 
 import {
   type ThemeId,
@@ -141,38 +140,49 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
      ============================================================ */
 
   const renderBackground = () => {
+    let scene = null;
     switch (themeId) {
       case 'miller':
-        return (
+        scene = (
           <ThemeHeroScene
             themeId="miller"
             scrollProgress={scrollProgress}
           />
         );
+        break;
 
       case 'pandora':
-        return (
+        scene = (
           <PandoraHeroScene
             scrollProgress={scrollProgress}
           />
         );
+        break;
 
       case 'kepler':
-        return (
+        scene = (
           <KeplerHeroScene
             scrollProgress={scrollProgress}
           />
         );
+        break;
 
       case 'tau-ceti':
       default:
-        return (
+        scene = (
           <SpaceScene
             scrollProgress={scrollProgress}
             themeId={themeId}
           />
         );
+        break;
     }
+
+    return (
+      <React.Suspense fallback={null}>
+        {scene}
+      </React.Suspense>
+    );
   };
 
   return (

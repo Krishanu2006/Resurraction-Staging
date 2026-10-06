@@ -183,8 +183,8 @@ export const RockyCursor: React.FC = () => {
         <img
           src={
             isPointing
-              ? '/assets/about/rocky-pointer.png'
-              : '/assets/about/rocky.png'
+              ? '/assets/about/rocky-pointer.webp'
+              : '/assets/about/rocky.webp'
           }
           alt=""
           draggable={false}

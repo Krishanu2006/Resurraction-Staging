@@ -7,10 +7,10 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import tauCetiImage from './track_images/taucetie.png';
-import millerImage from './track_images/miller.png';
-import pandoraImage from './track_images/pandora.png';
-import keplerImage from './track_images/kepler.png';
+import tauCetiImage from './track_images/taucetie.webp';
+import millerImage from './track_images/miller.webp';
+import pandoraImage from './track_images/pandora.webp';
+import keplerImage from './track_images/kepler.webp';
 
 type PlanetCard = {
   id: string;

@@ -523,8 +523,12 @@ export const HeroContent: React.FC<HeroContentProps> = ({
       >
 
         <img
-          src="/assets/brand/resurraction-logo.png"
-          alt="RESURRACTION"
+          src="/assets/brand/resurraction-logo.webp"
+          alt="RESURRACTION — IEM CSE Hackathon"
+          width="2048"
+          height="169"
+          fetchPriority="high"
+          decoding="async"
           style={{
             width: '100%',
             height: 'auto',

@@ -33,8 +33,12 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="md:col-span-6 lg:col-span-5 space-y-4">
             <img
-              src="/assets/brand/resurraction-logo.png"
+              src="/assets/brand/resurraction-logo.webp"
               alt="RESURRACTION"
+              width="192"
+              height="16"
+              loading="lazy"
+              decoding="async"
               className="w-48 h-auto object-contain"
             />
 

@@ -13,7 +13,24 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
   const [exiting, setExiting] =
     useState(false);
 
+  const skipBoot = React.useCallback(() => {
+    try {
+      sessionStorage.setItem('resurrection_boot_seen', 'true');
+    } catch {
+      // ignore
+    }
+    document.body.style.overflow = '';
+    onComplete();
+  }, [onComplete]);
+
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+        skipBoot();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     const previousOverflow =
       document.body.style.overflow;
 
@@ -34,9 +51,6 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
     /*
      * =====================================================
      * START EXIT
-     *
-     * Logo remains visible for a short moment,
-     * then the entire boot screen fades away.
      * =====================================================
      */
 
@@ -54,16 +68,19 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
 
     const completeTimer =
       window.setTimeout(() => {
-
         document.body.style.overflow =
           previousOverflow;
-
+        try {
+          sessionStorage.setItem('resurrection_boot_seen', 'true');
+        } catch {
+          // ignore
+        }
         onComplete();
-
       }, 4800);
 
 
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
 
       window.clearTimeout(
         logoTimer,
@@ -81,7 +98,7 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
         previousOverflow;
     };
 
-  }, [onComplete]);
+  }, [onComplete, skipBoot]);
 
 
   return (
@@ -94,6 +111,10 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
             : ''
         }
       `}
+      onClick={skipBoot}
+      role="button"
+      tabIndex={0}
+      title="Click or press ESC to skip"
     >
 
       {/* =====================================================
@@ -105,11 +126,12 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
           resurrection-boot__video
         "
         src="/assets/hero/scroll-space-background.mp4"
+        poster="/assets/hero/scroll-space-poster.webp"
         autoPlay
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
       />
 
 
@@ -140,12 +162,30 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
       >
 
         <img
-          src="/assets/brand/resurraction-logo.png"
+          src="/assets/brand/resurraction-logo.webp"
           alt="RESURRACTION"
+          width="500"
+          height="41"
           draggable={false}
         />
 
       </div>
+
+      {/* =====================================================
+          SKIP BUTTON
+          ===================================================== */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          skipBoot();
+        }}
+        className="resurrection-boot__skip"
+        aria-label="Skip introduction"
+      >
+        <span>SKIP INTRO</span>
+        <kbd>ESC</kbd>
+      </button>
 
 
       {/* =====================================================
@@ -430,6 +470,45 @@ export const BootLoader: React.FC<BootLoaderProps> = ({
 
         }
 
+        /* =====================================================
+           SKIP BUTTON
+           ===================================================== */
+        .resurrection-boot__skip {
+          position: absolute;
+          bottom: 2rem;
+          right: 2rem;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 0.85rem;
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(10, 15, 30, 0.65);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          color: rgba(255, 255, 255, 0.7);
+          font-family: 'Space Mono', monospace;
+          font-size: 0.7rem;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .resurrection-boot__skip:hover {
+          background: rgba(255, 255, 255, 0.12);
+          border-color: rgba(255, 255, 255, 0.35);
+          color: #ffffff;
+        }
+
+        .resurrection-boot__skip kbd {
+          padding: 0.1rem 0.35rem;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          font-size: 0.65rem;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
 
         /* =====================================================
            REDUCED MOTION

@@ -295,8 +295,11 @@ export const FloatingMenu: React.FC = () => {
         }}
       >
         <img
-          src="/assets/brand/resurraction-logo.png"
+          src="/assets/brand/resurraction-logo.webp"
           alt="RESURRACTION"
+          width="267"
+          height="22"
+          decoding="async"
           style={{ height: 22, width: 'auto' }}
         />
         <span

@@ -25,17 +25,27 @@ import { RulesSection } from './components/sections/RulesSection';
 import { FAQSection } from './components/sections/FAQSection';
 
 import { Footer } from './components/layout/Footer';
-
-import { RockyCursor } from './components/ui/RockyCursor';
 import { BootLoader } from './components/ui/BootLoader';
-import { ThemeSelector } from './components/ui/ThemeSelector';
 
-import GlobalThemeBackground from './components/ui/GlobalThemeBackground';
+const RockyCursor = React.lazy(() =>
+  import('./components/ui/RockyCursor').then((m) => ({ default: m.RockyCursor }))
+);
+const ThemeSelector = React.lazy(() =>
+  import('./components/ui/ThemeSelector').then((m) => ({ default: m.ThemeSelector }))
+);
+const GlobalThemeBackground = React.lazy(() => import('./components/ui/GlobalThemeBackground'));
 
 import {
   themePalettes,
   type ThemeId,
 } from './config/theme';
+
+const isBotCrawler = () => {
+  if (typeof navigator === 'undefined') return false;
+  return /bot|googlebot|bingbot|crawler|spider|slurp|facebookexternalhit|twitterbot/i.test(
+    navigator.userAgent
+  );
+};
 
 /* ============================================================
    APP
@@ -48,8 +58,13 @@ const App: React.FC = () => {
 
   const [bootComplete, setBootComplete] = useState(() => {
     if (typeof window !== 'undefined') {
+      if (isBotCrawler()) return true;
       const params = new URLSearchParams(window.location.search);
-      return params.has('theme') || params.has('skipBoot');
+      return (
+        params.has('theme') ||
+        params.has('skipBoot') ||
+        sessionStorage.getItem('resurrection_boot_seen') === 'true'
+      );
     }
     return false;
   });
@@ -60,8 +75,11 @@ const App: React.FC = () => {
 
   const [themeSelected, setThemeSelected] = useState(() => {
     if (typeof window !== 'undefined') {
+      if (isBotCrawler()) return true;
       const params = new URLSearchParams(window.location.search);
-      return params.has('theme');
+      if (params.has('theme')) return true;
+      const savedTheme = localStorage.getItem('resurrection_theme');
+      return !!savedTheme;
     }
     return false;
   });
@@ -73,6 +91,10 @@ const App: React.FC = () => {
       if (t === 'kepler' || t === 'miller' || t === 'pandora' || t === 'tau-ceti') {
         return t;
       }
+      const saved = localStorage.getItem('resurrection_theme') as ThemeId;
+      if (saved === 'kepler' || saved === 'miller' || saved === 'pandora' || saved === 'tau-ceti') {
+        return saved;
+      }
     }
     return 'tau-ceti';
   });
@@ -83,6 +105,11 @@ const App: React.FC = () => {
 
   const handleBootComplete =
     useCallback(() => {
+      try {
+        sessionStorage.setItem('resurrection_boot_seen', 'true');
+      } catch {
+        // ignore
+      }
       setBootComplete(true);
     }, []);
 
@@ -92,6 +119,11 @@ const App: React.FC = () => {
 
   const handleThemeSelect =
     useCallback((themeId: ThemeId) => {
+      try {
+        localStorage.setItem('resurrection_theme', themeId);
+      } catch {
+        // ignore
+      }
       setSelectedTheme(themeId);
       setThemeSelected(true);
     }, []);
@@ -165,11 +197,13 @@ const App: React.FC = () => {
          ====================================================== */}
 
       {bootComplete && !themeSelected && (
-        <ThemeSelector
-          onSelect={(themeId) => {
-            handleThemeSelect(themeId as ThemeId);
-          }}
-        />
+        <React.Suspense fallback={null}>
+          <ThemeSelector
+            onSelect={(themeId) => {
+              handleThemeSelect(themeId as ThemeId);
+            }}
+          />
+        </React.Suspense>
       )}
 
       {/* ======================================================
@@ -178,9 +212,11 @@ const App: React.FC = () => {
 
       {bootComplete && themeSelected && (
         <>
-          <GlobalThemeBackground
-            themeId={selectedTheme}
-          />
+          <React.Suspense fallback={null}>
+            <GlobalThemeBackground
+              themeId={selectedTheme}
+            />
+          </React.Suspense>
 
           <div
             id="app-theme"
@@ -256,7 +292,11 @@ const App: React.FC = () => {
           ROCKY CURSOR
          ====================================================== */}
 
-      {bootComplete && <RockyCursor />}
+      {bootComplete && (
+        <React.Suspense fallback={null}>
+          <RockyCursor />
+        </React.Suspense>
+      )}
     </>
   );
 };

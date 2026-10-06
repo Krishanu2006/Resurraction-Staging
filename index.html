@@ -2,24 +2,202 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/assets/brand/resurraction-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RESURRECTION — CSE Hackathon | IEM Kolkata</title>
+    <title>RESURRECTION 2026 — Inter-College CSE Hackathon | IEM Kolkata</title>
+
+    <!-- SEO Meta Tags -->
     <meta
       name="description"
-      content="RESURRECTION — an upcoming hackathon by the Department of CSE, IEM Kolkata."
+      content="RESURRECTION is a premier flagship inter-college hackathon hosted by the Department of Computer Science & Engineering, IEM Kolkata. Compete in cosmic engineering tracks, solve high-stakes challenges, and win bounties."
     />
-    <meta name="theme-color" content="#090305" />
+    <meta
+      name="keywords"
+      content="RESURRECTION, IEM Kolkata, CSE Hackathon, Hackathon 2026, Institute of Engineering and Management, college hackathon Kolkata, tech fest, student developer hackathon, coding competition"
+    />
+    <meta name="author" content="Department of Computer Science & Engineering, IEM Kolkata" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://resurrection-iem.web.app/" />
+    <meta name="theme-color" content="#02040c" />
 
-    <!-- Google Fonts: Space Grotesk (Display), Inter (Body), JetBrains Mono (Technical) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+    <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RESURRECTION Hackathon" />
+    <meta property="og:title" content="RESURRECTION 2026 — Inter-College CSE Hackathon | IEM Kolkata" />
+    <meta
+      property="og:description"
+      content="A signal emerges from a cosmic phenomenon. Join student innovators and visionary developers for the flagship hackathon by CSE IEM Kolkata."
     />
+    <meta property="og:url" content="https://resurrection-iem.web.app/" />
+    <meta property="og:image" content="https://resurrection-iem.web.app/assets/brand/resurraction-logo.png" />
+    <meta property="og:image:alt" content="RESURRECTION Hackathon" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RESURRECTION 2026 — CSE Hackathon | IEM Kolkata" />
+    <meta
+      name="twitter:description"
+      content="Flagship hackathon engineered to unite visionary student builders. Department of CSE, IEM Kolkata."
+    />
+    <meta name="twitter:image" content="https://resurrection-iem.web.app/assets/brand/resurraction-logo.png" />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/png" href="/assets/brand/resurraction-logo.png" />
+    <link rel="apple-touch-icon" href="/assets/brand/resurraction-logo.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Performance: Preload Critical Local Fonts to eliminate layout shift (CLS) -->
+    <link
+      rel="preload"
+      href="/fonts/neue-stance/NeueStance-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/nasalization/Nasalization-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Structured Data (JSON-LD): Hackathon Event, Organization & FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Event",
+          "@id": "https://resurrection-iem.web.app/#event",
+          "name": "RESURRECTION 2026",
+          "alternateName": "RESURRECTION Hackathon",
+          "description": "RESURRECTION is a flagship technical hackathon organized by the Department of Computer Science & Engineering, Institute of Engineering & Management (IEM), Kolkata. It serves as a mission launchpad for engineering students and developers to construct transformative solutions for high-impact challenges.",
+          "url": "https://resurrection-iem.web.app/",
+          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "image": "https://resurrection-iem.web.app/assets/brand/resurraction-logo.png",
+          "location": {
+            "@type": "Place",
+            "name": "Institute of Engineering & Management (IEM), Kolkata",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Sector V, Salt Lake Electronics Complex",
+              "addressLocality": "Kolkata",
+              "addressRegion": "West Bengal",
+              "postalCode": "700091",
+              "addressCountry": "IN"
+            }
+          },
+          "organizer": {
+            "@type": "Organization",
+            "name": "Department of Computer Science & Engineering, Institute of Engineering & Management (IEM), Kolkata",
+            "url": "https://iem.edu.in/"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://resurrection-iem.web.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is RESURRECTION?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "RESURRECTION is a flagship technical hackathon organized by the Department of Computer Science & Engineering, Institute of Engineering & Management (IEM), Kolkata. It serves as a mission launchpad for engineering students and developers to construct transformative solutions for high-impact challenges."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Who is organizing the hackathon?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The event is organized and hosted by the Department of Computer Science & Engineering, Institute of Engineering & Management (IEM), Kolkata."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "When will the official dates and timeline be announced?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Specific mission dates, schedule milestones, and sprint durations are currently being finalized. All confirmed dates will be announced on this official staging platform and verified department channels."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Who is eligible to participate?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Undergraduate and postgraduate students enrolled in recognized universities and colleges will be eligible to register. Comprehensive eligibility rules will be published alongside registration documentation."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the expected team size?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Team size requirements (typically squads of 2 to 4 members) are currently being reviewed. Detailed squad composition rules will be published before registration commences."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What are the hackathon tracks and problem statements?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "All track themes are currently marked CLASSIFIED. Problem domains and specialized challenge briefs will be declassified and unlocked upon the official mission briefing."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Where will the hackathon take place?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The hackathon is anchored by IEM Kolkata. Exact venue details (on-campus facilities and virtual telemetry infrastructure) will be announced prior to registration opening."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the prize pool for RESURRECTION?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The complete prize structure—including champion trophies, tier bounties, and partner tracks—is currently in calibration. Official amounts will be revealed during the event announcement."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I register and is there a registration fee?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Registration links are not yet active as this is the official pre-announcement staging surface. Full registration procedures and fee structures (if any) will be revealed upon mission launch."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
+    <!-- Fallback semantic content for search engines, web crawlers, and users with JS disabled -->
+    <noscript>
+      <div style="padding: 2rem; max-width: 900px; margin: 0 auto; font-family: sans-serif; color: #fff; background: #02040c;">
+        <h1>RESURRECTION 2026 — Inter-College CSE Hackathon | IEM Kolkata</h1>
+        <p>A signal emerges from a cosmic phenomenon. RESURRECTION is the mission that follows.</p>
+        <p>Organized by the Department of Computer Science & Engineering, Institute of Engineering & Management (IEM), Kolkata.</p>
+        <h2>About the Mission</h2>
+        <p>RESURRECTION is a flagship hackathon engineered to unite visionary student builders, engineers, and creators. Guided by scientific rigor and high-stakes problem solving, our mission parameters will push algorithmic and hardware ingenuity.</p>
+        <h2>Tracks & Worlds</h2>
+        <ul>
+          <li><strong>TAU CETI e</strong> — Primary World (AI & Frontier Computing)</li>
+          <li><strong>MILLER'S PLANET</strong> — Ocean World (High-scale Systems & Cloud Infrastructure)</li>
+          <li><strong>PANDORA</strong> — Alien Frontier (Web3, Decentralized & Security Systems)</li>
+          <li><strong>KEPLER-186f</strong> — Distant World (Open Innovation & Deep Tech)</li>
+        </ul>
+        <h2>Frequently Asked Questions</h2>
+        <p>For full details, interactive 3D simulations, and registration updates, please enable JavaScript to explore the platform.</p>
+      </div>
+    </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,0 +1,21 @@
+{
+  "name": "RESURRECTION Hackathon",
+  "short_name": "RESURRECTION",
+  "description": "Flagship CSE Hackathon by IEM Kolkata",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#02040c",
+  "theme_color": "#02040c",
+  "icons": [
+    {
+      "src": "/assets/brand/resurraction-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/brand/resurraction-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

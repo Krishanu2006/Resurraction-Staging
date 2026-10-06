@@ -1,9 +1,9 @@
 import React from 'react';
 
-import tauCetiImage from '../sections/track_images/taucetie.png';
-import millerImage from '../sections/track_images/miller.png';
-import pandoraImage from '../sections/track_images/pandora.png';
-import keplerImage from '../sections/track_images/kepler.png';
+import tauCetiImage from '../sections/track_images/taucetie.webp';
+import millerImage from '../sections/track_images/miller.webp';
+import pandoraImage from '../sections/track_images/pandora.webp';
+import keplerImage from '../sections/track_images/kepler.webp';
 import { ThemeId } from '../../config/theme';
 
 type ThemeSelectorProps = {

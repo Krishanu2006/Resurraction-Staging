@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Host
+Host: https://resurrection-iem.web.app
+
+# Sitemaps
+Sitemap: https://resurrection-iem.web.app/sitemap.xml
