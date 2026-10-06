@@ -4,13 +4,7 @@
 
 /*
   IMPORTANT:
-
-  HeroSection.tsx
-  ScrollVideoBackground.tsx
-  Hero video
-  Hero logo
-
-  are intentionally NOT modified here.
+  HeroSection.tsx and hero media assets are themed dynamically.
 */
 
 @import './tokens.css';

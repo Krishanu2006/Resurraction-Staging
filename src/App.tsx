@@ -31,7 +31,6 @@ import { BootLoader } from './components/ui/BootLoader';
 import { ThemeSelector } from './components/ui/ThemeSelector';
 
 import GlobalThemeBackground from './components/ui/GlobalThemeBackground';
-import AdrianEnvironment from './components/Environment/AdrianEnvironment';
 
 import {
   themePalettes,
@@ -179,8 +178,6 @@ const App: React.FC = () => {
 
       {bootComplete && themeSelected && (
         <>
-          <AdrianEnvironment />
-
           <GlobalThemeBackground
             themeId={selectedTheme}
           />

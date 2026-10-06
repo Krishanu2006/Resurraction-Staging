@@ -13,7 +13,7 @@ import { HeroContent } from './HeroContent';
    the components actually live in your project.
    ============================================================ */
 
-import SpaceScene from './/SpaceScene';
+import SpaceScene from './SpaceScene';
 import ThemeHeroScene from './ThemeHeroScene';
 import PandoraHeroScene from './PandoraHeroScene';
 import KeplerHeroScene from './KeplerHeroScene';
