@@ -59,10 +59,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef(scrollProgress);
-
-  useEffect(() => {
-    scrollRef.current = scrollProgress;
-  }, [scrollProgress]);
+  scrollRef.current = scrollProgress;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -126,8 +123,13 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
+    const bloomRes = new THREE.Vector2(
+      Math.max(1, Math.floor(window.innerWidth * 0.5)),
+      Math.max(1, Math.floor(window.innerHeight * 0.5))
+    );
+
     const bloom = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      bloomRes,
       0.24,
       0.72,
       0.72
@@ -362,7 +364,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
           float fbm(vec3 p) {
             float v = 0.0;
             float a = 0.5;
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 4; i++) {
               v += a * noise(p);
               p *= 2.05;
               a *= 0.5;
@@ -688,7 +690,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
           float fbm(vec3 p) {
             float v = 0.0;
             float a = 0.5;
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 4; i++) {
               v += a * noise(p);
               p *= 2.03;
               a *= 0.5;
@@ -851,7 +853,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
             float v = 0.0;
             float a = 0.5;
             mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 4; i++) {
               if (i >= oct) break;
               v += a * noise(p);
               p = rot * p * 2.02;
@@ -861,12 +863,12 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
           }
           float warped(vec2 p, float t, int oct) {
             vec2 q = vec2(
-              fbm(p + vec2(0.0, t * 0.04), 4),
-              fbm(p + vec2(3.7, 1.9), 4)
+              noise(p + vec2(0.0, t * 0.04)),
+              noise(p + vec2(3.7, 1.9))
             );
             vec2 r = vec2(
-              fbm(p + 2.5 * q + vec2(1.2, 5.4) + t * 0.02, 4),
-              fbm(p + 2.5 * q + vec2(6.8, 2.1) - t * 0.03, 4)
+              noise(p + 2.5 * q + vec2(1.2, 5.4) + t * 0.02),
+              noise(p + 2.5 * q + vec2(6.8, 2.1) - t * 0.03)
             );
             return fbm(p + 2.2 * r, oct);
           }
@@ -979,7 +981,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
             float v = 0.0;
             float a = 0.5;
             mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 3; i++) {
               v += a * noise(p);
               p = rot * p * 2.02;
               a *= 0.5;
@@ -1019,7 +1021,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
        STAR DUST
        ============================================================ */
 
-    const dustCount = mobile ? 1800 : 4000;
+    const dustCount = mobile ? 900 : 1800;
     const dustPos = new Float32Array(dustCount * 3);
     const dustCol = new Float32Array(dustCount * 3);
     const dustSize = new Float32Array(dustCount);
@@ -1191,7 +1193,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
 
     const rocks: RockData[] = [];
 
-    const rockCount = mobile ? 100 : 200;
+    const rockCount = mobile ? 60 : 130;
     const ringInner = GIANT_RADIUS * 1.35;
     const ringOuter = GIANT_RADIUS * 3.6;
 
@@ -1247,6 +1249,9 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
 
     interface LooseData {
       mesh: THREE.Mesh;
+      baseX: number;
+      baseY: number;
+      baseZ: number;
       velocity: THREE.Vector3;
       rotSpeed: THREE.Vector3;
       hovered: number;
@@ -1254,7 +1259,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
     }
 
     const looseRocks: LooseData[] = [];
-    const looseCount = mobile ? 50 : 110;
+    const looseCount = mobile ? 30 : 65;
 
     for (let i = 0; i < looseCount; i++) {
       const geo = rockGeos[Math.floor(Math.random() * rockGeos.length)];
@@ -1282,6 +1287,9 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
 
       looseRocks.push({
         mesh: rock,
+        baseX: x,
+        baseY: y,
+        baseZ: z,
         velocity: new THREE.Vector3(
           (Math.random() - 0.5) * 0.02,
           (Math.random() - 0.5) * 0.02,
@@ -1306,6 +1314,10 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
+      bloom.setSize(
+        Math.max(1, Math.floor(window.innerWidth * 0.5)),
+        Math.max(1, Math.floor(window.innerHeight * 0.5))
+      );
     };
 
     window.addEventListener('resize', onResize);
@@ -1455,8 +1467,8 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
       earthAtmoMat.uniforms.uPulse.value = interaction.pulse;
 
       if (!reducedMotion) {
-        earth.rotation.y += 0.0015;
-        clouds.rotation.y += 0.0019;
+        earth.rotation.y += dt * 0.09;
+        clouds.rotation.y += dt * 0.114;
       }
 
       const planetApproach = THREE.MathUtils.smoothstep(scroll, 0.35, 1.0);
@@ -1484,8 +1496,8 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
       dustMat.uniforms.uPulse.value = interaction.pulse;
 
       if (!reducedMotion) {
-        dust.rotation.y += 0.0003;
-        dust.rotation.x += pointer.velocityY * 0.0002;
+        dust.rotation.y += dt * 0.018;
+        dust.rotation.x += (-pointer.y * 0.02 - dust.rotation.x) * (1 - Math.exp(-2.5 * dt));
       }
 
       /* ASTEROIDS */
@@ -1494,26 +1506,24 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
         pointer.velocityY * pointer.velocityY
       );
 
-      interaction.shockwave *= 0.94;
+      interaction.shockwave *= Math.exp(-4 * dt);
 
       if (!reducedMotion) {
-        rocks.forEach((r) => {
-          const localPointer = new THREE.Vector3(
-            pointer.worldX - giantGroup.position.x,
-            pointer.worldY - giantGroup.position.y,
-            -giantGroup.position.z
-          );
+        const localPointerX = pointer.worldX - giantGroup.position.x;
+        const localPointerY = pointer.worldY - giantGroup.position.y;
 
-          r.angle += r.speed * 0.01;
+        const rockDamp = Math.exp(-6 * dt);
+        const rotFactor = dt * 60;
+
+        rocks.forEach((r) => {
+          r.angle += r.speed * dt * 0.6;
 
           const ringX = Math.cos(r.angle) * r.radius;
           const ringZ = Math.sin(r.angle) * r.radius;
           const ringY = r.yOffset + Math.sin(r.angle * 2) * 0.15;
 
-          r.mesh.position.set(ringX, ringY, ringZ);
-
-          const dx = ringX - localPointer.x;
-          const dy = ringY - localPointer.y;
+          const dx = ringX - localPointerX;
+          const dy = ringY - localPointerY;
           const distSq = dx * dx + dy * dy;
           const influenceRadius = 8.0;
 
@@ -1530,12 +1540,12 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
 
             r.hovered = Math.min(r.hovered + 0.2, 1);
           } else {
-            r.hovered *= 0.94;
+            r.hovered *= Math.exp(-4 * dt);
           }
 
           if (interaction.shockwave > 0.05) {
-            const shockX = r.mesh.position.x + giantGroup.position.x - interaction.shockOrigin.x;
-            const shockY = r.mesh.position.y + giantGroup.position.y - interaction.shockOrigin.y;
+            const shockX = ringX + giantGroup.position.x - interaction.shockOrigin.x;
+            const shockY = ringY + giantGroup.position.y - interaction.shockOrigin.y;
             const shockDistSq = shockX * shockX + shockY * shockY;
 
             if (shockDistSq < 100 && shockDistSq > 0.01) {
@@ -1552,21 +1562,19 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
             }
           }
 
-          r.mesh.position.x += r.velocity.x;
-          r.mesh.position.y += r.velocity.y;
-          r.mesh.position.z += r.velocity.z;
+          r.velocity.x *= rockDamp;
+          r.velocity.y *= rockDamp;
+          r.velocity.z *= rockDamp;
 
-          r.velocity.x *= 0.9;
-          r.velocity.y *= 0.9;
-          r.velocity.z *= 0.9;
+          r.mesh.position.set(
+            ringX + r.velocity.x,
+            ringY + r.velocity.y,
+            ringZ + r.velocity.z
+          );
 
-          r.mesh.position.x += (ringX - r.mesh.position.x) * 0.045;
-          r.mesh.position.y += (ringY - r.mesh.position.y) * 0.045;
-          r.mesh.position.z += (ringZ - r.mesh.position.z) * 0.045;
-
-          r.mesh.rotation.x += r.rotSpeed.x + pointerVelocityMag * 0.02;
-          r.mesh.rotation.y += r.rotSpeed.y + pointerVelocityMag * 0.02;
-          r.mesh.rotation.z += r.rotSpeed.z;
+          r.mesh.rotation.x += (r.rotSpeed.x + pointerVelocityMag * 0.02) * rotFactor;
+          r.mesh.rotation.y += (r.rotSpeed.y + pointerVelocityMag * 0.02) * rotFactor;
+          r.mesh.rotation.z += r.rotSpeed.z * rotFactor;
 
           const s = r.baseScale * (1 + r.hovered * 0.16);
           r.mesh.scale.setScalar(s);
@@ -1607,7 +1615,7 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
 
             r.hovered = Math.min(r.hovered + 0.25, 1);
           } else {
-            r.hovered *= 0.94;
+            r.hovered *= Math.exp(-4 * dt);
           }
 
           if (interaction.shockwave > 0.05) {
@@ -1629,35 +1637,32 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
             }
           }
 
-          r.mesh.position.x += r.velocity.x;
-          r.mesh.position.y += r.velocity.y;
-          r.mesh.position.z += r.velocity.z;
+          r.velocity.x *= rockDamp;
+          r.velocity.y *= rockDamp;
+          r.velocity.z *= rockDamp;
 
-          r.mesh.position.y +=
-            Math.sin(elapsed * 0.3 + r.driftPhase) * 0.002;
+          const driftY = Math.sin(elapsed * 0.3 + r.driftPhase) * 0.25;
+          const driftX = Math.sin(elapsed * 0.2 + r.driftPhase) * 0.18;
+          const driftZ = Math.cos(elapsed * 0.15 + r.driftPhase) * 0.15;
 
-          r.velocity.x *= 0.92;
-          r.velocity.y *= 0.92;
-          r.velocity.z *= 0.92;
+          r.mesh.position.set(
+            r.baseX + r.velocity.x + driftX,
+            r.baseY + r.velocity.y + driftY,
+            r.baseZ + r.velocity.z + driftZ
+          );
 
-          r.mesh.position.x +=
-            r.velocity.x * 0.4 +
-            Math.sin(elapsed * 0.2 + r.driftPhase) * 0.0015;
-          r.mesh.position.y +=
-            r.velocity.y * 0.4 +
-            Math.cos(elapsed * 0.15 + r.driftPhase) * 0.0012;
-
-          r.mesh.rotation.x += r.rotSpeed.x + pointerVelocityMag * 0.015;
-          r.mesh.rotation.y += r.rotSpeed.y + pointerVelocityMag * 0.015;
-          r.mesh.rotation.z += r.rotSpeed.z;
+          r.mesh.rotation.x += (r.rotSpeed.x + pointerVelocityMag * 0.015) * rotFactor;
+          r.mesh.rotation.y += (r.rotSpeed.y + pointerVelocityMag * 0.015) * rotFactor;
+          r.mesh.rotation.z += r.rotSpeed.z * rotFactor;
 
           const currentScale = r.mesh.scale.x;
           const targetScale = 0.3 + (r.hovered * 0.25);
           r.mesh.scale.setScalar(
-            currentScale + (targetScale - currentScale) * 0.15
+            currentScale + (targetScale - currentScale) * (1 - Math.exp(-8 * dt))
           );
         });
       }
+
 
       asteroidMat.emissiveIntensity =
         0.08 +
@@ -1747,4 +1752,4 @@ const PandoraHeroScene: React.FC<PandoraHeroSceneProps> = ({
   );
 };
 
-export default PandoraHeroScene;
+export default React.memo(PandoraHeroScene);
