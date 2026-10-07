@@ -54,7 +54,7 @@ const Menu3DOrb: React.FC<Menu3DOrbProps> = ({ isOpen, isHovered }) => {
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
-      powerPreference: 'low-power',
+      powerPreference: 'high-performance',
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));

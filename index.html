@@ -70,6 +70,23 @@
     <link rel="preload" href="/assets/hero/scroll-space-poster.webp" as="image" type="image/webp" />
     <link rel="preload" href="/assets/hero/scroll-space-background.webm" as="video" type="video/webm" />
 
+    <!-- Preload Brand Logo for instant display -->
+    <link rel="preload" href="/assets/brand/resurraction-logo.webp" as="image" type="image/webp" fetchpriority="high" />
+
+    <!-- Dedicated GPU / High-Performance Graphics Acceleration Hint -->
+    <script>
+      (function () {
+        try {
+          if (typeof navigator !== 'undefined' && 'gpu' in navigator && navigator.gpu?.requestAdapter) {
+            navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }).catch(function () {});
+          }
+          var canvas = document.createElement('canvas');
+          canvas.getContext('webgl2', { powerPreference: 'high-performance' }) ||
+            canvas.getContext('webgl', { powerPreference: 'high-performance' });
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Structured Data (JSON-LD): Hackathon Event, Organization & FAQPage -->
     <script type="application/ld+json">
     {
