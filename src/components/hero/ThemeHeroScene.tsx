@@ -23,10 +23,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef(scrollProgress);
-
-  useEffect(() => {
-    scrollRef.current = scrollProgress;
-  }, [scrollProgress]);
+  scrollRef.current = scrollProgress;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -71,7 +68,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
 
     const pixelRatio = Math.min(
       window.devicePixelRatio || 1,
-      mobile ? 1.25 : 2.0
+      mobile ? 1.15 : 1.5
     );
 
     renderer.setPixelRatio(pixelRatio);
@@ -95,8 +92,13 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
 
     composer.addPass(new RenderPass(scene, camera));
 
+    const bloomRes = new THREE.Vector2(
+      Math.max(1, Math.floor(window.innerWidth * 0.5)),
+      Math.max(1, Math.floor(window.innerHeight * 0.5))
+    );
+
     const bloom = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      bloomRes,
       1.35,   /* strength — high because we WANT the core to pop */
       0.55,   /* radius — smaller so bloom hugs the core */
       0.72    /* threshold — only very bright pixels bloom */
@@ -242,7 +244,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
         float v = 0.0;
         float a = 0.5;
         mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 4; i++) {
           v += a * noise(p);
           p = rot * p * 2.02;
           a *= 0.5;
@@ -252,8 +254,8 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
 
       float streak(vec2 p, float t) {
         vec2 q = p;
-        q.x += fbm(p * 0.6 + vec2(t * 0.06, 0.0)) * 2.2;
-        q.y += fbm(p * 0.8 + vec2(0.0, t * 0.05)) * 1.1;
+        q.x += noise(p * 0.6 + vec2(t * 0.06, 0.0)) * 2.2;
+        q.y += noise(p * 0.8 + vec2(0.0, t * 0.05)) * 1.1;
         return fbm(q * 2.4 + vec2(t * 0.18, 0.0));
       }
     `;
@@ -265,7 +267,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        they shouldn't compete with the black hole.
        ============================================================ */
 
-    const starCount = mobile ? 500 : 1100;
+    const starCount = mobile ? 450 : 850;
     const starPos = new Float32Array(starCount * 3);
     const starCol = new Float32Array(starCount * 3);
     const starSize = new Float32Array(starCount);
@@ -351,7 +353,9 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        BLACK HOLE SHADOW
        ============================================================ */
 
-    const shadowGeo = track(new THREE.SphereGeometry(3.2, 128, 96));
+    const shadowGeo = track(
+      new THREE.SphereGeometry(3.2, mobile ? 32 : 48, mobile ? 24 : 36)
+    );
 
     const shadowMat = track(
       new THREE.MeshBasicMaterial({
@@ -370,7 +374,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        ============================================================ */
 
     const photonGeo = track(
-      new THREE.RingGeometry(3.15, 4.2, 1024, 8)
+      new THREE.RingGeometry(3.15, 4.2, mobile ? 96 : 144, 1)
     );
 
     const photonMat = track(
@@ -405,13 +409,14 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
           void main() {
             vec2 p = vUv - 0.5;
             float r = length(p) * 2.0;
-            float a = atan(p.y, p.x);
 
             /* Sharp bright ring hugging the shadow */
             float innerEdge = smoothstep(0.0, 0.12, r);
             float outerEdge = 1.0 - smoothstep(0.35, 1.0, r);
             float ring = innerEdge * outerEdge;
+            if (ring < 0.005) discard;
 
+            float a = atan(p.y, p.x);
             float turb = fbm(vec2(
               a * 36.0 - uTime * 0.55,
               r * 70.0
@@ -445,7 +450,9 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        AMBIENT OUTER GLOW — much reduced
        ============================================================ */
 
-    const ambientGeo = track(new THREE.SphereGeometry(22, 64, 48));
+    const ambientGeo = track(
+      new THREE.SphereGeometry(22, mobile ? 24 : 36, mobile ? 18 : 24)
+    );
 
     const ambientMat = track(
       new THREE.ShaderMaterial({
@@ -512,7 +519,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        ============================================================ */
 
     const diskGeo = track(
-      new THREE.RingGeometry(3.4, 80, 1024, 200)
+      new THREE.RingGeometry(3.4, 80, mobile ? 96 : 160, 2)
     );
 
     const diskMat = track(
@@ -549,7 +556,6 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
           void main() {
             vec2 p = vUv - 0.5;
             float r = length(p) * 2.0;
-            float a = atan(p.y, p.x);
 
             /* Radial brightness — narrow bright inner band,
                then falls off steeply */
@@ -557,6 +563,9 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
             float outerMask = 1.0 - smoothstep(0.28, 0.75, r);
             float diskMask = innerMask * outerMask;
 
+            if (diskMask < 0.002) discard;
+
+            float a = atan(p.y, p.x);
             vec2 polar = vec2(a * 4.0, r * 10.0 - uTime * 0.32);
 
             float largeStreak = streak(polar, uTime);
@@ -637,7 +646,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        ============================================================ */
 
     const topArcGeo = track(
-      new THREE.RingGeometry(3.35, 6.2, 1024, 128, 0, Math.PI)
+      new THREE.RingGeometry(3.35, 6.2, mobile ? 96 : 144, 2, 0, Math.PI)
     );
 
     const topArcMat = track(
@@ -672,7 +681,6 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
           void main() {
             vec2 p = vUv - 0.5;
             float r = length(p) * 2.0;
-            float a = atan(p.y, p.x);
 
             /* Tighter ring band — arc hugs the shadow instead
                of sprawling outward */
@@ -680,6 +688,9 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
             float outer = 1.0 - smoothstep(0.42, 0.92, r);
             float mask = inner * outer;
 
+            if (mask < 0.002) discard;
+
+            float a = atan(p.y, p.x);
             vec2 polar = vec2(a * 6.0 - uTime * 0.24, r * 12.0);
             float gas = streak(polar, uTime);
             float detail = fbm(polar * 3.5);
@@ -712,7 +723,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        ============================================================ */
 
     const botArcGeo = track(
-      new THREE.RingGeometry(3.35, 5.6, 1024, 128, Math.PI, Math.PI)
+      new THREE.RingGeometry(3.35, 5.6, mobile ? 96 : 144, 2, Math.PI, Math.PI)
     );
 
     const botArcMat = track(
@@ -747,12 +758,14 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
           void main() {
             vec2 p = vUv - 0.5;
             float r = length(p) * 2.0;
-            float a = atan(p.y, p.x);
 
             float inner = smoothstep(0.05, 0.18, r);
             float outer = 1.0 - smoothstep(0.40, 0.88, r);
             float mask = inner * outer;
 
+            if (mask < 0.002) discard;
+
+            float a = atan(p.y, p.x);
             vec2 polar = vec2(a * 5.0 + uTime * 0.20, r * 10.0);
             float gas = streak(polar, uTime);
             float detail = fbm(polar * 3.0);
@@ -786,7 +799,7 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
        the disk instead of filling space.
        ============================================================ */
 
-    const particleCount = mobile ? 1800 : 4000;
+    const particleCount = mobile ? 1200 : 2200;
     const particlePos = new Float32Array(particleCount * 3);
     const particleCol = new Float32Array(particleCount * 3);
     const particleSize = new Float32Array(particleCount);
@@ -926,6 +939,10 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
+      bloom.setSize(
+        Math.max(1, Math.floor(window.innerWidth * 0.5)),
+        Math.max(1, Math.floor(window.innerHeight * 0.5))
+      );
     };
 
     window.addEventListener('resize', onResize);
@@ -938,82 +955,92 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
     let animationFrame = 0;
     let running = true;
 
+    let diskAngle = 0;
+    let topArcAngle = 0;
+    let botArcAngle = 0;
+    let photonRingAngle = 0;
+    let smoothScroll = scrollRef.current;
+
     const animate = () => {
       if (!running) return;
       animationFrame = requestAnimationFrame(animate);
 
+      const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.getElapsedTime();
-      const scroll = scrollRef.current;
 
-      const prevX = pointer.x;
-      const prevY = pointer.y;
+      // Smooth scroll progress to eliminate notched mouse wheel stepping
+      smoothScroll += (scrollRef.current - smoothScroll) * (1 - Math.exp(-10 * delta));
+      const scroll = smoothScroll;
 
-      pointer.x += (pointer.targetX - pointer.x) * 0.05;
-      pointer.y += (pointer.targetY - pointer.y) * 0.05;
+      // Frame-rate independent smooth pointer interpolation
+      const pointerDamp = 1 - Math.exp(-6 * delta);
+      pointer.x += (pointer.targetX - pointer.x) * pointerDamp;
+      pointer.y += (pointer.targetY - pointer.y) * pointerDamp;
 
-      pointer.velocityX = pointer.x - prevX;
-      pointer.velocityY = pointer.y - prevY;
-
+      const interDamp = 1 - Math.exp(-4 * delta);
       interaction.energy = THREE.MathUtils.lerp(
         interaction.energy,
         interaction.targetEnergy,
-        0.04
+        interDamp
       );
       interaction.proximity = THREE.MathUtils.lerp(
         interaction.proximity,
         interaction.targetProximity,
-        0.05
+        interDamp
       );
       interaction.hoverOnBH = THREE.MathUtils.lerp(
         interaction.hoverOnBH,
         interaction.targetHoverOnBH,
-        0.06
+        interDamp
       );
 
-      interaction.idleTime += 1 / 60;
+      interaction.idleTime += delta;
       if (interaction.idleTime > 1.5) {
         interaction.idleCharge = Math.min(
-          interaction.idleCharge + 0.003,
+          interaction.idleCharge + delta * 0.18,
           0.35
         );
       } else {
-        interaction.idleCharge *= 0.95;
+        interaction.idleCharge *= Math.exp(-3 * delta);
       }
 
       if (pointer.isDown) {
-        pointer.holdTime += 1 / 60;
+        pointer.holdTime += delta;
         interaction.targetFlare = Math.min(
           pointer.holdTime * 1.7,
           1.4
         );
       } else {
         pointer.holdTime = 0;
-        interaction.targetFlare *= 0.92;
+        interaction.targetFlare *= Math.exp(-5 * delta);
       }
 
       interaction.flare = THREE.MathUtils.lerp(
         interaction.flare,
         interaction.targetFlare,
-        0.12
+        1 - Math.exp(-8 * delta)
       );
 
-      /* Camera */
+      /* Camera - smooth positioning and lookAt */
       const targetCamZ = 32 - scroll * 16;
       const targetCamX = pointer.x * 2.5;
       const targetCamY = 1.2 + pointer.y * 1.2 + scroll * 0.4;
 
-      camera.position.x += (targetCamX - camera.position.x) * 0.04;
-      camera.position.y += (targetCamY - camera.position.y) * 0.04;
-      camera.position.z += (targetCamZ - camera.position.z) * 0.04;
+      const camDamp = 1 - Math.exp(-4 * delta);
+      camera.position.x += (targetCamX - camera.position.x) * camDamp;
+      camera.position.y += (targetCamY - camera.position.y) * camDamp;
+      camera.position.z += (targetCamZ - camera.position.z) * camDamp;
 
       if (!reducedMotion) {
         camera.position.z += Math.sin(elapsed * 0.16) * 0.05;
       }
 
-      camera.lookAt(pointer.x * 0.5, pointer.y * 0.3, 0);
+      // Consistently focus center of black hole to prevent lookAt matrix jitter
+      camera.lookAt(0, 0, 0);
 
-      root.rotation.y += (pointer.x * 0.035 - root.rotation.y) * 0.03;
-      root.rotation.x += (-pointer.y * 0.02 - root.rotation.x) * 0.03;
+      const rootRotDamp = 1 - Math.exp(-3 * delta);
+      root.rotation.y += (pointer.x * 0.035 - root.rotation.y) * rootRotDamp;
+      root.rotation.x += (-pointer.y * 0.02 - root.rotation.x) * rootRotDamp;
 
       if (!reducedMotion) {
         const spin =
@@ -1022,12 +1049,23 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
           interaction.flare * 0.0055 +
           interaction.idleCharge * 0.002;
 
-        disk.rotation.z = elapsed * spin;
-        gasParticles.rotation.z = elapsed * spin;
+        // Accumulate rotation smoothly with delta time! No more elapsed * spin jumps!
+        diskAngle += delta * spin;
+        disk.rotation.z = diskAngle;
+        gasParticles.rotation.z = diskAngle;
 
-        topArc.rotation.z = elapsed * 0.0008;
-        botArc.rotation.z = elapsed * 0.0006;
-        photonRing.rotation.z = -elapsed * 0.0012;
+        topArcAngle += delta * 0.0008;
+        botArcAngle += delta * 0.0006;
+        photonRingAngle -= delta * 0.0012;
+
+        topArc.rotation.z = topArcAngle;
+        botArc.rotation.z = botArcAngle;
+        photonRing.rotation.z = photonRingAngle;
+
+        // Smooth subtle star parallax without velocity twitch
+        const starDamp = 1 - Math.exp(-2 * delta);
+        stars.rotation.y += (pointer.x * 0.025 - stars.rotation.y) * starDamp;
+        stars.rotation.x += (-pointer.y * 0.015 - stars.rotation.x) * starDamp;
       }
 
       const applyUniforms = (mat: THREE.ShaderMaterial) => {
@@ -1064,15 +1102,6 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
           interaction.hoverOnBH * 1.3) *
         (1.0 - scroll * 0.35);
 
-      if (!reducedMotion) {
-        stars.rotation.y += pointer.velocityX * 0.0004;
-        stars.rotation.x += pointer.velocityY * 0.0003;
-      }
-
-      /* ======================================================
-         BLOOM — high strength but tight radius, high
-         threshold. Only the actual bright core blooms.
-         ====================================================== */
       const scrollBloomDim = 1.0 - scroll * 0.5;
 
       bloom.strength =
@@ -1082,16 +1111,11 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
           interaction.hoverOnBH * 0.6) *
         scrollBloomDim;
 
-      /* Radius stays small so bloom stays localized */
       bloom.radius =
         0.5 +
         interaction.proximity * 0.12 +
         interaction.hoverOnBH * 0.08;
 
-      /* ======================================================
-         EXPOSURE — kept moderate. The bloom does the brightening
-         work in the center; exposure stays neutral for the rest.
-         ====================================================== */
       renderer.toneMappingExposure =
         (0.92 +
           interaction.energy * 0.06 +
@@ -1148,4 +1172,4 @@ const ThemeHeroScene: React.FC<ThemeHeroSceneProps> = ({
   );
 };
 
-export default ThemeHeroScene;
+export default React.memo(ThemeHeroScene);
